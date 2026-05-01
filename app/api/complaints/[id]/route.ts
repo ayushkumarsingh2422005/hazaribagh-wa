@@ -36,8 +36,8 @@ export async function PUT(
                 const cid = complaint.complaintId || id;
 
                 const message = language === 'english'
-                    ? `✅ *Your Complaint Has Been Resolved*\n\n🆔 Complaint ID: *${cid}*\n\nDear ${complaint.name},\n\nWe are pleased to inform you that your complaint registered with Deoghar Police has been resolved.\n\nIf you are still facing issues, please contact us again or call *112*.\n\n_Deoghar Police Official WhatsApp Chatbot_`
-                    : `✅ *आपकी शिकायत हल हो गई है*\n\n🆔 शिकायत आईडी: *${cid}*\n\nप्रिय ${complaint.name},\n\nहमें यह सूचित करते हुए प्रसन्नता है कि देवघर पुलिस में दर्ज आपकी शिकायत का समाधान कर दिया गया है।\n\nयदि आप अभी भी समस्या का सामना कर रहे हैं, तो कृपया फिर से हमसे संपर्क करें या *112* पर कॉल करें।\n\n_देवघर पुलिस आधिकारिक व्हाट्सएप चैटबॉट_`;
+                    ? `✅ *Your Complaint Has Been Resolved*\n\n🆔 Complaint ID: *${cid}*\n\nDear ${complaint.name},\n\nWe are pleased to inform you that your complaint registered with Hazaribagh Police has been resolved.\n\nIf you are still facing issues, please contact us again or call *112*.\n\n_Hazaribagh Police Official WhatsApp Chatbot_`
+                    : `✅ *आपकी शिकायत हल हो गई है*\n\n🆔 शिकायत आईडी: *${cid}*\n\nप्रिय ${complaint.name},\n\nहमें यह सूचित करते हुए प्रसन्नता है कि हजारीबाग पुलिस में दर्ज आपकी शिकायत का समाधान कर दिया गया है।\n\nयदि आप अभी भी समस्या का सामना कर रहे हैं, तो कृपया फिर से हमसे संपर्क करें या *112* पर कॉल करें।\n\n_हजारीबाग पुलिस आधिकारिक व्हाट्सएप चैटबॉट_`;
 
                 await sendWhatsAppMessage({ to: complaint.phoneNumber, text: message });
             } catch (notifyErr) {

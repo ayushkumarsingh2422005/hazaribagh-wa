@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Privacy Policy | Deoghar Police WhatsApp Assistant',
+    title: 'Privacy Policy | Hazaribagh Police WhatsApp Assistant',
     description:
-        'Learn how Deoghar Police WhatsApp Assistant collects, uses, and protects your personal information when you interact with our service.',
+        'Learn how Hazaribagh Police WhatsApp Assistant collects, uses, and protects your personal information when you interact with our service.',
 };
 
 export default function PrivacyPolicyPage() {
@@ -35,7 +35,7 @@ export default function PrivacyPolicyPage() {
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">1. Introduction</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Welcome to the <strong>Deoghar Police WhatsApp Assistant</strong> (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;us&rdquo;). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you interact with our WhatsApp chatbot service operated on behalf of Deoghar Police. Please read this policy carefully. If you do not agree with the terms of this Privacy Policy, please discontinue use of the service.
+                            Welcome to the <strong>Hazaribagh Police WhatsApp Assistant</strong> (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;us&rdquo;). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you interact with our WhatsApp chatbot service operated on behalf of Hazaribagh Police. Please read this policy carefully. If you do not agree with the terms of this Privacy Policy, please discontinue use of the service.
                         </p>
                     </section>
 
@@ -74,7 +74,7 @@ export default function PrivacyPolicyPage() {
                             We do <strong>not</strong> sell or rent your personal information to third parties. We may share your information with:
                         </p>
                         <ul className="list-disc list-inside space-y-2 text-slate-600 dark:text-slate-400 mt-3">
-                            <li><strong>Deoghar Police Officers</strong> for the purpose of processing complaints and inquiries.</li>
+                            <li><strong>Hazaribagh Police Officers</strong> for the purpose of processing complaints and inquiries.</li>
                             <li><strong>WhatsApp / Meta:</strong> As required by the WhatsApp Business API platform under Meta&apos;s own terms and privacy policy.</li>
                             <li><strong>Legal Authorities:</strong> When required by applicable law, court order, or governmental regulation.</li>
                         </ul>
@@ -130,9 +130,9 @@ export default function PrivacyPolicyPage() {
                             If you have any questions or concerns regarding this Privacy Policy, please contact us:
                         </p>
                         <div className="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg text-slate-700 dark:text-slate-300 space-y-1">
-                            <p><strong>Deoghar Police</strong></p>
-                            <p>Deoghar, Jharkhand, India</p>
-                            <p>Email: <a href="mailto:deoghar.police@jharkhand.gov.in" className="text-indigo-600 dark:text-indigo-400 underline">deoghar.police@jharkhand.gov.in</a></p>
+                            <p><strong>Hazaribagh Police</strong></p>
+                            <p>Hazaribagh, Jharkhand, India</p>
+                            <p>Email: <a href="mailto:sp-hazaribagh@jhpolice.gov.in" className="text-indigo-600 dark:text-indigo-400 underline">sp-hazaribagh@jhpolice.gov.in</a></p>
                         </div>
                     </section>
                 </div>

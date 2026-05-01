@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Terms of Service | Deoghar Police WhatsApp Assistant',
+    title: 'Terms of Service | Hazaribagh Police WhatsApp Assistant',
     description:
-        'Read the Terms of Service governing your use of the Deoghar Police WhatsApp Assistant.',
+        'Read the Terms of Service governing your use of the Hazaribagh Police WhatsApp Assistant.',
 };
 
 export default function TermsOfServicePage() {
@@ -35,17 +35,17 @@ export default function TermsOfServicePage() {
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">1. Acceptance of Terms</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            By accessing or using the <strong>Deoghar Police WhatsApp Assistant</strong> (&ldquo;the Service&rdquo;), you agree to be bound by these Terms of Service. If you do not agree to all of these terms, please discontinue use of the Service immediately. These Terms apply to all users who interact with the chatbot via WhatsApp.
+                            By accessing or using the <strong>Hazaribagh Police WhatsApp Assistant</strong> (&ldquo;the Service&rdquo;), you agree to be bound by these Terms of Service. If you do not agree to all of these terms, please discontinue use of the Service immediately. These Terms apply to all users who interact with the chatbot via WhatsApp.
                         </p>
                     </section>
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">2. Description of Service</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            The Service is a WhatsApp-based chatbot operated by Deoghar Police that provides citizens with the ability to:
+                            The Service is a WhatsApp-based chatbot operated by Hazaribagh Police that provides citizens with the ability to:
                         </p>
                         <ul className="list-disc list-inside space-y-2 text-slate-600 dark:text-slate-400 mt-3">
-                            <li>File complaints and inquiries with Deoghar Police.</li>
+                            <li>File complaints and inquiries with Hazaribagh Police.</li>
                             <li>Access information about police stations, emergency contacts, and traffic regulations.</li>
                             <li>Receive automated responses and guidance on public safety topics.</li>
                             <li>Submit feedback and reviews about police services.</li>
@@ -83,14 +83,14 @@ export default function TermsOfServicePage() {
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">5. Accuracy of Information</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            While we strive to provide accurate and up-to-date information, the Service is provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. Deoghar Police does not warrant the completeness, accuracy, reliability, or timeliness of any information provided through the chatbot. Always verify critical information through official channels.
+                            While we strive to provide accurate and up-to-date information, the Service is provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. Hazaribagh Police does not warrant the completeness, accuracy, reliability, or timeliness of any information provided through the chatbot. Always verify critical information through official channels.
                         </p>
                     </section>
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">6. Intellectual Property</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            All content, design, and technology comprising the Service, including but not limited to text, graphics, logos, and software, are the property of Deoghar Police or its licensors and are protected by applicable intellectual property laws. You may not reproduce, distribute, or create derivative works without our express written permission.
+                            All content, design, and technology comprising the Service, including but not limited to text, graphics, logos, and software, are the property of Hazaribagh Police or its licensors and are protected by applicable intellectual property laws. You may not reproduce, distribute, or create derivative works without our express written permission.
                         </p>
                     </section>
 
@@ -108,7 +108,7 @@ export default function TermsOfServicePage() {
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">8. Limitation of Liability</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            To the fullest extent permitted by law, Deoghar Police and its officers, employees, and agents shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of your use of, or inability to use, the Service. This includes, without limitation, any loss of data, revenue, or goodwill.
+                            To the fullest extent permitted by law, Hazaribagh Police and its officers, employees, and agents shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of your use of, or inability to use, the Service. This includes, without limitation, any loss of data, revenue, or goodwill.
                         </p>
                     </section>
 
@@ -129,7 +129,7 @@ export default function TermsOfServicePage() {
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">11. Governing Law</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            These Terms shall be governed by and construed in accordance with the laws of <strong>India</strong>, specifically the Information Technology Act, 2000, and other applicable statutes. Any disputes shall be subject to the exclusive jurisdiction of the courts of Deoghar, Jharkhand.
+                            These Terms shall be governed by and construed in accordance with the laws of <strong>India</strong>, specifically the Information Technology Act, 2000, and other applicable statutes. Any disputes shall be subject to the exclusive jurisdiction of the courts of Hazaribagh, Jharkhand.
                         </p>
                     </section>
 
@@ -139,9 +139,9 @@ export default function TermsOfServicePage() {
                             If you have any questions about these Terms, please contact us:
                         </p>
                         <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 space-y-1">
-                            <p><strong>Deoghar Police</strong></p>
-                            <p>Deoghar, Jharkhand, India</p>
-                            <p>Email: <a href="mailto:deoghar.police@jharkhand.gov.in" className="text-indigo-600 dark:text-indigo-400 underline">deoghar.police@jharkhand.gov.in</a></p>
+                            <p><strong>Hazaribagh Police</strong></p>
+                            <p>Hazaribagh, Jharkhand, India</p>
+                            <p>Email: <a href="mailto:sp-hazaribagh@jhpolice.gov.in" className="text-indigo-600 dark:text-indigo-400 underline">sp-hazaribagh@jhpolice.gov.in</a></p>
                         </div>
                     </section>
                 </div>

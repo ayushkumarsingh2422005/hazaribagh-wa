@@ -28,7 +28,7 @@ export default function PoliceStationForm({ initialData }: PoliceStationFormProp
         nameHindi: initialData?.nameHindi || '',
         address: initialData?.address || '',
         addressHindi: initialData?.addressHindi || '',
-        district: initialData?.district || 'Deoghar',
+        district: initialData?.district || 'Hazaribagh',
         contactNumber: initialData?.contactNumber || '',
         inchargeName: initialData?.inchargeName || '',
         inchargeNameHindi: initialData?.inchargeNameHindi || '',

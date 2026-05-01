@@ -74,12 +74,12 @@ export async function processChatbotMessage(
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-        const logoUrl = baseUrl ? `${baseUrl}/deoghar%20police%20logo.jpeg` : undefined;
+        const logoUrl = baseUrl ? `${baseUrl}/hazaribagh%20police%20logo.png` : undefined;
 
         return {
             type: 'buttons',
             headerImageUrl: logoUrl,
-            bodyText: `*Welcome to Deoghar Police Official WhatsApp Chatbot*\n*देवघर पुलिस आधिकारिक व्हाट्सएप चैटबॉट में आपका स्वागत है*\n\n🚨 *Important Contacts / महत्वपूर्ण नंबर:*\n📞 Emergency / आपातकाल: 112\n📞 District Control Room: +919241821642\n📞 Cyber Crime / साइबर अपराध: 1930\n📞 Cyber Police Station: +919241821643\n📞 Traffic Police Station: +919296811585\n\nPlease select your official language:\nकृपया अपनी आधिकारिक भाषा चुनें:`,
+            bodyText: `*Welcome to Hazaribagh Police Official WhatsApp Chatbot*\n*हजारीबाग पुलिस आधिकारिक व्हाट्सएप चैटबॉट में आपका स्वागत है*\n\n🚨 *Important Contacts / महत्वपूर्ण नंबर:*\n📞 Emergency / आपातकाल: 112\n📞 District Control Room: +918002529348\n📞 District Helpline: +918002529349\n📞 Cyber Crime / साइबर अपराध: 1930\n📞 SP Office Hazaribagh / एसपी कार्यालय: 06546-252227\n\nPlease select your official language:\nकृपया अपनी आधिकारिक भाषा चुनें:`,
             buttons: [
                 { id: 'lang_english', title: 'English' },
                 { id: 'lang_hindi', title: 'हिंदी' },
@@ -187,9 +187,9 @@ async function showDisclaimerAndContacts(
     let message = '';
 
     if (language === 'english') {
-        message = `✅ *You have selected English language.*\n\nWe will provide you with information about Deoghar Police services in this language.\n\n`;
+        message = `✅ *You have selected English language.*\n\nWe will provide you with information about Hazaribagh Police services in this language.\n\n`;
         message += `⚠️ *BEWARE:* Unauthorized WhatsApp chatbots may ask for personal details, links, or downloads. These can be SCAMS! Report immediately on *1930*.\n\n`;
-        message += `📋 *Disclaimer:* This WhatsApp Chatbot is only for Deoghar Police. For *URGENT* matters, visit nearest police station or call *112* or District Control Room on *9241821642*.\n\n`;
+        message += `📋 *Disclaimer:* This WhatsApp Chatbot is only for Hazaribagh Police. For *URGENT* matters, visit nearest police station or call *112* or District Control Room on *8002529348*.\n\n`;
         message += `📞 *Police Station Contact Numbers:*\n\n`;
 
         stations.forEach((station, index) => {
@@ -199,9 +199,9 @@ async function showDisclaimerAndContacts(
         message += `\n\nPlease select a service from the menu below.`;
         message += `\n\n_Powered by DigiCraft Innovation Pvt. Ltd._`;
     } else {
-        message = `✅ *आपने हिंदी भाषा का चयन किया है।*\n\nहम आपको इस भाषा में देवघर पुलिस सेवाओं के बारे में जानकारी प्रदान करेंगे।\n\n`;
+        message = `✅ *आपने हिंदी भाषा का चयन किया है।*\n\nहम आपको इस भाषा में हजारीबाग पुलिस सेवाओं के बारे में जानकारी प्रदान करेंगे।\n\n`;
         message += `⚠️ *सावधान:* अनधिकृत व्हाट्सएप चैटबॉट व्यक्तिगत विवरण, लिंक या डाउनलोड मांग सकते हैं। ये घोटाले हो सकते हैं! तुरंत *1930* पर रिपोर्ट करें।\n\n`;
-        message += `📋 *अस्वीकरण:* यह व्हाट्सएप चैटबॉट केवल देवघर पुलिस के लिए है। *तत्काल* मामलों के लिए, निकटतम पुलिस स्टेशन पर जाएं या *112* या जिला नियंत्रण कक्ष *9241821642* पर कॉल करें।\n\n`;
+        message += `📋 *अस्वीकरण:* यह व्हाट्सएप चैटबॉट केवल हजारीबाग पुलिस के लिए है। *तत्काल* मामलों के लिए, निकटतम पुलिस स्टेशन पर जाएं या *112* या जिला नियंत्रण कक्ष *8002529348* पर कॉल करें।\n\n`;
         message += `📞 *पुलिस स्टेशन संपर्क नंबर:*\n\n`;
 
         stations.forEach((station, index) => {
@@ -475,8 +475,8 @@ async function getLocationService(phoneNumber: string, language: 'english' | 'hi
     const { sendLocationRequest } = await import('./whatsapp');
 
     const bodyText = language === 'english'
-        ? `📍 *Find Your Nearest Police Station*\n\nTo help you find the nearest police station, please share your current location by clicking the button below.\n\nYour location will only be used to find the closest station in Deoghar district.`
-        : `📍 *अपना निकटतम पुलिस स्टेशन खोजें*\n\nआपको निकटतम पुलिस स्टेशन खोजने में मदद करने के लिए, कृपया नीचे दिए गए बटन पर क्लिक करके अपना वर्तमान स्थान साझा करें।\n\nआपके स्थान का उपयोग केवल देवघर जिले में निकटतम स्टेशन खोजने के लिए किया जाएगा।`;
+        ? `📍 *Find Your Nearest Police Station*\n\nTo help you find the nearest police station, please share your current location by clicking the button below.\n\nYour location will only be used to find the closest station in Hazaribagh district.`
+        : `📍 *अपना निकटतम पुलिस स्टेशन खोजें*\n\nआपको निकटतम पुलिस स्टेशन खोजने में मदद करने के लिए, कृपया नीचे दिए गए बटन पर क्लिक करके अपना वर्तमान स्थान साझा करें।\n\nआपके स्थान का उपयोग केवल हजारीबाग जिले में निकटतम स्टेशन खोजने के लिए किया जाएगा।`;
 
     await sendLocationRequest({
         to: phoneNumber,
@@ -724,28 +724,28 @@ async function handleSubServiceSelection(
     // Show appropriate form based on sub-service
     const formMessages: Record<string, { english: string; hindi: string }> = {
         sub_passport_delay: {
-            english: `📝 *Passport Verification Delay*\n\nPlease provide the following details (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Concerned Police Station\n*Line 4:* Remarks\n\n*Example:*\nRahul Kumar\nAB1234567\nTown Thana\nVerification pending since 2 months\n\nPlease reply with all details.`,
-            hindi: `📝 *पासपोर्ट सत्यापन में देरी*\n\nकृपया निम्नलिखित विवरण प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* संबंधित पुलिस स्टेशन\n*पंक्ति 4:* टिप्पणी\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\nनगर थाना\n2 महीने से सत्यापन लंबित\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `📝 *Passport Verification Delay*\n\nPlease provide the following details (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Concerned Police Station\n*Line 4:* Remarks\n\n*Example:*\nRahul Kumar\nAB1234567\nHazaribagh Sadar Thana\nVerification pending since 2 months\n\nPlease reply with all details.`,
+            hindi: `📝 *पासपोर्ट सत्यापन में देरी*\n\nकृपया निम्नलिखित विवरण प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* संबंधित पुलिस स्टेशन\n*पंक्ति 4:* टिप्पणी\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\nहजारीबाग सदर थाना\n2 महीने से सत्यापन लंबित\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_passport_other: {
-            english: `📝 *Other Passport Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Concerned Police Station\n*Line 4:* Issue Details\n\n*Example:*\nPriya Sharma\nCD9876543\nTown Thana\nDocument submission issue\n\nPlease reply with details.`,
-            hindi: `📝 *अन्य पासपोर्ट समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* संबंधित पुलिस स्टेशन\n*पंक्ति 4:* समस्या विवरण\n\n*उदाहरण:*\nप्रिया शर्मा\nCD9876543\nनगर थाना\nदस्तावेज जमा करने में समस्या\n\nकृपया विवरण के साथ उत्तर दें।`,
+            english: `📝 *Other Passport Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Concerned Police Station\n*Line 4:* Issue Details\n\n*Example:*\nPriya Sharma\nCD9876543\nHazaribagh Sadar Thana\nDocument submission issue\n\nPlease reply with details.`,
+            hindi: `📝 *अन्य पासपोर्ट समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* संबंधित पुलिस स्टेशन\n*पंक्ति 4:* समस्या विवरण\n\n*उदाहरण:*\nप्रिया शर्मा\nCD9876543\nहजारीबाग सदर थाना\nदस्तावेज जमा करने में समस्या\n\nकृपया विवरण के साथ उत्तर दें।`,
         },
         sub_character_delay: {
-            english: `📝 *Character Verification Delay*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Application Date\n*Line 4:* Concerned Police Station\n*Line 5:* Remarks\n\n*Example:*\nSunil Verma\nCH12345\n12/03/2026\nTown Thana\nVerification is delayed by 15 days\n\nPlease reply with all details.`,
-            hindi: `📝 *चरित्र सत्यापन में देरी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* आवेदन तिथि\n*पंक्ति 4:* संबंधित पुलिस स्टेशन\n*पंक्ति 5:* टिप्पणी\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\n12/03/2026\nनगर थाना\nसत्यापन 15 दिनों से लंबित है\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `📝 *Character Verification Delay*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Application Date\n*Line 4:* Concerned Police Station\n*Line 5:* Remarks\n\n*Example:*\nSunil Verma\nCH12345\n12/03/2026\nHazaribagh Sadar Thana\nVerification is delayed by 15 days\n\nPlease reply with all details.`,
+            hindi: `📝 *चरित्र सत्यापन में देरी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* आवेदन तिथि\n*पंक्ति 4:* संबंधित पुलिस स्टेशन\n*पंक्ति 5:* टिप्पणी\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\n12/03/2026\nहजारीबाग सदर थाना\nसत्यापन 15 दिनों से लंबित है\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_character_other: {
-            english: `📝 *Other Character Verification Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Application Date\n*Line 4:* Concerned Police Station\n*Line 5:* Issue Details\n\n*Example:*\nSunil Verma\nCH12345\n12/03/2026\nTown Thana\nName is misspelled in the application\n\nPlease reply with details.`,
-            hindi: `📝 *अन्य चरित्र सत्यापन समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* आवेदन तिथि\n*पंक्ति 4:* संबंधित पुलिस स्टेशन\n*पंक्ति 5:* समस्या विवरण\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\n12/03/2026\nनगर थाना\nआवेदन में नाम की वर्तनी गलत है\n\nकृपया विवरण के साथ उत्तर दें।`,
+            english: `📝 *Other Character Verification Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Application Date\n*Line 4:* Concerned Police Station\n*Line 5:* Issue Details\n\n*Example:*\nSunil Verma\nCH12345\n12/03/2026\nHazaribagh Sadar Thana\nName is misspelled in the application\n\nPlease reply with details.`,
+            hindi: `📝 *अन्य चरित्र सत्यापन समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* आवेदन तिथि\n*पंक्ति 4:* संबंधित पुलिस स्टेशन\n*पंक्ति 5:* समस्या विवरण\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\n12/03/2026\nहजारीबाग सदर थाना\nआवेदन में नाम की वर्तनी गलत है\n\nकृपया विवरण के साथ उत्तर दें।`,
         },
         sub_petition_not_visited: {
-            english: `📝 *Police Did Not Visit - Petition*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Issue Details\n\n*Example:*\nAmit Singh\nRakesh Singh\nWard 5, Deoghar\n9876543210\nTown Thana\nPolice did not visit regarding my petition filed 5 days ago\n\nPlease reply with all details.`,
-            hindi: `📝 *पुलिस नहीं आई - याचिका*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nअमित सिंह\nराकेश सिंह\nवार्ड 5, देवघर\n9876543210\nनगर थाना\n5 दिन पहले दायर याचिका के संबंध में पुलिस नहीं आई\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `📝 *Police Did Not Visit - Petition*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Issue Details\n\n*Example:*\nAmit Singh\nRakesh Singh\nWard 5, Hazaribagh\n9876543210\nHazaribagh Sadar Thana\nPolice did not visit regarding my petition filed 5 days ago\n\nPlease reply with all details.`,
+            hindi: `📝 *पुलिस नहीं आई - याचिका*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nअमित सिंह\nराकेश सिंह\nवार्ड 5, हजारीबाग\n9876543210\nहजारीबाग सदर थाना\n5 दिन पहले दायर याचिका के संबंध में पुलिस नहीं आई\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_petition_not_satisfied: {
-            english: `📝 *Not Satisfied with Police Response*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Police Station\n*Line 6:* Reason for Dissatisfaction\n\n*Example:*\nVikash Yadav\nSuresh Yadav\nJasidih, Deoghar\n9876543211\nJasidih Thana\nThe investigation was closed without taking my statement\n\nPlease reply with all details.`,
-            hindi: `📝 *पुलिस की प्रतिक्रिया से संतुष्ट नहीं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* पुलिस स्टेशन\n*पंक्ति 6:* असंतोष का कारण\n\n*उदाहरण:*\nविकाश यादव\nसुरेश यादव\nजसीडीह, देवघर\n9876543211\nजसीडीह थाना\nमेरा बयान लिए बिना जांच बंद कर दी गई\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `📝 *Not Satisfied with Police Response*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Police Station\n*Line 6:* Reason for Dissatisfaction\n\n*Example:*\nVikash Yadav\nSuresh Yadav\nBarkagaon, Hazaribagh\n9876543211\nBarkagaon Thana\nThe investigation was closed without taking my statement\n\nPlease reply with all details.`,
+            hindi: `📝 *पुलिस की प्रतिक्रिया से संतुष्ट नहीं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* पुलिस स्टेशन\n*पंक्ति 6:* असंतोष का कारण\n\n*उदाहरण:*\nविकाश यादव\nसुरेश यादव\nबरकागांव, हजारीबाग\n9876543211\nबरकागांव थाना\nमेरा बयान लिए बिना जांच बंद कर दी गई\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_petition_other: {
             english: `📝 *Other Petition Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Police Station\n*Line 6:* Issue Details\n\n*Example:*\nNeha Kumari\nManoj Prasad\nMadhupur\n9876543212\nMadhupur Thana\nNeed an update on the status of my petition\n\nPlease reply with all details.`,
@@ -765,8 +765,8 @@ async function handleSubServiceSelection(
         },
         // sub_lost_mobile is handled separately above — redirects to CEIR portal
         sub_lost_mobile_not_satisfied: {
-            english: `📱 *Not Satisfied with Police Action*\n\nIf you're not satisfied with police action on your lost mobile, please reply with:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Lost Mobile Number\n*Line 6:* Concerned Police Station\n\n*Example:*\nSanjay Sharma\nRahul Sharma\nWilliams Town\n9876543210\n9876543211\nTown Thana\n\nPlease reply with all details.`,
-            hindi: `📱 *पुलिस कार्रवाई से संतुष्ट नहीं*\n\nयदि आप पुलिस कार्रवाई से संतुष्ट नहीं हैं, तो कृपया निम्नलिखित के साथ उत्तर दें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* खोया मोबाइल नंबर\n*पंक्ति 6:* संबंधित पुलिस स्टेशन\n\n*उदाहरण:*\nसंजय शर्मा\nराहुल शर्मा\nविलियम्स टाउन\n9876543210\n9876543211\nनगर थाना\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `📱 *Not Satisfied with Police Action*\n\nIf you're not satisfied with police action on your lost mobile, please reply with:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Lost Mobile Number\n*Line 6:* Concerned Police Station\n\n*Example:*\nSanjay Sharma\nRahul Sharma\nSadar, Hazaribagh\n9876543210\n9876543211\nHazaribagh Sadar Thana\n\nPlease reply with all details.`,
+            hindi: `📱 *पुलिस कार्रवाई से संतुष्ट नहीं*\n\nयदि आप पुलिस कार्रवाई से संतुष्ट नहीं हैं, तो कृपया निम्नलिखित के साथ उत्तर दें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* खोया मोबाइल नंबर\n*पंक्ति 6:* संबंधित पुलिस स्टेशन\n\n*उदाहरण:*\nसंजय शर्मा\nराहुल शर्मा\nसदर, हजारीबाग\n9876543210\n9876543211\nहजारीबाग सदर थाना\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         // sub_cyber is handled separately above — redirects to cybercrime.gov.in / helpline 1930
         sub_cyber_other: {
@@ -981,9 +981,9 @@ export async function handleLocationMessage(
 
     if (nearestStations.length === 0) {
         if (language === 'english') {
-            message = `📍 *No Police Station Found*\n\nIt seems you are currently outside the 10KM range of Deoghar Police Stations. Please try again when you are within the district, or call *112* for emergencies.`;
+            message = `📍 *No Police Station Found*\n\nIt seems you are currently outside the 10KM range of Hazaribagh Police Stations. Please try again when you are within the district, or call *112* for emergencies.`;
         } else {
-            message = `📍 *कोई पुलिस स्टेशन नहीं मिला*\n\nऐसा लगता है कि आप वर्तमान में देवघर पुलिस स्टेशनों की 10 किमी की सीमा से बाहर हैं। कृपया जिले में होने पर पुनः प्रयास करें, या आपातकालीन स्थिति के लिए *112* पर कॉल करें।`;
+            message = `📍 *कोई पुलिस स्टेशन नहीं मिला*\n\nऐसा लगता है कि आप वर्तमान में हजारीबाग पुलिस स्टेशनों की 10 किमी की सीमा से बाहर हैं। कृपया जिले में होने पर पुनः प्रयास करें, या आपातकालीन स्थिति के लिए *112* पर कॉल करें।`;
         }
         return {
             type: 'text',

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
             nameHindi: data.nameHindi,
             address: data.address,
             addressHindi: data.addressHindi,
-            district: data.district || 'Deoghar',
+            district: data.district || 'Hazaribagh',
             location: {
                 type: 'Point',
                 coordinates: [parseFloat(data.longitude), parseFloat(data.latitude)],

@@ -3,9 +3,9 @@ import Link from 'next/link';
 import DataDeletionForm from './DataDeletionForm';
 
 export const metadata: Metadata = {
-    title: 'User Data Deletion | Deoghar Police WhatsApp Assistant',
+    title: 'User Data Deletion | Hazaribagh Police WhatsApp Assistant',
     description:
-        'Request deletion of your personal data collected by the Deoghar Police WhatsApp Assistant.',
+        'Request deletion of your personal data collected by the Hazaribagh Police WhatsApp Assistant.',
 };
 
 export default function DataDeletionPage() {
@@ -38,7 +38,7 @@ export default function DataDeletionPage() {
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">What Data We Hold</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            When you interact with the <strong>Deoghar Police WhatsApp Assistant</strong>, we may store:
+                            When you interact with the <strong>Hazaribagh Police WhatsApp Assistant</strong>, we may store:
                         </p>
                         <ul className="mt-3 list-disc list-inside space-y-2 text-slate-600 dark:text-slate-400">
                             <li>Your WhatsApp phone number</li>
@@ -61,7 +61,7 @@ export default function DataDeletionPage() {
                         </ul>
                         <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
                             <p className="text-amber-800 dark:text-amber-200 text-sm">
-                                <strong>⚠ Please note:</strong> Complaints that have been formally registered with Deoghar Police may need to be retained for legal and administrative purposes even after a deletion request. We will inform you if any data must be retained.
+                                <strong>⚠ Please note:</strong> Complaints that have been formally registered with Hazaribagh Police may need to be retained for legal and administrative purposes even after a deletion request. We will inform you if any data must be retained.
                             </p>
                         </div>
                     </section>
@@ -80,8 +80,8 @@ export default function DataDeletionPage() {
                             You may also send a deletion request directly by email to:
                         </p>
                         <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 space-y-1">
-                            <p><strong>Deoghar Police Data Officer</strong></p>
-                            <p>Email: <a href="mailto:deoghar.police@jharkhand.gov.in" className="text-red-600 dark:text-red-400 underline">deoghar.police@jharkhand.gov.in</a></p>
+                            <p><strong>Hazaribagh Police Data Officer</strong></p>
+                            <p>Email: <a href="mailto:sp-hazaribagh@jhpolice.gov.in" className="text-red-600 dark:text-red-400 underline">sp-hazaribagh@jhpolice.gov.in</a></p>
                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                                 Subject line: <em>Data Deletion Request – [Your Phone Number]</em>
                             </p>

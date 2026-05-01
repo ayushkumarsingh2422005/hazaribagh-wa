@@ -44,8 +44,8 @@ export async function PUT(
 
                 const message =
                     language === 'english'
-                        ? `✅ *Your Submission Has Been Resolved*\n\n🆔 Reference ID: *${cid}*\n\nDear ${name},\n\nWe are pleased to inform you that the matter you raised with Deoghar Police (submitted in non-standard format) has been reviewed and resolved.\n\nIf you still need help, please contact us again or call *112*.\n\n_Deoghar Police Official WhatsApp Chatbot_`
-                        : `✅ *आपका प्रकरण हल हो गया है*\n\n🆔 संदर्भ आईडी: *${cid}*\n\nप्रिय ${name},\n\nहमें यह सूचित करते हुए प्रसन्नता है कि देवघर पुलिस में आपके द्वारा भेजा गया विवरण (गैर-मानक प्रारूप में) समीक्षा कर लिया गया है और समाधान कर दिया गया है।\n\nयदि आपको अभी भी सहायता चाहिए, तो कृपया फिर से संपर्क करें या *112* पर कॉल करें।\n\n_देवघर पुलिस आधिकारिक व्हाट्सएप चैटबॉट_`;
+                        ? `✅ *Your Submission Has Been Resolved*\n\n🆔 Reference ID: *${cid}*\n\nDear ${name},\n\nWe are pleased to inform you that the matter you raised with Hazaribagh Police (submitted in non-standard format) has been reviewed and resolved.\n\nIf you still need help, please contact us again or call *112*.\n\n_Hazaribagh Police Official WhatsApp Chatbot_`
+                        : `✅ *आपका प्रकरण हल हो गया है*\n\n🆔 संदर्भ आईडी: *${cid}*\n\nप्रिय ${name},\n\nहमें यह सूचित करते हुए प्रसन्नता है कि हजारीबाग पुलिस में आपके द्वारा भेजा गया विवरण (गैर-मानक प्रारूप में) समीक्षा कर लिया गया है और समाधान कर दिया गया है।\n\nयदि आपको अभी भी सहायता चाहिए, तो कृपया फिर से संपर्क करें या *112* पर कॉल करें।\n\n_हजारीबाग पुलिस आधिकारिक व्हाट्सएप चैटबॉट_`;
 
                 await sendWhatsAppMessage({ to: rawComplaint.phoneNumber, text: message });
             } catch (notifyErr) {

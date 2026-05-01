@@ -32,7 +32,7 @@ export default async function PoliceStationsPage() {
                         Police Stations
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 text-base">
-                        Manage police stations in Deoghar district
+                        Manage police stations in Hazaribagh district
                     </p>
                 </div>
                 <a

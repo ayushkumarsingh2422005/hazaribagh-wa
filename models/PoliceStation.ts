@@ -41,7 +41,7 @@ const PoliceStationSchema = new Schema<IPoliceStation>(
         district: {
             type: String,
             required: true,
-            default: 'Deoghar',
+            default: 'Hazaribagh',
         },
         location: {
             type: {
