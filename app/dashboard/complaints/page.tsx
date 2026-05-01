@@ -38,6 +38,7 @@ export const complaintTypeLabels: Record<string, string> = {
     traffic_other: 'Traffic - Other',
     cyber: 'Cyber Crime',
     cyber_other: 'Cyber Crime - Other',
+    location_find_station: 'Location - Find my Police Station',
     suggestion: 'Suggestion',
 };
 
@@ -45,6 +46,7 @@ export const GROUPS = [
     { label: 'Passport Issues',       color: 'indigo', types: ['passport_delay', 'passport_other'] },
     { label: 'Character Verification', color: 'violet', types: ['character_delay', 'character_other'] },
     { label: 'SP Office Petition',    color: 'blue',   types: ['petition_not_visited', 'petition_not_satisfied', 'petition_other'] },
+    { label: 'Location Services',   color: 'teal',   types: ['location_find_station'] },
     { label: 'Lost Mobile Phone',     color: 'orange', types: ['lost_mobile', 'lost_mobile_not_satisfied'] },
     { label: 'Traffic Issues',        color: 'yellow', types: ['traffic_jam', 'traffic_challan', 'traffic_other'] },
     { label: 'Cyber Crime',           color: 'red',    types: ['cyber', 'cyber_other'] },

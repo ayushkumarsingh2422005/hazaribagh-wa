@@ -15,6 +15,7 @@ export type ComplaintType =
     | 'traffic_other'
     | 'cyber'
     | 'cyber_other'
+    | 'location_find_station'
     | 'suggestion';
 
 export interface IComplaint extends Document {
@@ -69,6 +70,7 @@ const ComplaintSchema = new Schema<IComplaint>(
                 'traffic_other',
                 'cyber',
                 'cyber_other',
+                'location_find_station',
                 'suggestion',
             ],
         },
@@ -106,7 +108,7 @@ ComplaintSchema.pre('save', async function () {
         const year = new Date().getFullYear();
         const count = await mongoose.model('Complaint').countDocuments({});
         const serial = String(count + 1).padStart(5, '0');
-        this.complaintId = `DGH-${year}-${serial}`;
+        this.complaintId = `HZB-${year}-${serial}`;
     }
 });
 

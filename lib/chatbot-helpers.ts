@@ -12,14 +12,14 @@ export function validateFormInput(
 ): { isValid: boolean; errorMessage?: string; data?: Record<string, unknown> } {
     const lines = userInput.trim().split('\n').map(line => line.trim()).filter(line => line);
 
-    // Passport delay validation
+    // Passport delay validation (PDF: Applicant name, Application No., Remarks)
     if (formType === 'sub_passport_delay') {
-        if (lines.length < 4) {
+        if (lines.length < 3) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide all required details in this format:\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Concerned Police Station\n*Line 4:* Remarks\n\n*Example:*\nRahul Kumar\nAB1234567\nHazaribagh Sadar Thana\nVerification pending for 2 months\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया इस प्रारूप में सभी आवश्यक विवरण प्रदान करें:\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* संबंधित पुलिस स्टेशन\n*पंक्ति 4:* टिप्पणी\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\nहजारीबाग सदर थाना\n2 महीने से सत्यापन लंबित\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Remarks\n\n*Example:*\nRahul Kumar\nAB1234567\nVerification pending for 2 months\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* टिप्पणी\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\n2 महीने से सत्यापन लंबित\n\nकृपया पुनः प्रयास करें।`,
             };
         }
 
@@ -28,20 +28,19 @@ export function validateFormInput(
             data: {
                 name: lines[0],
                 applicationNumber: lines[1],
-                policeStation: lines[2],
-                remarks: lines.slice(3).join(' '),
+                remarks: lines.slice(2).join('\n'),
             },
         };
     }
 
-    // Passport other issues
+    // Passport other issues (PDF: Applicant name, Application No., Report issue)
     if (formType === 'sub_passport_other') {
-        if (lines.length < 4) {
+        if (lines.length < 3) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Concerned Police Station\n*Line 4:* Issue Details\n\n*Example:*\nPriya Sharma\nCD9876543\nHazaribagh Sadar Thana\nDocument submission issue\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* संबंधित पुलिस स्टेशन\n*पंक्ति 4:* समस्या विवरण\n\n*उदाहरण:*\nप्रिया शर्मा\nCD9876543\nहजारीबाग सदर थाना\nदस्तावेज जमा करने में समस्या\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Report issue\n\n*Example:*\nPriya Sharma\nCD9876543\nDocument submission issue\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* समस्या विवरण\n\n*उदाहरण:*\nप्रिया शर्मा\nCD9876543\nदस्तावेज जमा करने में समस्या\n\nकृपया पुनः प्रयास करें।`,
             };
         }
 
@@ -50,15 +49,14 @@ export function validateFormInput(
             data: {
                 name: lines[0],
                 applicationNumber: lines[1],
-                policeStation: lines[2],
-                remarks: lines.slice(3).join(' '),
+                remarks: lines.slice(2).join('\n'),
             },
         };
     }
 
     // Petition issues
     if (formType.startsWith('sub_petition')) {
-        if (lines.length < 5) {
+        if (lines.length < 6) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
@@ -79,14 +77,36 @@ export function validateFormInput(
         };
     }
 
-    // Suggestion/Review
-    if (formType === 'suggestion_form') {
-        if (lines.length < 2) {
+    // Find my Police Station (PDF Section D — place name request)
+    if (formType === 'sub_location_find_station') {
+        if (lines.length < 5) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease simply provide:\n1. Your Name\n2. Your Suggestion/Review\n\n*Example:*\nRahul Kumar\nExcellent service by the traffic police team.\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया बस प्रदान करें:\n1. आपका नाम\n2. अपना सुझाव/समीक्षा\n\n*उदाहरण:*\nराहुल कुमार\nट्रैफिक पुलिस टीम द्वारा उत्कृष्ट सेवा।\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Your place name / landmark\n\n*Example:*\nAmit Singh\nRakesh Singh\nPelawal area, Hazaribagh\n9876543210\nNear Pelawal OP\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* अपने स्थान का नाम / लैंडमार्क\n\n*उदाहरण:*\nअमित सिंह\nराकेश सिंह\nपेलावल, हजारीबाग\n9876543210\nपेलावल ओपी के पास\n\nकृपया पुनः प्रयास करें।`,
+            };
+        }
+        return {
+            isValid: true,
+            data: {
+                name: lines[0],
+                fatherName: lines[1],
+                address: lines[2],
+                location: lines[4],
+                remarks: `Mobile: ${lines[3]}${lines.length > 5 ? `\n\n${lines.slice(5).join('\n')}` : ''}`,
+            },
+        };
+    }
+
+    // Suggestion (PDF: Name, Father, Address, Mobile, Station, Suggestion)
+    if (formType === 'suggestion_form') {
+        if (lines.length < 6) {
+            return {
+                isValid: false,
+                errorMessage: language === 'english'
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Your Suggestion\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रति पंक्ति एक विवरण भेजें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल\n*पंक्ति 5:* संबंधित थाना\n*पंक्ति 6:* सुझाव\n\nकृपया पुनः प्रयास करें।`,
             };
         }
 
@@ -94,19 +114,19 @@ export function validateFormInput(
             isValid: true,
             data: {
                 name: lines[0],
-                content: lines.slice(1).join(' '),
+                content: `Father's name: ${lines[1]}\nAddress: ${lines[2]}\nMobile: ${lines[3]}\nPolice station: ${lines[4]}\nSuggestion:\n${lines.slice(5).join('\n')}`,
             },
         };
     }
 
     // Traffic Jam
     if (formType === 'sub_traffic_jam') {
-        if (lines.length < 3) {
+        if (lines.length < 4) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n1. Name\n2. Mobile Number\n3. Location\n4. Remarks\n\n*Example:*\nRajeev Kumar\n9876543210\nTower Chowk\nHeavy traffic jam for 1 hour\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n1. नाम\n2. मोबाइल नंबर\n3. स्थान\n4. टिप्पणी\n\n*उदाहरण:*\nराजीव कुमार\n9876543210\nटावर चौक\n1 घंटे से भारी जाम है\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n1. Name\n2. Mobile Number\n3. Traffic jam location\n4. Remarks\n\n*Example:*\nRajeev Kumar\n9876543210\nTower Chowk\nHeavy traffic jam for 1 hour\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n1. नाम\n2. मोबाइल नंबर\n3. जाम का स्थान\n4. टिप्पणी\n\n*उदाहरण:*\nराजीव कुमार\n9876543210\nटावर चौक\n1 घंटे से भारी जाम है\n\nकृपया पुनः प्रयास करें।`,
             };
         }
         return {
@@ -119,54 +139,58 @@ export function validateFormInput(
         };
     }
 
-    // Traffic Challan
+    // Traffic Challan (PDF: Name, Father, Address, Mobile, Challan No., Report issue)
     if (formType === 'sub_traffic_challan') {
-        if (lines.length < 3) {
+        if (lines.length < 6) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n1. Name\n2. Mobile Number\n3. Challan Number\n4. Issue\n\n*Example:*\nSanjay Gupta\n9876543210\nJH12345678\nI was wearing a helmet but got challan\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n1. नाम\n2. मोबाइल नंबर\n3. चालान नंबर\n4. समस्या\n\n*उदाहरण:*\nसंजय गुप्ता\n9876543210\nJH12345678\nमैंने हेलमेट पहना था पर चालान कट गया\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Challan Number\n*Line 6:* Report issue\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रति पंक्ति एक विवरण भेजें (नाम, पिता, पता, मोबाइल, चालान नंबर, समस्या)।\n\nकृपया पुनः प्रयास करें।`,
             };
         }
         return {
             isValid: true,
             data: {
                 name: lines[0],
-                challanNumber: lines[2],
-                remarks: `Contact No: ${lines[1]}\n\n${lines.slice(3).join(' ')}`,
+                fatherName: lines[1],
+                address: lines[2],
+                challanNumber: lines[4],
+                remarks: `Mobile: ${lines[3]}\nIssue: ${lines.slice(5).join(' ')}`,
             },
         };
     }
 
-    // Traffic Other
+    // Traffic Other (PDF: Name, Father, Address, Mobile, Station, Report issue)
     if (formType === 'sub_traffic_other') {
+        if (lines.length < 6) {
+            return {
+                isValid: false,
+                errorMessage: language === 'english'
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Report issue\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रति पंक्ति एक विवरण भेजें।\n\nकृपया पुनः प्रयास करें।`,
+            };
+        }
+        return {
+            isValid: true,
+            data: {
+                name: lines[0],
+                fatherName: lines[1],
+                address: lines[2],
+                policeStation: lines[4],
+                remarks: `Mobile: ${lines[3]}\nIssue: ${lines.slice(5).join(' ')}`,
+            },
+        };
+    }
+
+    // Character delay (PDF: Name, Character verification application no., Remarks)
+    if (formType === 'sub_character_delay') {
         if (lines.length < 3) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n1. Name\n2. Mobile Number\n3. Station\n4. Issue\n\n*Example:*\nPooja Dey\n9876543210\nTraffic Thana\nTraffic light not working at Bajrangbali Chowk\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n1. नाम\n2. मोबाइल नंबर\n3. स्टेशन\n4. समस्या\n\n*उदाहरण:*\nपूजा डे\n9876543210\nयातायात थाना\nबजरंगबली चौक पर ट्रैफिक लाइट खराब है\n\nकृपया पुनः प्रयास करें।`,
-            };
-        }
-        return {
-            isValid: true,
-            data: {
-                name: lines[0],
-                policeStation: lines[2],
-                remarks: `Contact No: ${lines[1]}\n\n${lines.slice(3).join(' ')}`,
-            },
-        };
-    }
-
-    // Character delay
-    if (formType === 'sub_character_delay') {
-        if (lines.length < 5) {
-            return {
-                isValid: false,
-                errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Application Date\n*Line 4:* Concerned Police Station\n*Line 5:* Remarks\n\n*Example:*\nSunil Verma\nCH12345\n12/03/2026\nHazaribagh Sadar Thana\nVerification delayed by 15 days\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* आवेदन तिथि\n*पंक्ति 4:* संबंधित पुलिस स्टेशन\n*पंक्ति 5:* टिप्पणी\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\n12/03/2026\nहजारीबाग सदर थाना\nसत्यापन 15 दिनों से लंबित है\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name of Applicant\n*Line 2:* Character Verification Application Number\n*Line 3:* Remarks\n\n*Example:*\nSunil Verma\nCH12345\nVerification delayed by 15 days\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* चरित्र सत्यापन आवेदन संख्या\n*पंक्ति 3:* टिप्पणी\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\nसत्यापन 15 दिनों से लंबित है\n\nकृपया पुनः प्रयास करें।`,
             };
         }
         return {
@@ -174,21 +198,19 @@ export function validateFormInput(
             data: {
                 name: lines[0],
                 applicationNumber: lines[1],
-                applicationDate: lines[2],
-                policeStation: lines[3],
-                remarks: lines.slice(4).join(' '),
+                remarks: lines.slice(2).join('\n'),
             },
         };
     }
 
-    // Character other
+    // Character other (PDF: Name, Character application no., Report issue)
     if (formType === 'sub_character_other') {
-        if (lines.length < 5) {
+        if (lines.length < 3) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Application Date\n*Line 4:* Concerned Police Station\n*Line 5:* Issue Details\n\n*Example:*\nSunil Verma\nCH12345\n12/03/2026\nHazaribagh Sadar Thana\nName misspelled in application\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* आवेदन तिथि\n*पंक्ति 4:* संबंधित पुलिस स्टेशन\n*पंक्ति 5:* समस्या विवरण\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\n12/03/2026\nहजारीबाग सदर थाना\nआवेदन में नाम की वर्तनी गलत है\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name of Applicant\n*Line 2:* Character Application Number\n*Line 3:* Report issue\n\n*Example:*\nSunil Verma\nCH12345\nName misspelled in application\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* चरित्र आवेदन संख्या\n*पंक्ति 3:* समस्या विवरण\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\nआवेदन में नाम की वर्तनी गलत है\n\nकृपया पुनः प्रयास करें।`,
             };
         }
         return {
@@ -196,9 +218,7 @@ export function validateFormInput(
             data: {
                 name: lines[0],
                 applicationNumber: lines[1],
-                applicationDate: lines[2],
-                policeStation: lines[3],
-                remarks: lines.slice(4).join(' '),
+                remarks: lines.slice(2).join('\n'),
             },
         };
     }
@@ -232,8 +252,8 @@ export function validateFormInput(
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Issue Details\n\n*Example:*\nKamal Roy\nBijay Roy\nBompas Town\n9876543210\nCyber Thana\nAmount fraudulently deducted from my account\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* मुद्दे का विवरण\n\n*उदाहरण:*\nकमल रॉय\nबिजय रॉय\nबोम्पस टाउन\n9876543210\nसाइबर थाना\nमेरे खाते से धोखाधड़ी से पैसे काटे गए\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Report issue\n\n*Example:*\nKamal Roy\nBijay Roy\nSadar, Hazaribagh\n9876543210\nCyber P.S.\nAmount fraudulently deducted from my account\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nकमल रॉय\nबिजय रॉय\nसदर, हजारीबाग\n9876543210\nसाइबर पीएस\nमेरे खाते से धोखाधड़ी से पैसे काटे गए\n\nकृपया पुनः प्रयास करें।`,
             };
         }
         return {

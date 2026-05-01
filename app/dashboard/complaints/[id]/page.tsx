@@ -21,6 +21,7 @@ const complaintTypeLabels: Record<string, string> = {
     traffic_other: 'Traffic - Other',
     cyber: 'Cyber Crime',
     cyber_other: 'Cyber Crime - Other',
+    location_find_station: 'Location - Find my Police Station',
     suggestion: 'Suggestion',
 };
 
@@ -146,6 +147,13 @@ export default async function ComplaintDetailPage({
                                 <div>
                                     <label className="text-sm text-slate-500 dark:text-slate-400">Concerned Police Station</label>
                                     <p className="text-slate-900 dark:text-white">{complaint.policeStation}</p>
+                                </div>
+                            )}
+
+                            {'location' in complaint && (complaint as { location?: string }).location && (
+                                <div>
+                                    <label className="text-sm text-slate-500 dark:text-slate-400">Place name / landmark</label>
+                                    <p className="text-slate-900 dark:text-white">{(complaint as { location?: string }).location}</p>
                                 </div>
                             )}
 

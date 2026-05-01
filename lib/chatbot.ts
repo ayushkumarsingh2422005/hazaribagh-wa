@@ -79,7 +79,7 @@ export async function processChatbotMessage(
         return {
             type: 'buttons',
             headerImageUrl: logoUrl,
-            bodyText: `*Welcome to Hazaribagh Police Official WhatsApp Chatbot*\n*हजारीबाग पुलिस आधिकारिक व्हाट्सएप चैटबॉट में आपका स्वागत है*\n\n🚨 *Important Contacts / महत्वपूर्ण नंबर:*\n📞 Emergency / आपातकाल: 112\n📞 District Control Room: +918002529348\n📞 District Helpline: +918002529349\n📞 Cyber Crime / साइबर अपराध: 1930\n📞 SP Office Hazaribagh / एसपी कार्यालय: 06546-252227\n\nPlease select your official language:\nकृपया अपनी आधिकारिक भाषा चुनें:`,
+            bodyText: `*Welcome to Hazaribagh Police Official WhatsApp Chatbot*\n*हजारीबाग पुलिस आधिकारिक व्हाट्सएप चैटबॉट में आपका स्वागत है*\n\n🚨 *Important Contacts / महत्वपूर्ण नंबर:*\n📞 Emergency / आपातकाल: 112\n📞 District Control Room Hazaribagh: 06546264159 / 8002529348\n📞 Supdt. of Police, HZB: 9431706297\n📞 Cyber Crime Helpline / साइबर अपराध: 1930\n\nPlease select your official language:\nकृपया अपनी आधिकारिक भाषा चुनें:`,
             buttons: [
                 { id: 'lang_english', title: 'English' },
                 { id: 'lang_hindi', title: 'हिंदी' },
@@ -182,14 +182,14 @@ async function showDisclaimerAndContacts(
     phoneNumber: string,
     language: 'english' | 'hindi'
 ): Promise<ChatbotResponse> {
-    const stations = await PoliceStation.find({ isActive: true }).sort({ name: 1 }).limit(39);
+    const stations = await PoliceStation.find({ isActive: true }).sort({ name: 1 }).limit(60);
 
     let message = '';
 
     if (language === 'english') {
         message = `✅ *You have selected English language.*\n\nWe will provide you with information about Hazaribagh Police services in this language.\n\n`;
-        message += `⚠️ *BEWARE:* Unauthorized WhatsApp chatbots may ask for personal details, links, or downloads. These can be SCAMS! Report immediately on *1930*.\n\n`;
-        message += `📋 *Disclaimer:* This WhatsApp Chatbot is only for Hazaribagh Police. For *URGENT* matters, visit nearest police station or call *112* or District Control Room on *8002529348*.\n\n`;
+        message += `⚠️ *BEWARE:* Beware of unauthorized WhatsApp chatbots asking you to share your personal details, click on links, or download apps. These can be scams to defraud you. If you receive such communication, please report immediately on *1930*.\n\n`;
+        message += `📋 *Disclaimer:* This WhatsApp Chatbot is only for Hazaribagh Police which is made to provide you services and resolve your queries related to Hazaribagh Police. This is a query-based information system. For urgent matters, please visit the nearest police station or call *112* or call District Control Room on *8002529348*. Please find contact numbers of police stations and other important offices below.\n\n`;
         message += `📞 *Police Station Contact Numbers:*\n\n`;
 
         stations.forEach((station, index) => {
@@ -200,8 +200,8 @@ async function showDisclaimerAndContacts(
         message += `\n\n_Powered by DigiCraft Innovation Pvt. Ltd._`;
     } else {
         message = `✅ *आपने हिंदी भाषा का चयन किया है।*\n\nहम आपको इस भाषा में हजारीबाग पुलिस सेवाओं के बारे में जानकारी प्रदान करेंगे।\n\n`;
-        message += `⚠️ *सावधान:* अनधिकृत व्हाट्सएप चैटबॉट व्यक्तिगत विवरण, लिंक या डाउनलोड मांग सकते हैं। ये घोटाले हो सकते हैं! तुरंत *1930* पर रिपोर्ट करें।\n\n`;
-        message += `📋 *अस्वीकरण:* यह व्हाट्सएप चैटबॉट केवल हजारीबाग पुलिस के लिए है। *तत्काल* मामलों के लिए, निकटतम पुलिस स्टेशन पर जाएं या *112* या जिला नियंत्रण कक्ष *8002529348* पर कॉल करें।\n\n`;
+        message += `⚠️ *सावधान:* अनधिकृत व्हाट्सएप चैटबॉट से सावधान रहें जो आपसे व्यक्तिगत विवरण साझा करने, लिंक पर क्लिक करने या ऐप डाउनलोड करने को कहें। ये धोखाधड़ी के लिए घोटाले हो सकते हैं। यदि आपको ऐसा संदेश मिले, तो कृपया तुरंत *1930* पर रिपोर्ट करें।\n\n`;
+        message += `📋 *अस्वीकरण:* यह व्हाट्सएप चैटबॉट केवल हजारीबाग पुलिस के लिए है, जो आपको सेवाएं प्रदान करने और हजारीबाग पुलिस से संबंधित आपके प्रश्नों का समाधान करने के लिए बनाया गया है। यह प्रश्न-आधारित सूचना प्रणाली है। *तत्काल* मामलों के लिए निकटतम पुलिस स्टेशन पर जाएं या *112* पर कॉल करें या जिला नियंत्रण कक्ष *8002529348* पर कॉल करें। नीचे पुलिस स्टेशनों और अन्य महत्वपूर्ण कार्यालयों के संपर्क नंबर देखें।\n\n`;
         message += `📞 *पुलिस स्टेशन संपर्क नंबर:*\n\n`;
 
         stations.forEach((station, index) => {
@@ -234,11 +234,11 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         { id: 'service_passport', title: 'Passport Issues', description: 'Passport verification issues' },
                         { id: 'service_character', title: 'Character Verification', description: 'Character verification issues' },
                         { id: 'service_petition', title: 'SP Office Petition', description: 'Issues with petition to SP' },
-                        { id: 'service_location', title: 'Location Service', description: 'Find nearest police station' },
+                        { id: 'service_location', title: 'Location Service', description: 'Station locations & find PS' },
                         { id: 'service_lost_phone', title: 'Lost Mobile Phone', description: 'Report lost phone' },
                         { id: 'service_traffic', title: 'Traffic Issues', description: 'Traffic related queries' },
                         { id: 'service_cyber', title: 'Cyber Crime', description: 'Cyber crime reporting' },
-                        { id: 'service_suggestion', title: 'Suggestion / Review', description: 'Share your suggestion or review' },
+                        { id: 'service_suggestion', title: 'Suggestion', description: 'Suggestion related to police services' },
                         { id: 'service_change_lang', title: 'Change Language', description: 'Switch to Hindi' },
                     ],
                 },
@@ -255,11 +255,11 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         { id: 'service_passport', title: 'पासपोर्ट समस्याएं', description: 'पासपोर्ट सत्यापन समस्याएं' },
                         { id: 'service_character', title: 'चरित्र सत्यापन', description: 'चरित्र सत्यापन समस्याएं' },
                         { id: 'service_petition', title: 'एसपी कार्यालय याचिका', description: 'एसपी को याचिका से संबंधित मुद्दे' },
-                        { id: 'service_location', title: 'स्थान सेवा', description: 'निकटतम पुलिस स्टेशन खोजें' },
+                        { id: 'service_location', title: 'स्थान सेवा', description: 'स्टेशन स्थान व थाना खोजें' },
                         { id: 'service_lost_phone', title: 'खोया मोबाइल फोन', description: 'खोया फोन रिपोर्ट करें' },
                         { id: 'service_traffic', title: 'यातायात समस्याएं', description: 'यातायात संबंधी प्रश्न' },
                         { id: 'service_cyber', title: 'साइबर अपराध', description: 'साइबर अपराध रिपोर्टिंग' },
-                        { id: 'service_suggestion', title: 'सुझाव / समीक्षा', description: 'अपने सुझाव या समीक्षा साझा करें' },
+                        { id: 'service_suggestion', title: 'सुझाव', description: 'पुलिस सेवाओं से संबंधित सुझाव' },
                         { id: 'service_change_lang', title: 'भाषा बदलें', description: 'अंग्रेजी में स्विच करें' },
                     ],
                 },
@@ -301,7 +301,7 @@ async function handleServiceSelection(
         case 'service_petition':
             return getPetitionSubMenu(language);
         case 'service_location':
-            return await getLocationService(phoneNumber, language);
+            return getLocationSubMenu(language);
         case 'service_lost_phone':
             return getLostPhoneSubMenu(language);
         case 'service_traffic':
@@ -466,6 +466,68 @@ function getPetitionSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
 }
 
 /**
+ * Location-based services (PDF Section D): GPS nearest PS or submit place details.
+ */
+function getLocationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
+    if (language === 'english') {
+        return {
+            type: 'list',
+            bodyText:
+                '*Location-based services*\n\nYou can find police station locations in Hazaribagh district on Google Maps using coordinates published by the district. Choose an option below:',
+            buttonText: 'Select Option',
+            sections: [
+                {
+                    title: 'Options',
+                    rows: [
+                        {
+                            id: 'sub_location_gps',
+                            title: 'Nearest PS (GPS)',
+                            description: 'Share location to find nearest station',
+                        },
+                        {
+                            id: 'sub_location_find_station',
+                            title: 'Find my Police Station',
+                            description: 'Submit name, address & place name',
+                        },
+                    ],
+                },
+                {
+                    title: 'Navigation',
+                    rows: [{ id: 'menu', title: '↩ Main Menu', description: 'Return to main service menu' }],
+                },
+            ],
+        };
+    }
+    return {
+        type: 'list',
+        bodyText:
+            '*स्थान आधारित सेवाएं*\n\nहजारीबाग जिले में पुलिस स्टेशनों के स्थान जिला द्वारा जारी निर्देशांक से Google Maps पर देखे जा सकते हैं। नीचे एक विकल्प चुनें:',
+        buttonText: 'विकल्प चुनें',
+        sections: [
+            {
+                title: 'विकल्प',
+                rows: [
+                    {
+                        id: 'sub_location_gps',
+                        title: 'निकटतम थाना (GPS)',
+                        description: 'स्थान साझा कर निकटतम स्टेशन खोजें',
+                    },
+                    {
+                        id: 'sub_location_find_station',
+                        title: 'मेरा पुलिस स्टेशन खोजें',
+                        description: 'नाम, पता व स्थान का नाम भेजें',
+                    },
+                ],
+            },
+            {
+                title: 'नेविगेशन',
+                rows: [{ id: 'menu', title: '↩ मुख्य मेनू', description: 'मुख्य सेवा मेनू पर वापस जाएं' }],
+            },
+        ],
+    };
+}
+
+/**
  * Location service - request user's location then find nearest station
  */
 async function getLocationService(phoneNumber: string, language: 'english' | 'hindi'): Promise<ChatbotResponse> {
@@ -475,8 +537,8 @@ async function getLocationService(phoneNumber: string, language: 'english' | 'hi
     const { sendLocationRequest } = await import('./whatsapp');
 
     const bodyText = language === 'english'
-        ? `📍 *Find Your Nearest Police Station*\n\nTo help you find the nearest police station, please share your current location by clicking the button below.\n\nYour location will only be used to find the closest station in Hazaribagh district.`
-        : `📍 *अपना निकटतम पुलिस स्टेशन खोजें*\n\nआपको निकटतम पुलिस स्टेशन खोजने में मदद करने के लिए, कृपया नीचे दिए गए बटन पर क्लिक करके अपना वर्तमान स्थान साझा करें।\n\nआपके स्थान का उपयोग केवल हजारीबाग जिले में निकटतम स्टेशन खोजने के लिए किया जाएगा।`;
+        ? `📍 *Find Your Nearest Police Station (GPS)*\n\nGo to https://maps.google.com and use published grid references to open any station. To find the *closest* station to you, share your live location using the button below.\n\nYour location is used only to find the nearest station in Hazaribagh district.`
+        : `📍 *अपना निकटतम पुलिस स्टेशन (GPS)*\n\nhttps://maps.google.com पर जाकर प्रकाशित निर्देशांक से कोई भी स्टेशन खोल सकते हैं। *अपने निकटतम* स्टेशन के लिए नीचे दिए बटन से अपना लाइव स्थान साझा करें।\n\nआपका स्थान केवल हजारीबाग जिले में निकटतम स्टेशन खोजने के लिए उपयोग किया जाएगा।`;
 
     await sendLocationRequest({
         to: phoneNumber,
@@ -655,14 +717,14 @@ function getSuggestionForm(language: 'english' | 'hindi'): ChatbotResponse {
     if (language === 'english') {
         return {
             type: 'buttons',
-            bodyText: `💡 *Share Your Suggestion/Review*\n\nPlease simply type your Name and your Suggestion/Review.\n\n*Example:*\nRahul Kumar\nExcellent service by the traffic police team.\n\nPlease reply now.`,
+            bodyText: `💡 *Suggestion*\n\nIf you have any suggestion related to the police, please reply (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Your Suggestion\n\n*Example:*\nRahul Kumar\nSunil Kumar\nWard 3, Sadar, Hazaribagh\n9876543210\nSadar P.S.\nMore community outreach programmes in rural areas.\n\nPlease reply with all details.`,
             buttons: [{ id: 'menu', title: 'Main Menu' }],
             language,
         };
     } else {
         return {
             type: 'buttons',
-            bodyText: `💡 *अपना सुझाव/समीक्षा साझा करें*\n\nकृपया बस अपना नाम और अपना सुझाव/समीक्षा टाइप करें।\n\n*उदाहरण:*\nराहुल कुमार\nट्रैफिक पुलिस टीम द्वारा उत्कृष्ट सेवा।\n\nकृपया अभी उत्तर दें।`,
+            bodyText: `💡 *सुझाव*\n\nयदि आपके पास पुलिस से संबंधित कोई सुझाव है, कृपया प्रति पंक्ति एक विवरण भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* आपका सुझाव\n\n*उदाहरण:*\nराहुल कुमार\nसुनील कुमार\nवार्ड 3, सदर, हजारीबाग\n9876543210\nसदर थाना\nग्रामीण क्षेत्रों में अधिक जन-संपर्क कार्यक्रम चाहिए।\n\nकृपया सभी विवरण भेजें।`,
             buttons: [{ id: 'menu', title: 'मुख्य मेनू' }],
             language,
         };
@@ -680,6 +742,11 @@ async function handleSubServiceSelection(
     // Set flow state for form collection
     userFlowState[phoneNumber] = { step: subServiceId };
 
+    // GPS nearest PS (overrides step to awaiting_location inside getLocationService)
+    if (subServiceId === 'sub_location_gps') {
+        return await getLocationService(phoneNumber, language);
+    }
+
     // Handle traffic rules separately (it returns ChatbotResponse)
     if (subServiceId === 'sub_traffic_rules') {
         return await getTrafficRulesInfo(language);
@@ -691,8 +758,8 @@ async function handleSubServiceSelection(
         delete userFlowState[phoneNumber];
 
         const ceirMessage = language === 'english'
-            ? `📱 *Report Lost Mobile Phone*\n\nTo report a lost mobile phone, you must visit the official *CEIR Portal* (Central Equipment Identity Register) operated by the Government of India.\n\n🔗 *Visit:* https://www.ceir.gov.in\n\nOn the CEIR portal you can:\n• Block your lost/stolen phone\n• Track blocking status\n• Unblock your recovered phone\n\n⚠️ _Reporting through this chatbot is not available for lost mobile phones. Please use the CEIR portal directly._`
-            : `📱 *खोया मोबाइल फोन रिपोर्ट*\n\nखोए हुए मोबाइल की रिपोर्ट करने के लिए, आपको भारत सरकार के आधिकारिक *CEIR पोर्टल* (Central Equipment Identity Register) पर जाना होगा।\n\n🔗 *पोर्टल पर जाएं:* https://www.ceir.gov.in\n\nCEIR पोर्टल पर आप:\n• अपना खोया/चोरी हुआ फोन ब्लॉक करें\n• ब्लॉकिंग स्थिति ट्रैक करें\n• मिला हुआ फोन अनब्लॉक करें\n\n⚠️ _इस चैटबॉट के माध्यम से खोए मोबाइल की रिपोर्ट दर्ज करना उपलब्ध नहीं है। कृपया सीधे CEIR पोर्टल का उपयोग करें।_`;
+            ? `📱 *Report Lost Mobile Phone*\n\nTo report a lost mobile phone please visit *www.ceir.gov.in*. We will get your request from there and inform you as soon as your mobile is found.\n\n🔗 *CEIR Portal:* https://www.ceir.gov.in\n\nOn the CEIR portal you can block your lost/stolen phone, track status, and unblock when recovered.\n\n⚠️ _Lost mobile reporting is not done through this chatbot — please use the CEIR portal directly._`
+            : `📱 *खोया मोबाइल फोन रिपोर्ट*\n\nखोए मोबाइल की रिपोर्ट के लिए कृपया *www.ceir.gov.in* पर जाएं। वहां से आपका अनुरोध प्राप्त होगा और मोबाइल मिलने पर सूचित किया जाएगा।\n\n🔗 *CEIR पोर्टल:* https://www.ceir.gov.in\n\n⚠️ _इस चैटबॉट से सीधे रिपोर्ट दर्ज नहीं होती — कृपया CEIR पोर्टल का उपयोग करें।_`;
 
         return {
             type: 'buttons',
@@ -709,8 +776,8 @@ async function handleSubServiceSelection(
         delete userFlowState[phoneNumber];
 
         const cyberMessage = language === 'english'
-            ? `💻 *Report Cyber Crime*\n\nTo report a cyber crime, you must use the official *National Cyber Crime Reporting Portal* operated by the Government of India.\n\n🔗 *Visit:* https://cybercrime.gov.in\n📞 *Helpline:* Call *1930* (24x7 Cyber Crime Helpline)\n\nOn the portal you can report:\n• Online financial fraud\n• Social media crimes\n• Hacking & data theft\n• Sextortion & blackmail\n• Any other cyber offences\n\n⚠️ _Reporting cyber crimes through this chatbot is not available. Please use the official portal or call 1930 immediately._`
-            : `💻 *साइबर अपराध रिपोर्ट*\n\nसाइबर अपराध दर्ज करने के लिए, आपको भारत सरकार के आधिकारिक *राष्ट्रीय साइबर अपराध रिपोर्टिंग पोर्टल* का उपयोग करना होगा।\n\n🔗 *पोर्टल पर जाएं:* https://cybercrime.gov.in\n📞 *हेल्पलाइन:* *1930* पर कॉल करें (24x7 साइबर अपराध हेल्पलाइन)\n\nपोर्टल पर आप रिपोर्ट कर सकते हैं:\n• ऑनलाइन वित्तीय धोखाधड़ी\n• सोशल मीडिया अपराध\n• हैकिंग और डेटा चोरी\n• सेक्सटॉर्शन और ब्लैकमेल\n• अन्य साइबर अपराध\n\n⚠️ _इस चैटबॉट के माध्यम से साइबर अपराध दर्ज करना उपलब्ध नहीं है। कृपया आधिकारिक पोर्टल का उपयोग करें या तुरंत 1930 पर कॉल करें।_`;
+            ? `💻 *Report Cyber Crime*\n\nTo learn about types of cyber fraud, visit:\n🔗 https://cybercrime.gov.in/Webform/Accept.aspx — open *"Learn about cyber-crimes"*.\n\nTo report: call *1930* or visit the Cyber Police Station.\n📞 *Cyber Police Station:* 9430165939\n📍 *Location:* https://www.google.com/maps?q=23.997447,85.364978\n\n🔗 *National portal:* https://cybercrime.gov.in\n\n⚠️ _Cyber crime reporting is not completed inside this chatbot — use 1930, the portal, or visit Cyber PS._`
+            : `💻 *साइबर अपराध रिपोर्ट*\n\nसाइबर धोखाधड़ी के प्रकार जानने के लिए:\n🔗 https://cybercrime.gov.in/Webform/Accept.aspx — *"Learn about cyber-crimes"* खोलें।\n\nरिपोर्ट के लिए: *1930* पर कॉल करें या साइबर पुलिस स्टेशन जाएं।\n📞 *साइबर पुलिस स्टेशन:* 9430165939\n📍 *स्थान:* https://www.google.com/maps?q=23.997447,85.364978\n\n🔗 *राष्ट्रीय पोर्टल:* https://cybercrime.gov.in\n\n⚠️ _इस चैटबॉट के अंदर पूरी रिपोर्ट दर्ज नहीं होती — 1930, पोर्टल या साइबर थाना का उपयोग करें।_`;
 
         return {
             type: 'buttons',
@@ -724,20 +791,20 @@ async function handleSubServiceSelection(
     // Show appropriate form based on sub-service
     const formMessages: Record<string, { english: string; hindi: string }> = {
         sub_passport_delay: {
-            english: `📝 *Passport Verification Delay*\n\nPlease provide the following details (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Concerned Police Station\n*Line 4:* Remarks\n\n*Example:*\nRahul Kumar\nAB1234567\nHazaribagh Sadar Thana\nVerification pending since 2 months\n\nPlease reply with all details.`,
-            hindi: `📝 *पासपोर्ट सत्यापन में देरी*\n\nकृपया निम्नलिखित विवरण प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* संबंधित पुलिस स्टेशन\n*पंक्ति 4:* टिप्पणी\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\nहजारीबाग सदर थाना\n2 महीने से सत्यापन लंबित\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `📝 *Passport — Delay in Police Verification*\n\nPlease provide (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Remarks\n\n*Example:*\nRahul Kumar\nAB1234567\nVerification pending since 2 months\n\nPlease reply with all details.`,
+            hindi: `📝 *पासपोर्ट — पुलिस सत्यापन में देरी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* टिप्पणी\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\n2 महीने से सत्यापन लंबित\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_passport_other: {
-            english: `📝 *Other Passport Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Concerned Police Station\n*Line 4:* Issue Details\n\n*Example:*\nPriya Sharma\nCD9876543\nHazaribagh Sadar Thana\nDocument submission issue\n\nPlease reply with details.`,
-            hindi: `📝 *अन्य पासपोर्ट समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* संबंधित पुलिस स्टेशन\n*पंक्ति 4:* समस्या विवरण\n\n*उदाहरण:*\nप्रिया शर्मा\nCD9876543\nहजारीबाग सदर थाना\nदस्तावेज जमा करने में समस्या\n\nकृपया विवरण के साथ उत्तर दें।`,
+            english: `📝 *Passport — Other Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Report issue\n\n*Example:*\nPriya Sharma\nCD9876543\nDocument submission issue at the PSK\n\nPlease reply with details.`,
+            hindi: `📝 *पासपोर्ट — अन्य समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* समस्या विवरण\n\n*उदाहरण:*\nप्रिया शर्मा\nCD9876543\nपीएसके पर दस्तावेज जमा करने में समस्या\n\nकृपया विवरण के साथ उत्तर दें।`,
         },
         sub_character_delay: {
-            english: `📝 *Character Verification Delay*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Application Date\n*Line 4:* Concerned Police Station\n*Line 5:* Remarks\n\n*Example:*\nSunil Verma\nCH12345\n12/03/2026\nHazaribagh Sadar Thana\nVerification is delayed by 15 days\n\nPlease reply with all details.`,
-            hindi: `📝 *चरित्र सत्यापन में देरी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* आवेदन तिथि\n*पंक्ति 4:* संबंधित पुलिस स्टेशन\n*पंक्ति 5:* टिप्पणी\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\n12/03/2026\nहजारीबाग सदर थाना\nसत्यापन 15 दिनों से लंबित है\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `📝 *Character Verification — Delay*\n\nPlease provide (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* Character Verification Application Number\n*Line 3:* Remarks\n\n*Example:*\nSunil Verma\nCH12345\nVerification is delayed by 15 days\n\nPlease reply with all details.`,
+            hindi: `📝 *चरित्र सत्यापन — देरी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* चरित्र सत्यापन आवेदन संख्या\n*पंक्ति 3:* टिप्पणी\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\nसत्यापन 15 दिनों से लंबित है\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_character_other: {
-            english: `📝 *Other Character Verification Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Application Number\n*Line 3:* Application Date\n*Line 4:* Concerned Police Station\n*Line 5:* Issue Details\n\n*Example:*\nSunil Verma\nCH12345\n12/03/2026\nHazaribagh Sadar Thana\nName is misspelled in the application\n\nPlease reply with details.`,
-            hindi: `📝 *अन्य चरित्र सत्यापन समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आवेदन संख्या\n*पंक्ति 3:* आवेदन तिथि\n*पंक्ति 4:* संबंधित पुलिस स्टेशन\n*पंक्ति 5:* समस्या विवरण\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\n12/03/2026\nहजारीबाग सदर थाना\nआवेदन में नाम की वर्तनी गलत है\n\nकृपया विवरण के साथ उत्तर दें।`,
+            english: `📝 *Character Verification — Other Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* Character Application Number\n*Line 3:* Report issue\n\n*Example:*\nSunil Verma\nCH12345\nName is misspelled in the application\n\nPlease reply with details.`,
+            hindi: `📝 *चरित्र सत्यापन — अन्य समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* चरित्र आवेदन संख्या\n*पंक्ति 3:* समस्या विवरण\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\nआवेदन में नाम की वर्तनी गलत है\n\nकृपया विवरण के साथ उत्तर दें।`,
         },
         sub_petition_not_visited: {
             english: `📝 *Police Did Not Visit - Petition*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Issue Details\n\n*Example:*\nAmit Singh\nRakesh Singh\nWard 5, Hazaribagh\n9876543210\nHazaribagh Sadar Thana\nPolice did not visit regarding my petition filed 5 days ago\n\nPlease reply with all details.`,
@@ -748,20 +815,24 @@ async function handleSubServiceSelection(
             hindi: `📝 *पुलिस की प्रतिक्रिया से संतुष्ट नहीं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* पुलिस स्टेशन\n*पंक्ति 6:* असंतोष का कारण\n\n*उदाहरण:*\nविकाश यादव\nसुरेश यादव\nबरकागांव, हजारीबाग\n9876543211\nबरकागांव थाना\nमेरा बयान लिए बिना जांच बंद कर दी गई\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_petition_other: {
-            english: `📝 *Other Petition Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Police Station\n*Line 6:* Issue Details\n\n*Example:*\nNeha Kumari\nManoj Prasad\nMadhupur\n9876543212\nMadhupur Thana\nNeed an update on the status of my petition\n\nPlease reply with all details.`,
-            hindi: `📝 *अन्य याचिका समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nनेहा कुमारी\nमनोज प्रसाद\nमधुपुर\n9876543212\nमधुपुर थाना\nमुझे अपनी याचिका की स्थिति का अपडेट चाहिए\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `📝 *Other Petition Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Police Station\n*Line 6:* Issue Details\n\n*Example:*\nNeha Kumari\nManoj Prasad\nKorra, Hazaribagh\n9876543212\nKorra P.S.\nNeed an update on the status of my petition\n\nPlease reply with all details.`,
+            hindi: `📝 *अन्य याचिका समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nनेहा कुमारी\nमनोज प्रसाद\nकोर्रा, हजारीबाग\n9876543212\nकोर्रा थाना\nमुझे अपनी याचिका की स्थिति का अपडेट चाहिए\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+        },
+        sub_location_find_station: {
+            english: `📍 *Find my Police Station*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Report your place name\n\n*Example:*\nAmit Singh\nRakesh Singh\nPelawal area, Hazaribagh\n9876543210\nNear Pelawal OP main road\n\nPlease reply with all details.`,
+            hindi: `📍 *मेरा पुलिस स्टेशन खोजें*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* अपने स्थान का नाम लिखें\n\n*उदाहरण:*\nअमित सिंह\nराकेश सिंह\nपेलावल क्षेत्र, हजारीबाग\n9876543210\nपेलावल ओपी मुख्य सड़क के पास\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_traffic_jam: {
             english: `🚦 *Report Traffic Jam*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Traffic Jam Location\n*Line 4:* Remarks\n\n*Example:*\nRajeev Kumar\n9876543213\nTower Chowk\nHeavy traffic congestion for the last hour\n\nPlease reply with all details.`,
             hindi: `🚦 *ट्रैफ़िक जाम रिपोर्ट*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* ट्रैफ़िक जाम का स्थान\n*पंक्ति 4:* टिप्पणी\n\n*उदाहरण:*\nराजीव कुमार\n9876543213\nटावर चौक\nपिछले एक घंटे से भारी ट्रैफ़िक जाम है\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_traffic_challan: {
-            english: `🚦 *Traffic Challan Issues*\n\nYou can pay online at: www.echallan.parivahan.gov.in\n\nTo report an issue, please provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Mobile Number\n*Line 3:* Challan Number\n*Line 4:* Issue Details\n\n*Example:*\nSanjay Gupta\n9876543214\nJH12345678\nI was wearing a helmet but still got a challan\n\nPlease reply with details.`,
-            hindi: `🚦 *ट्रैफ़िक चालान मुद्दे*\n\nआप ऑनलाइन भुगतान कर सकते हैं: www.echallan.parivahan.gov.in\n\nसमस्या रिपोर्ट करने के लिए, कृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* चालान नंबर\n*पंक्ति 4:* समस्या विवरण\n\n*उदाहरण:*\nसंजय गुप्ता\n9876543214\nJH12345678\nमैंने हेलमेट पहना था फिर भी चालान कट गया\n\nकृपया विवरण के साथ उत्तर दें।`,
+            english: `🚦 *Traffic Challan Issues*\n\nYou can submit challan online at *https://echallan.parivahan.gov.in* or visit Traffic Police Station.\n📞 Traffic Police Station: *9939257628*\n📍 https://www.google.com/maps?q=23.998764,85.365657\n\nTo report other challan-related issues, reply (one per line):\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Challan Number\n*Line 6:* Report issue\n\n*Example:*\nSanjay Gupta\nRamesh Gupta\nSadar, Hazaribagh\n9876543214\nJH12345678\nI was wearing a helmet but still received a challan\n\nPlease reply with all details.`,
+            hindi: `🚦 *ट्रैफ़िक चालान मुद्दे*\n\nचालान ऑनलाइन *https://echallan.parivahan.gov.in* पर जमा करें या ट्रैफ़िक पुलिस स्टेशन जाएं।\n📞 ट्रैफ़िक पुलिस स्टेशन: *9939257628*\n📍 https://www.google.com/maps?q=23.998764,85.365657\n\nअन्य चालान संबंधी समस्या के लिए (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* चालान नंबर\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nसंजय गुप्ता\nरमेश गुप्ता\nसदर, हजारीबाग\n9876543214\nJH12345678\nहेलमेट पहनने के बावजूद चालान कट गया\n\nकृपया सभी विवरण भेजें।`,
         },
         sub_traffic_other: {
-            english: `🚦 *Other Traffic Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Mobile Number\n*Line 3:* Interested Police Station\n*Line 4:* Issue Details\n\n*Example:*\nPooja Dey\n9876543215\nTraffic Thana\nA traffic light is not functioning at Bajrangbali Chowk\n\nPlease reply with details.`,
-            hindi: `🚦 *अन्य यातायात समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* संबंधित पुलिस स्टेशन\n*पंक्ति 4:* समस्या विवरण\n\n*उदाहरण:*\nपूजा डे\n9876543215\nयातायात थाना\nबजरंगबली चौक पर ट्रैफिक लाइट काम नहीं कर रही है\n\nकृपया विवरण के साथ उत्तर दें।`,
+            english: `🚦 *Other Traffic Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Report issue\n\n*Example:*\nPooja Dey\nAmit Dey\nCharhi, Hazaribagh\n9876543215\nO/C Traffic / Sadar P.S.\nTraffic light not working at Bajrangbali Chowk\n\nPlease reply with all details.`,
+            hindi: `🚦 *अन्य यातायात समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nपूजा डे\nअमित डे\nचरही, हजारीबाग\n9876543215\nO/C ट्रैफिक / सदर थाना\nबजरंगबली चौक पर ट्रैफिक लाइट खराब है\n\nकृपया सभी विवरण भेजें।`,
         },
         // sub_lost_mobile is handled separately above — redirects to CEIR portal
         sub_lost_mobile_not_satisfied: {
@@ -770,8 +841,8 @@ async function handleSubServiceSelection(
         },
         // sub_cyber is handled separately above — redirects to cybercrime.gov.in / helpline 1930
         sub_cyber_other: {
-            english: `💻 *Other Cyber Issues*\n\nIf you have other cyber-related issues, please reply with:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Police Station\n*Line 6:* Issue Details\n\n*Example:*\nKamal Roy\nBijay Roy\nBompas Town\n9876543210\nCyber Thana\nQuery regarding social media hack\n\nPlease reply with details.`,
-            hindi: `💻 *अन्य साइबर मुद्दे*\n\nयदि आपके पास अन्य साइबर संबंधी मुद्दे हैं, तो कृपया उत्तर दें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* पुलिस स्टेशन\n*पंक्ति 6:* मुद्दे का विवरण\n\n*उदाहरण:*\nकमल रॉय\nबिजय रॉय\nबोम्पस टाउन\n9876543210\nसाइबर थाना\nसोशल मीडिया हैक के संबंध में प्रश्न\n\nकृपया विवरण के साथ उत्तर दें।`,
+            english: `💻 *Other Cyber Issues*\n\nIf you have other cyber-related issues, please reply with:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Report issue\n\n*Example:*\nKamal Roy\nBijay Roy\nSadar, Hazaribagh\n9876543210\nCyber P.S.\nQuery regarding social media account hack\n\nPlease reply with details.`,
+            hindi: `💻 *अन्य साइबर मुद्दे*\n\nयदि आपके पास अन्य साइबर संबंधी मुद्दे हैं, तो कृपया उत्तर दें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nकमल रॉय\nबिजय रॉय\nसदर, हजारीबाग\n9876543210\nसाइबर पीएस\nसोशल मीडिया अकाउंट हैक के संबंध में प्रश्न\n\nकृपया विवरण के साथ उत्तर दें।`,
         },
     };
 
@@ -817,8 +888,9 @@ async function getTrafficRulesInfo(language: 'english' | 'hindi'): Promise<Chatb
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
-        message += `\n📞 Traffic Police Station: +919296811585\n`;
-        message += `📍 Location: https://www.google.com/maps?q=24.490654,86.691856\n\n`;
+        message += `\n📞 Traffic Police Station (O/C Traffic): 9939257628\n`;
+        message += `📍 Location: https://www.google.com/maps?q=23.998764,85.365657\n\n`;
+        message += `_Common offences & penalties: Motor Vehicles (Amendment) Act, 2019 — also amended by Jharkhand Government (effective dates as notified)._\n\n`;
         message += `*Important Acts & Laws (Click to View):*\n`;
         message += `• Central Motor Vehicle Act, 1988:\n  🔗 ${baseUrl}/Moter%20Vehical/CENTRAL%20MOTOR%20VEHICLE%20ACT%201988.pdf\n`;
         message += `• Jharkhand MV (Amendment) Rules, 2021:\n  🔗 ${baseUrl}/Moter%20Vehical/Jharkhand_Motor_Vehicle_(amendment)Rule%2C2021.pdf\n`;
@@ -846,8 +918,9 @@ async function getTrafficRulesInfo(language: 'english' | 'hindi'): Promise<Chatb
         }
 
         const baseUrlHi = process.env.NEXT_PUBLIC_BASE_URL || '';
-        message += `\n📞 ट्रैफ़िक पुलिस स्टेशन: +919296811585\n`;
-        message += `📍 स्थान: https://www.google.com/maps?q=24.490654,86.691856\n\n`;
+        message += `\n📞 ट्रैफ़िक पुलिस स्टेशन (O/C ट्रैफिक): 9939257628\n`;
+        message += `📍 स्थान: https://www.google.com/maps?q=23.998764,85.365657\n\n`;
+        message += `_सामान्य अपराध व दंड: मोटर वाहन (संशोधन) अधिनियम, 2019 — झारखंड सरकार द्वारा अधिसूचित संशोधन लागू।_\n\n`;
         message += `*महत्वपूर्ण अधिनियम और कानून (देखने के लिए क्लिक करें):*\n`;
         message += `• केंद्रीय मोटर वाहन अधिनियम, 1988:\n  🔗 ${baseUrlHi}/Moter%20Vehical/CENTRAL%20MOTOR%20VEHICLE%20ACT%201988.pdf\n`;
         message += `• झारखंड मोटर वाहन (संशोधन) नियम, 2021:\n  🔗 ${baseUrlHi}/Moter%20Vehical/Jharkhand_Motor_Vehicle_(amendment)Rule%2C2021.pdf\n`;
