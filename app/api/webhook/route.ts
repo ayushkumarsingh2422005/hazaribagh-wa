@@ -7,6 +7,42 @@ import { sendChatbotResponse } from '@/lib/chatbot';
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 
+function getPersistableOutgoingText(
+    botResponse: {
+        type: 'text' | 'buttons' | 'list';
+        message?: string;
+        bodyText?: string;
+        buttonText?: string;
+        buttons?: Array<{ id: string; title: string }>;
+        sections?: Array<{ title?: string; rows: Array<{ id: string; title: string; description?: string }> }>;
+    }
+): string {
+    const primary = botResponse.type === 'text' ? (botResponse.message || '') : (botResponse.bodyText || '');
+    if (primary.trim()) return primary;
+
+    if (botResponse.type === 'list' && botResponse.sections?.length) {
+        const rowTitles = botResponse.sections
+            .flatMap(section => section.rows.map(row => row.title))
+            .filter(Boolean)
+            .slice(0, 8);
+        const fallback = [
+            botResponse.buttonText || 'Interactive list',
+            rowTitles.length ? `Options: ${rowTitles.join(', ')}` : '',
+        ]
+            .filter(Boolean)
+            .join('\n');
+        if (fallback.trim()) return fallback;
+    }
+
+    if (botResponse.type === 'buttons' && botResponse.buttons?.length) {
+        const buttonTitles = botResponse.buttons.map(btn => btn.title).filter(Boolean).join(', ');
+        const fallback = buttonTitles ? `Interactive buttons: ${buttonTitles}` : 'Interactive buttons';
+        if (fallback.trim()) return fallback;
+    }
+
+    return '';
+}
+
 // Webhook verification (GET request from Meta)
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -120,15 +156,27 @@ export async function POST(request: NextRequest) {
 
                     // Save the outgoing message to database
                     if (response?.messages?.[0]?.id) {
-                        const outgoingText = botResponse.type === 'buttons' ? botResponse.bodyText : botResponse.message;
-                        await ChatMessage.create({
-                            phoneNumber,
-                            message: outgoingText || '',
-                            direction: 'outgoing',
-                            messageId: response.messages[0].id,
-                            timestamp: new Date(),
-                            status: 'sent',
-                        });
+                        const outgoingText = getPersistableOutgoingText(botResponse);
+
+                        // Some WhatsApp interactive payloads may contain only metadata.
+                        // Avoid writing invalid empty chat rows to Mongo.
+                        if (outgoingText.trim()) {
+                            try {
+                                await ChatMessage.create({
+                                    phoneNumber,
+                                    message: outgoingText,
+                                    direction: 'outgoing',
+                                    messageId: response.messages[0].id,
+                                    timestamp: new Date(),
+                                    status: 'sent',
+                                });
+                            } catch (saveError) {
+                                console.error('❌ Failed to persist outgoing chatbot message:', saveError);
+                            }
+                        } else {
+                            console.warn(`⚠️ Skipped outgoing ChatMessage save due to empty body (type: ${botResponse.type})`);
+                        }
+
                         console.log(`✅ Chatbot reply sent successfully to ${phoneNumber}`);
                     }
 
