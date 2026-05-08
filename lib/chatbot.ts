@@ -669,12 +669,12 @@ function getInformationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                 {
                     title: 'Options',
                     rows: [
-                        { id: 'sub_info_extortion', title: 'Extortion Info', description: 'अड़ेबाजी से संबंधित जानकारी' },
-                        { id: 'sub_info_misbehavior', title: 'Harassment Info', description: 'छेड़खानी से संबंधित जानकारी' },
-                        { id: 'sub_info_drugs', title: 'Drugs/Intoxication', description: 'नशाखोरी/ड्रग्स से संबंधित जानकारी' },
-                        { id: 'sub_info_absconders', title: 'Absconders Info', description: 'फरार अपराधियों से संबंधित जानकारी' },
-                        { id: 'sub_info_illegal', title: 'Illegal Activities', description: 'अन्य अवैध गतिविधियों से संबंधित जानकारी' },
-                        { id: 'sub_info_other', title: 'Other Information', description: 'कोई अन्य सूचना' },
+                        { id: 'sub_info_extortion', title: 'Extortion Info', description: 'Share extortion-related information' },
+                        { id: 'sub_info_misbehavior', title: 'Harassment Info', description: 'Share harassment-related information' },
+                        { id: 'sub_info_drugs', title: 'Drugs/Intoxication', description: 'Share drug/intoxication-related information' },
+                        { id: 'sub_info_absconders', title: 'Absconders Info', description: 'Share information about absconding criminals' },
+                        { id: 'sub_info_illegal', title: 'Illegal Activities', description: 'Share information about illegal activities' },
+                        { id: 'sub_info_other', title: 'Other Information', description: 'Share any other actionable information' },
                     ],
                 },
                 {
