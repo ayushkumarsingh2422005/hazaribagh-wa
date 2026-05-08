@@ -79,7 +79,7 @@ export async function processChatbotMessage(
         return {
             type: 'buttons',
             headerImageUrl: logoUrl,
-            bodyText: `*Welcome to Hazaribagh Police Official WhatsApp Chatbot*\n*हजारीबाग पुलिस आधिकारिक व्हाट्सएप चैटबॉट में आपका स्वागत है*\n\n🚨 *Important Contacts / महत्वपूर्ण नंबर:*\n📞 Emergency / आपातकाल: 112\n📞 District Control Room Hazaribagh: 06546264159 / 8002529348\n📞 Supdt. of Police, HZB: 9431706297\n📞 Cyber Crime Helpline / साइबर अपराध: 1930\n\nPlease select your official language:\nकृपया अपनी आधिकारिक भाषा चुनें:`,
+            bodyText: `*Welcome to Hazaribagh Police Official WhatsApp Chatbot*\n*हजारीबाग पुलिस आधिकारिक व्हाट्सएप चैटबॉट में आपका स्वागत है*\n\n🚨 *Important Contacts / महत्वपूर्ण नंबर:*\n📞 Emergency / आपातकाल: 112\n📞 District Control Room Hazaribagh: 06546264159 / 8002529348\n📞 Cyber Crime Helpline / साइबर अपराध: 1930\n\nPlease select your official language:\nकृपया अपनी आधिकारिक भाषा चुनें:`,
             buttons: [
                 { id: 'lang_english', title: 'English' },
                 { id: 'lang_hindi', title: 'हिंदी' },
@@ -233,11 +233,11 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                     rows: [
                         { id: 'service_passport', title: 'Passport Issues', description: 'Passport verification issues' },
                         { id: 'service_character', title: 'Character Verification', description: 'Character verification issues' },
-                        { id: 'service_petition', title: 'SP Office Petition', description: 'Issues with petition to SP' },
                         { id: 'service_location', title: 'Location Service', description: 'Station locations & find PS' },
                         { id: 'service_lost_phone', title: 'Lost Mobile Phone', description: 'Report lost phone' },
                         { id: 'service_traffic', title: 'Traffic Issues', description: 'Traffic related queries' },
                         { id: 'service_cyber', title: 'Cyber Crime', description: 'Cyber crime reporting' },
+                        { id: 'service_information', title: 'Information', description: 'Share actionable information' },
                         { id: 'service_suggestion', title: 'Suggestion', description: 'Suggestion related to police services' },
                         { id: 'service_change_lang', title: 'Change Language', description: 'Switch to Hindi' },
                     ],
@@ -254,11 +254,11 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                     rows: [
                         { id: 'service_passport', title: 'पासपोर्ट समस्याएं', description: 'पासपोर्ट सत्यापन समस्याएं' },
                         { id: 'service_character', title: 'चरित्र सत्यापन', description: 'चरित्र सत्यापन समस्याएं' },
-                        { id: 'service_petition', title: 'एसपी कार्यालय याचिका', description: 'एसपी को याचिका से संबंधित मुद्दे' },
                         { id: 'service_location', title: 'स्थान सेवा', description: 'स्टेशन स्थान व थाना खोजें' },
                         { id: 'service_lost_phone', title: 'खोया मोबाइल फोन', description: 'खोया फोन रिपोर्ट करें' },
                         { id: 'service_traffic', title: 'यातायात समस्याएं', description: 'यातायात संबंधी प्रश्न' },
                         { id: 'service_cyber', title: 'साइबर अपराध', description: 'साइबर अपराध रिपोर्टिंग' },
+                        { id: 'service_information', title: 'सूचना', description: 'कार्रवाई योग्य सूचना साझा करें' },
                         { id: 'service_suggestion', title: 'सुझाव', description: 'पुलिस सेवाओं से संबंधित सुझाव' },
                         { id: 'service_change_lang', title: 'भाषा बदलें', description: 'अंग्रेजी में स्विच करें' },
                     ],
@@ -298,8 +298,6 @@ async function handleServiceSelection(
             return getPassportSubMenu(language);
         case 'service_character':
             return getCharacterSubMenu(language);
-        case 'service_petition':
-            return getPetitionSubMenu(language);
         case 'service_location':
             return getLocationSubMenu(language);
         case 'service_lost_phone':
@@ -308,6 +306,8 @@ async function handleServiceSelection(
             return getTrafficSubMenu(language);
         case 'service_cyber':
             return getCyberSubMenu(language);
+        case 'service_information':
+            return getInformationSubMenu(language);
         case 'service_suggestion':
             userFlowState[phoneNumber] = { step: 'suggestion_form' };
             return getSuggestionForm(language);
@@ -401,57 +401,6 @@ function getCharacterSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                     rows: [
                         { id: 'sub_character_delay', title: 'सत्यापन में देरी', description: 'पुलिस सत्यापन में देरी हो रही है' },
                         { id: 'sub_character_other', title: 'अन्य समस्याएं', description: 'अन्य सत्यापन समस्याएं' },
-                    ],
-                },
-                {
-                    title: 'नेविगेशन',
-                    rows: [
-                        { id: 'menu', title: '↩ मुख्य मेनू', description: 'मुख्य सेवा मेनू पर वापस जाएं' },
-                    ],
-                },
-            ],
-        };
-    }
-}
-
-/**
- * Petition sub-menu
- */
-function getPetitionSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
-    if (language === 'english') {
-        return {
-            type: 'list',
-            bodyText: '*Issues with Petition to SP Office*\n\nSelect your issue:',
-            buttonText: 'Select Issue',
-            sections: [
-                {
-                    title: 'Options',
-                    rows: [
-                        { id: 'sub_petition_not_visited', title: 'Police Did Not Visit', description: 'Police have not visited yet' },
-                        { id: 'sub_petition_not_satisfied', title: 'Not Satisfied', description: 'Not satisfied with police response' },
-                        { id: 'sub_petition_other', title: 'Other Issues', description: 'Other petition related issues' },
-                    ],
-                },
-                {
-                    title: 'Navigation',
-                    rows: [
-                        { id: 'menu', title: '↩ Main Menu', description: 'Return to main service menu' },
-                    ],
-                },
-            ],
-        };
-    } else {
-        return {
-            type: 'list',
-            bodyText: '*एसपी कार्यालय में याचिका से संबंधित मुद्दे*\n\nअपनी समस्या चुनें:',
-            buttonText: 'समस्या चुनें',
-            sections: [
-                {
-                    title: 'विकल्प',
-                    rows: [
-                        { id: 'sub_petition_not_visited', title: 'पुलिस नहीं आई', description: 'पुलिस अभी तक नहीं आई है' },
-                        { id: 'sub_petition_not_satisfied', title: 'संतुष्ट नहीं', description: 'पुलिस की प्रतिक्रिया से संतुष्ट नहीं' },
-                        { id: 'sub_petition_other', title: 'अन्य समस्याएं', description: 'अन्य याचिका संबंधी मुद्दे' },
                     ],
                 },
                 {
@@ -708,6 +657,59 @@ function getCyberSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
 }
 
 /**
+ * Information sub-menu
+ */
+function getInformationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
+    if (language === 'english') {
+        return {
+            type: 'list',
+            bodyText: '*Information*\n\nSelect the type of information you want to share:',
+            buttonText: 'Select Type',
+            sections: [
+                {
+                    title: 'Options',
+                    rows: [
+                        { id: 'sub_info_extortion', title: 'Extortion related information', description: 'अड़ेबाजी से संबंधित जानकारी' },
+                        { id: 'sub_info_misbehavior', title: 'Harassment related information', description: 'छेड़खानी से संबंधित जानकारी' },
+                        { id: 'sub_info_drugs', title: 'Drug / intoxication related information', description: 'नशाखोरी/ड्रग्स से संबंधित जानकारी' },
+                        { id: 'sub_info_absconders', title: 'Absconding criminals related information', description: 'फरार अपराधियों से संबंधित जानकारी' },
+                        { id: 'sub_info_illegal', title: 'Other illegal activities related information', description: 'अन्य अवैध गतिविधियों से संबंधित जानकारी' },
+                        { id: 'sub_info_other', title: 'Any other information', description: 'कोई अन्य सूचना' },
+                    ],
+                },
+                {
+                    title: 'Navigation',
+                    rows: [{ id: 'menu', title: '↩ Main Menu', description: 'Return to main service menu' }],
+                },
+            ],
+        };
+    }
+
+    return {
+        type: 'list',
+        bodyText: '*सूचना*\n\nआप किस प्रकार की सूचना साझा करना चाहते हैं, चुनें:',
+        buttonText: 'प्रकार चुनें',
+        sections: [
+            {
+                title: 'विकल्प',
+                rows: [
+                    { id: 'sub_info_extortion', title: 'अड़ेबाजी से संबंधित जानकारी', description: 'अड़ेबाजी संबंधी सूचना दें' },
+                    { id: 'sub_info_misbehavior', title: 'छेड़खानी से संबंधित जानकारी', description: 'छेड़खानी संबंधी सूचना दें' },
+                    { id: 'sub_info_drugs', title: 'नशाखोरी/ड्रग्स से संबंधित जानकारी', description: 'नशाखोरी/ड्रग्स की सूचना दें' },
+                    { id: 'sub_info_absconders', title: 'फरार अपराधियों से संबंधित जानकारी', description: 'फरार अपराधियों की सूचना दें' },
+                    { id: 'sub_info_illegal', title: 'अन्य अवैध गतिविधियों से संबंधित जानकारी', description: 'अवैध गतिविधियों की सूचना दें' },
+                    { id: 'sub_info_other', title: 'कोई अन्य सूचना', description: 'अन्य महत्वपूर्ण सूचना दें' },
+                ],
+            },
+            {
+                title: 'नेविगेशन',
+                rows: [{ id: 'menu', title: '↩ मुख्य मेनू', description: 'मुख्य सेवा मेनू पर वापस जाएं' }],
+            },
+        ],
+    };
+}
+
+/**
  * Suggestion form
  */
 /**
@@ -843,6 +845,30 @@ async function handleSubServiceSelection(
         sub_cyber_other: {
             english: `💻 *Other Cyber Issues*\n\nIf you have other cyber-related issues, please reply with:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Report issue\n\n*Example:*\nKamal Roy\nBijay Roy\nSadar, Hazaribagh\n9876543210\nCyber P.S.\nQuery regarding social media account hack\n\nPlease reply with details.`,
             hindi: `💻 *अन्य साइबर मुद्दे*\n\nयदि आपके पास अन्य साइबर संबंधी मुद्दे हैं, तो कृपया उत्तर दें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nकमल रॉय\nबिजय रॉय\nसदर, हजारीबाग\n9876543210\nसाइबर पीएस\nसोशल मीडिया अकाउंट हैक के संबंध में प्रश्न\n\nकृपया विवरण के साथ उत्तर दें।`,
+        },
+        sub_info_extortion: {
+            english: `ℹ️ *Extortion Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Information details\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *अड़ेबाजी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* सूचना का विवरण\n\nकृपया पूरी जानकारी भेजें।`,
+        },
+        sub_info_misbehavior: {
+            english: `ℹ️ *Harassment Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Information details\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *छेड़खानी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* सूचना का विवरण\n\nकृपया पूरी जानकारी भेजें।`,
+        },
+        sub_info_drugs: {
+            english: `ℹ️ *Drug / Intoxication Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Information details\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *नशाखोरी/ड्रग्स से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* सूचना का विवरण\n\nकृपया पूरी जानकारी भेजें।`,
+        },
+        sub_info_absconders: {
+            english: `ℹ️ *Absconding Criminals Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Information details\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *फरार अपराधियों से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* सूचना का विवरण\n\nकृपया पूरी जानकारी भेजें।`,
+        },
+        sub_info_illegal: {
+            english: `ℹ️ *Other Illegal Activities Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Information details\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *अन्य अवैध गतिविधियों से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* सूचना का विवरण\n\nकृपया पूरी जानकारी भेजें।`,
+        },
+        sub_info_other: {
+            english: `ℹ️ *Any Other Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Information details\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *कोई अन्य सूचना*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* सूचना का विवरण\n\nकृपया पूरी जानकारी भेजें।`,
         },
     };
 

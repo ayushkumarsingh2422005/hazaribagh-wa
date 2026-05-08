@@ -21,6 +21,12 @@ const complaintTypeLabels: Record<string, string> = {
     traffic_other: 'Traffic - Other',
     cyber: 'Cyber Crime',
     cyber_other: 'Cyber Crime - Other',
+    info_extortion: 'Information - Extortion',
+    info_misbehavior: 'Information - Harassment',
+    info_drugs: 'Information - Drugs',
+    info_absconders: 'Information - Absconders',
+    info_illegal: 'Information - Illegal Activities',
+    info_other: 'Information - Other',
     location_find_station: 'Location - Find my Police Station',
     suggestion: 'Suggestion',
 };

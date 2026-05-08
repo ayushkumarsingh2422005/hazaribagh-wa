@@ -77,6 +77,29 @@ export function validateFormInput(
         };
     }
 
+    // Information inputs
+    if (formType.startsWith('sub_info_')) {
+        if (lines.length < 6) {
+            return {
+                isValid: false,
+                errorMessage: language === 'english'
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Information details\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* सूचना का विवरण\n\nकृपया पुनः प्रयास करें।`,
+            };
+        }
+
+        return {
+            isValid: true,
+            data: {
+                name: lines[0],
+                fatherName: lines[1],
+                address: lines[2],
+                policeStation: lines[4],
+                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(5).join(' ')}`,
+            },
+        };
+    }
+
     // Find my Police Station (PDF Section D — place name request)
     if (formType === 'sub_location_find_station') {
         if (lines.length < 5) {

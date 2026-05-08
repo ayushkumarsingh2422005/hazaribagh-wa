@@ -38,6 +38,12 @@ export const complaintTypeLabels: Record<string, string> = {
     traffic_other: 'Traffic - Other',
     cyber: 'Cyber Crime',
     cyber_other: 'Cyber Crime - Other',
+    info_extortion: 'Information - Extortion',
+    info_misbehavior: 'Information - Harassment',
+    info_drugs: 'Information - Drugs',
+    info_absconders: 'Information - Absconders',
+    info_illegal: 'Information - Illegal Activities',
+    info_other: 'Information - Other',
     location_find_station: 'Location - Find my Police Station',
     suggestion: 'Suggestion',
 };
@@ -50,6 +56,7 @@ export const GROUPS = [
     { label: 'Lost Mobile Phone',     color: 'orange', types: ['lost_mobile', 'lost_mobile_not_satisfied'] },
     { label: 'Traffic Issues',        color: 'yellow', types: ['traffic_jam', 'traffic_challan', 'traffic_other'] },
     { label: 'Cyber Crime',           color: 'red',    types: ['cyber', 'cyber_other'] },
+    { label: 'Information',           color: 'cyan',   types: ['info_extortion', 'info_misbehavior', 'info_drugs', 'info_absconders', 'info_illegal', 'info_other'] },
     { label: 'Suggestions & Reviews', color: 'green',  types: ['suggestion'] },
 ];
 
