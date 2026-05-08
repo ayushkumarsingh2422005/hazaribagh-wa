@@ -3,7 +3,7 @@ import PoliceStation from '@/models/PoliceStation';
 import TrafficViolation from '@/models/TrafficViolation';
 import connectDB from './db';
 import { sendInteractiveButtons, sendWhatsAppMessage, sendInteractiveList } from './whatsapp';
-import { handleFormSubmission } from './chatbot-helpers';
+import { handleFormSubmission, saveComplaint } from './chatbot-helpers';
 
 interface ChatbotResponse {
     type: 'text' | 'buttons' | 'list';
@@ -101,9 +101,51 @@ export async function processChatbotMessage(
 
     // Check if user is in a form flow (waiting for input)
     if (userFlowState[phoneNumber]?.step) {
+        if (userFlowState[phoneNumber].step === 'awaiting_info_location') {
+            const language = userLanguage || 'english';
+            return {
+                type: 'buttons',
+                bodyText: language === 'english'
+                    ? `📍 *Location Pending*\n\nPlease share your *live location* first to complete complaint registration.`
+                    : `📍 *लोकेशन लंबित*\n\nशिकायत दर्ज पूरी करने के लिए कृपया पहले अपना *लाइव लोकेशन* साझा करें।`,
+                buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+                language,
+            };
+        }
+
         const result = await handleFormSubmission(phoneNumber, incomingMessage, userFlowState[phoneNumber]);
 
         if (result.success) {
+            if (result.awaitLocation && result.deferredComplaintType && result.deferredComplaintData) {
+                userFlowState[phoneNumber] = {
+                    step: 'awaiting_info_location',
+                    data: {
+                        complaintType: result.deferredComplaintType,
+                        complaintData: result.deferredComplaintData,
+                    },
+                };
+
+                const { sendLocationRequest } = await import('./whatsapp');
+                const locationBody =
+                    result.language === 'english'
+                        ? `📍 *Final Step: Share Live Location*\n\nTo register this information complaint, please share your current live location by tapping the button below.`
+                        : `📍 *अंतिम चरण: लाइव लोकेशन साझा करें*\n\nइस सूचना शिकायत को दर्ज करने के लिए कृपया नीचे दिए गए बटन से अपना वर्तमान लाइव स्थान साझा करें।`;
+
+                await sendLocationRequest({
+                    to: phoneNumber,
+                    bodyText: locationBody,
+                });
+
+                return {
+                    type: 'text',
+                    message:
+                        result.language === 'english'
+                            ? '📍 Please click the "Send Location" button above to complete complaint registration.'
+                            : '📍 शिकायत दर्ज पूरी करने के लिए ऊपर दिए "स्थान भेजें" बटन पर क्लिक करें।',
+                    language: result.language,
+                };
+            }
+
             // Clear flow state on success
             delete userFlowState[phoneNumber];
 
@@ -1050,6 +1092,68 @@ export async function handleLocationMessage(
 
     const contact = await Contact.findOne({ phoneNumber });
     const language = contact?.language || 'english';
+
+    // Special flow: complete Information complaint only after live location.
+    const flowState = userFlowState[phoneNumber];
+    if (flowState?.step === 'awaiting_info_location') {
+        const deferred = flowState.data || {};
+        const complaintType = String(deferred.complaintType || '');
+        const complaintData = (deferred.complaintData as Record<string, unknown> | undefined) || {};
+
+        if (!complaintType || !complaintType.startsWith('sub_info_')) {
+            delete userFlowState[phoneNumber];
+            return {
+                type: 'buttons',
+                bodyText:
+                    language === 'english'
+                        ? `❌ *Session Expired*\n\nPlease submit the information details again from the menu.`
+                        : `❌ *सेशन समाप्त*\n\nकृपया मेनू से सूचना विवरण फिर से भेजें।`,
+                buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+                language,
+            };
+        }
+
+        try {
+            const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            const existingRemarks = String(complaintData.remarks || '');
+            const enrichedData: Record<string, unknown> = {
+                ...complaintData,
+                location: `${latitude},${longitude}`,
+                remarks: `${existingRemarks}\n\nLive Location: ${latitude},${longitude}\nMap: ${mapLink}`,
+            };
+
+            const complaintId = await saveComplaint(phoneNumber, complaintType, enrichedData);
+            delete userFlowState[phoneNumber];
+
+            const idLine = complaintId
+                ? language === 'english'
+                    ? `\n\n🆔 *Complaint ID: ${complaintId}*\n_Please save this ID to track your complaint._`
+                    : `\n\n🆔 *शिकायत आईडी: ${complaintId}*\n_इस आईडी को सुरक्षित रखें, आपकी शिकायत ट्रैक करने के काम आएगी।_`
+                : '';
+
+            return {
+                type: 'text',
+                message:
+                    language === 'english'
+                        ? `✅ *Complaint Registered Successfully*\n\nYour information has been registered with live location.${idLine}\n\nOur team will review it and take appropriate action.`
+                        : `✅ *शिकायत सफलतापूर्वक दर्ज*\n\nआपकी सूचना लाइव लोकेशन के साथ दर्ज कर ली गई है।${idLine}\n\nहमारी टीम इसकी समीक्षा करके उचित कार्रवाई करेगी।`,
+                language,
+                sendFollowUpMenu: true,
+            };
+        } catch (error) {
+            console.error('Error saving info complaint with location:', error);
+            delete userFlowState[phoneNumber];
+            return {
+                type: 'buttons',
+                bodyText:
+                    language === 'english'
+                        ? `❌ *Error*\n\nSorry, there was an error saving your complaint. Please try again from the menu.`
+                        : `❌ *त्रुटि*\n\nक्षमा करें, शिकायत सहेजने में त्रुटि हुई। कृपया मेनू से पुनः प्रयास करें।`,
+                buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+                language,
+            };
+        }
+    }
 
     // Clear location flow state
     delete userFlowState[phoneNumber];

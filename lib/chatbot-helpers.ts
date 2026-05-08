@@ -373,6 +373,9 @@ export async function handleFormSubmission(
     message: string;
     language: 'english' | 'hindi';
     sendFollowUpMenu?: boolean;
+    awaitLocation?: boolean;
+    deferredComplaintType?: string;
+    deferredComplaintData?: Record<string, unknown>;
 }> {
     // Import database connection
     const connectDB = (await import('./db')).default;
@@ -394,6 +397,21 @@ export async function handleFormSubmission(
             success: false,
             message: validationResult.errorMessage || '',
             language,
+        };
+    }
+
+    // Information flow requires one extra step:
+    // collect live location first, then register complaint.
+    if (flowState.step.startsWith('sub_info_')) {
+        return {
+            success: true,
+            message: language === 'english'
+                ? `📍 *Final Step Required*\n\nPlease share your *live location* now to complete complaint registration.\n\nTap the location button sent by WhatsApp and submit your current location.`
+                : `📍 *अंतिम चरण आवश्यक*\n\nशिकायत दर्ज पूरी करने के लिए कृपया अब अपना *लाइव लोकेशन* साझा करें।\n\nव्हाट्सएप में भेजे गए लोकेशन बटन पर टैप करके अपना वर्तमान स्थान भेजें।`,
+            language,
+            awaitLocation: true,
+            deferredComplaintType: flowState.step,
+            deferredComplaintData: validationResult.data || {},
         };
     }
 
