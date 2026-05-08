@@ -669,12 +669,12 @@ function getInformationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                 {
                     title: 'Options',
                     rows: [
-                        { id: 'sub_info_extortion', title: 'Extortion related information', description: 'अड़ेबाजी से संबंधित जानकारी' },
-                        { id: 'sub_info_misbehavior', title: 'Harassment related information', description: 'छेड़खानी से संबंधित जानकारी' },
-                        { id: 'sub_info_drugs', title: 'Drug / intoxication related information', description: 'नशाखोरी/ड्रग्स से संबंधित जानकारी' },
-                        { id: 'sub_info_absconders', title: 'Absconding criminals related information', description: 'फरार अपराधियों से संबंधित जानकारी' },
-                        { id: 'sub_info_illegal', title: 'Other illegal activities related information', description: 'अन्य अवैध गतिविधियों से संबंधित जानकारी' },
-                        { id: 'sub_info_other', title: 'Any other information', description: 'कोई अन्य सूचना' },
+                        { id: 'sub_info_extortion', title: 'Extortion Info', description: 'अड़ेबाजी से संबंधित जानकारी' },
+                        { id: 'sub_info_misbehavior', title: 'Harassment Info', description: 'छेड़खानी से संबंधित जानकारी' },
+                        { id: 'sub_info_drugs', title: 'Drugs/Intoxication', description: 'नशाखोरी/ड्रग्स से संबंधित जानकारी' },
+                        { id: 'sub_info_absconders', title: 'Absconders Info', description: 'फरार अपराधियों से संबंधित जानकारी' },
+                        { id: 'sub_info_illegal', title: 'Illegal Activities', description: 'अन्य अवैध गतिविधियों से संबंधित जानकारी' },
+                        { id: 'sub_info_other', title: 'Other Information', description: 'कोई अन्य सूचना' },
                     ],
                 },
                 {
@@ -693,12 +693,12 @@ function getInformationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
             {
                 title: 'विकल्प',
                 rows: [
-                    { id: 'sub_info_extortion', title: 'अड़ेबाजी से संबंधित जानकारी', description: 'अड़ेबाजी संबंधी सूचना दें' },
-                    { id: 'sub_info_misbehavior', title: 'छेड़खानी से संबंधित जानकारी', description: 'छेड़खानी संबंधी सूचना दें' },
-                    { id: 'sub_info_drugs', title: 'नशाखोरी/ड्रग्स से संबंधित जानकारी', description: 'नशाखोरी/ड्रग्स की सूचना दें' },
-                    { id: 'sub_info_absconders', title: 'फरार अपराधियों से संबंधित जानकारी', description: 'फरार अपराधियों की सूचना दें' },
-                    { id: 'sub_info_illegal', title: 'अन्य अवैध गतिविधियों से संबंधित जानकारी', description: 'अवैध गतिविधियों की सूचना दें' },
-                    { id: 'sub_info_other', title: 'कोई अन्य सूचना', description: 'अन्य महत्वपूर्ण सूचना दें' },
+                    { id: 'sub_info_extortion', title: 'अड़ेबाजी सूचना', description: 'अड़ेबाजी संबंधी सूचना दें' },
+                    { id: 'sub_info_misbehavior', title: 'छेड़खानी सूचना', description: 'छेड़खानी संबंधी सूचना दें' },
+                    { id: 'sub_info_drugs', title: 'नशाखोरी/ड्रग्स', description: 'नशाखोरी/ड्रग्स की सूचना दें' },
+                    { id: 'sub_info_absconders', title: 'फरार अपराधी', description: 'फरार अपराधियों की सूचना दें' },
+                    { id: 'sub_info_illegal', title: 'अवैध गतिविधियां', description: 'अवैध गतिविधियों की सूचना दें' },
+                    { id: 'sub_info_other', title: 'अन्य सूचना', description: 'अन्य महत्वपूर्ण सूचना दें' },
                 ],
             },
             {
