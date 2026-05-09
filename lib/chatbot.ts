@@ -94,21 +94,21 @@ function buildStationSelectionListResponse(
     const navRows: Array<{ id: string; title: string; description?: string }> = [
         {
             id: 'station_pick_unknown',
-            title: language === 'english' ? "Not sure / Don't know station" : 'स्टेशन पता नहीं है',
+            title: language === 'english' ? safeTitle('Not sure / Unknown') : safeTitle('स्टेशन पता नहीं'),
             description: language === 'english' ? 'Proceed without station name' : 'बिना स्टेशन नाम के आगे बढ़ें',
         },
     ];
     if (safePage > 0) {
         navRows.push({
             id: `station_page_${safePage - 1}`,
-            title: language === 'english' ? '⬅ Previous' : '⬅ पिछला',
+            title: safeTitle(language === 'english' ? '⬅ Previous' : '⬅ पिछला'),
             description: language === 'english' ? 'View previous stations' : 'पिछले स्टेशन देखें',
         });
     }
     if (safePage < totalPages - 1) {
         navRows.push({
             id: `station_page_${safePage + 1}`,
-            title: language === 'english' ? 'Next ➡' : 'अगला ➡',
+            title: safeTitle(language === 'english' ? 'Next ➡' : 'अगला ➡'),
             description: language === 'english' ? 'View more stations' : 'और स्टेशन देखें',
         });
     }
