@@ -54,6 +54,7 @@ export const complaintTypeLabels: Record<string, string> = {
     traffic_jam: 'Traffic - Jam',
     traffic_challan: 'Traffic - Challan',
     traffic_other: 'Traffic - Other',
+    missing_person: 'Missing Person',
     cyber: 'Cyber Crime',
     cyber_other: 'Cyber Crime - Other',
     info_extortion: 'Information - Extortion',
@@ -72,7 +73,7 @@ export const GROUPS = [
     { label: 'Location Services',   color: 'teal',   types: ['location_find_station'] },
     { label: 'Lost Mobile Phone',     color: 'orange', types: ['lost_mobile', 'lost_mobile_not_satisfied'] },
     { label: 'Traffic Issues',        color: 'yellow', types: ['traffic_jam', 'traffic_challan', 'traffic_other'] },
-    { label: 'Cyber Crime',           color: 'red',    types: ['cyber', 'cyber_other'] },
+    { label: 'Missing Person',        color: 'red',    types: ['missing_person'] },
     { label: 'Information',           color: 'cyan',   types: ['info_extortion', 'info_misbehavior', 'info_drugs', 'info_absconders', 'info_illegal', 'info_other'] },
     { label: 'Suggestions & Reviews', color: 'green',  types: ['suggestion'] },
 ];

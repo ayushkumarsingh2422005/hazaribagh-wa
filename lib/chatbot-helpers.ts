@@ -291,6 +291,27 @@ export function validateFormInput(
         };
     }
 
+    // Missing person (station is selected in next actionable step)
+    if (formType === 'sub_missing_person') {
+        if (lines.length < 5) {
+            return {
+                isValid: false,
+                errorMessage: language === 'english'
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nकृपया पुनः प्रयास करें।`,
+            };
+        }
+        return {
+            isValid: true,
+            data: {
+                name: lines[0],
+                fatherName: lines[1],
+                address: lines[2],
+                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(4).join(' ')}`,
+            },
+        };
+    }
+
     // Default
     return {
         isValid: true,
@@ -424,13 +445,14 @@ export async function handleFormSubmission(
         'sub_character_other',
         'sub_traffic_jam',
         'sub_traffic_challan',
+        'sub_missing_person',
     ]);
     if (stationSelectionSteps.has(flowState.step)) {
         return {
             success: true,
             message: language === 'english'
-                ? `🏢 *Final Step Required*\n\nPlease select/type the concerned police station to complete complaint registration.`
-                : `🏢 *अंतिम चरण आवश्यक*\n\nशिकायत दर्ज पूरी करने के लिए कृपया संबंधित पुलिस स्टेशन चुनें/टाइप करें।`,
+                ? `🏢 *Final Step Required*\n\nPlease select the concerned police station to complete complaint registration.`
+                : `🏢 *अंतिम चरण आवश्यक*\n\nशिकायत दर्ज पूरी करने के लिए कृपया संबंधित पुलिस स्टेशन चुनें।`,
             language,
             awaitStationSelection: true,
             deferredComplaintType: flowState.step,

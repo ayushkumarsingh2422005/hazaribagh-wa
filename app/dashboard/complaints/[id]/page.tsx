@@ -19,6 +19,7 @@ const complaintTypeLabels: Record<string, string> = {
     traffic_jam: 'Traffic - Jam',
     traffic_challan: 'Traffic - Challan',
     traffic_other: 'Traffic - Other',
+    missing_person: 'Missing Person',
     cyber: 'Cyber Crime',
     cyber_other: 'Cyber Crime - Other',
     info_extortion: 'Information - Extortion',

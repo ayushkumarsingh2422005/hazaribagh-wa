@@ -42,10 +42,13 @@ async function saveDeferredComplaintWithStation(
             ...complaintData,
             policeStation: stationValue,
         });
+        const isMissingPerson = complaintType === 'sub_missing_person';
         delete userFlowState[phoneNumber];
         return {
             type: 'text',
-            message: buildComplaintSuccess(language, complaintId),
+            message: isMissingPerson
+                ? buildMissingPersonComplaintSuccess(language, complaintId)
+                : buildComplaintSuccess(language, complaintId),
             language,
             sendFollowUpMenu: true,
         };
@@ -136,6 +139,17 @@ function buildComplaintSuccess(language: 'english' | 'hindi', complaintId: strin
     return language === 'english'
         ? `✅ *Complaint Registered Successfully*\n\nYour complaint has been registered. Our team will review it and take appropriate action.${idLine}\n\nYou will be contacted soon. Thank you for your patience.`
         : `✅ *शिकायत सफलतापूर्वक दर्ज*\n\nआपकी शिकायत दर्ज कर ली गई है। हमारी टीम इसकी समीक्षा करेगी और उचित कार्रवाई करेगी।${idLine}\n\nजल्द ही आपसे संपर्क किया जाएगा। आपके धैर्य के लिए धन्यवाद।`;
+}
+
+function buildMissingPersonComplaintSuccess(language: 'english' | 'hindi', complaintId: string | null): string {
+    const idLine = complaintId
+        ? language === 'english'
+            ? `\n\n🆔 *Complaint ID: ${complaintId}*\n_Please save this ID to track your complaint._`
+            : `\n\n🆔 *शिकायत आईडी: ${complaintId}*\n_इस आईडी को सुरक्षित रखें, आपकी शिकायत ट्रैक करने के काम आएगी।_`
+        : '';
+    return language === 'english'
+        ? `✅ *Missing Person Information Submitted*\n\nYour complaint has been recorded informally. You are requested to visit the concerned police station and register the complaint formally.${idLine}`
+        : `✅ *लापता व्यक्ति संबंधी सूचना दर्ज*\n\nअनौपचारिक रूप से आपकी शिकायत दर्ज कर लिया गया है परंतु आपसे अनुरोध है कि औपचारिक रूप से थाने में जा कर शिकायत दर्ज कराए।${idLine}`;
 }
 
 // Store user flow state in memory (in production, use Redis or database)
@@ -464,7 +478,7 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         { id: 'service_location', title: 'Location Service', description: 'Station locations & find PS' },
                         { id: 'service_lost_phone', title: 'Lost Mobile Phone', description: 'Report lost phone' },
                         { id: 'service_traffic', title: 'Traffic Issues', description: 'Traffic related queries' },
-                        { id: 'service_cyber', title: 'Cyber Crime', description: 'Cyber crime reporting' },
+                        { id: 'service_missing_person', title: 'Missing Person', description: 'Report missing person details' },
                         { id: 'service_information', title: 'Information', description: 'Share actionable information' },
                         { id: 'service_suggestion', title: 'Suggestion', description: 'Suggestion related to police services' },
                         { id: 'service_change_lang', title: 'Change Language', description: 'Switch to Hindi' },
@@ -485,7 +499,7 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         { id: 'service_location', title: 'स्थान सेवा', description: 'स्टेशन स्थान व थाना खोजें' },
                         { id: 'service_lost_phone', title: 'खोया मोबाइल फोन', description: 'खोया फोन रिपोर्ट करें' },
                         { id: 'service_traffic', title: 'यातायात समस्याएं', description: 'यातायात संबंधी प्रश्न' },
-                        { id: 'service_cyber', title: 'साइबर अपराध', description: 'साइबर अपराध रिपोर्टिंग' },
+                        { id: 'service_missing_person', title: 'लापता व्यक्ति', description: 'लापता व्यक्ति की जानकारी दें' },
                         { id: 'service_information', title: 'सूचना', description: 'कार्रवाई योग्य सूचना साझा करें' },
                         { id: 'service_suggestion', title: 'सुझाव', description: 'पुलिस सेवाओं से संबंधित सुझाव' },
                         { id: 'service_change_lang', title: 'भाषा बदलें', description: 'अंग्रेजी में स्विच करें' },
@@ -532,8 +546,9 @@ async function handleServiceSelection(
             return getLostPhoneSubMenu(language);
         case 'service_traffic':
             return getTrafficSubMenu(language);
-        case 'service_cyber':
-            return getCyberSubMenu(language);
+        case 'service_missing_person':
+            userFlowState[phoneNumber] = { step: 'sub_missing_person' };
+            return getMissingPersonForm(language);
         case 'service_information':
             return getInformationSubMenu(language);
         case 'service_suggestion':
@@ -835,53 +850,22 @@ function getTrafficSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
     }
 }
 
-/**
- * Cyber sub-menu
- */
-function getCyberSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
+function getMissingPersonForm(language: 'english' | 'hindi'): ChatbotResponse {
     if (language === 'english') {
         return {
-            type: 'list',
-            bodyText: '*Cyber Crime*\n\nSelect your issue:',
-            buttonText: 'Select Issue',
-            sections: [
-                {
-                    title: 'Options',
-                    rows: [
-                        { id: 'sub_cyber', title: 'Report Cyber Crime', description: 'Visit cybercrime.gov.in to report' },
-                        { id: 'sub_cyber_other', title: 'Other Issues', description: 'Other cyber-related issues' },
-                    ],
-                },
-                {
-                    title: 'Navigation',
-                    rows: [
-                        { id: 'menu', title: '↩ Main Menu', description: 'Return to main service menu' },
-                    ],
-                },
-            ],
-        };
-    } else {
-        return {
-            type: 'list',
-            bodyText: '*साइबर अपराध*\n\nअपनी समस्या चुनें:',
-            buttonText: 'समस्या चुनें',
-            sections: [
-                {
-                    title: 'विकल्प',
-                    rows: [
-                        { id: 'sub_cyber', title: 'साइबर अपराध रिपोर्ट', description: 'cybercrime.gov.in पर रिपोर्ट करें' },
-                        { id: 'sub_cyber_other', title: 'अन्य समस्याएं', description: 'अन्य साइबर संबंधी मुद्दे' },
-                    ],
-                },
-                {
-                    title: 'नेविगेशन',
-                    rows: [
-                        { id: 'menu', title: '↩ मुख्य मेनू', description: 'मुख्य सेवा मेनू पर वापस जाएं' },
-                    ],
-                },
-            ],
+            type: 'buttons',
+            bodyText: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nAfter this, you will be asked to select the concerned police station.`,
+            buttons: [{ id: 'menu', title: 'Main Menu' }],
+            language,
         };
     }
+
+    return {
+        type: 'buttons',
+        bodyText: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nइसके बाद आपसे संबंधित पुलिस स्टेशन चुनने के लिए कहा जाएगा।`,
+        buttons: [{ id: 'menu', title: 'मुख्य मेनू' }],
+        language,
+    };
 }
 
 /**
@@ -1068,6 +1052,10 @@ async function handleSubServiceSelection(
         sub_lost_mobile_not_satisfied: {
             english: `📱 *Not Satisfied with Police Action*\n\nIf you're not satisfied with police action on your lost mobile, please reply with:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Lost Mobile Number\n*Line 6:* Concerned Police Station\n\n*Example:*\nSanjay Sharma\nRahul Sharma\nSadar, Hazaribagh\n9876543210\n9876543211\nHazaribagh Sadar Thana\n\nPlease reply with all details.`,
             hindi: `📱 *पुलिस कार्रवाई से संतुष्ट नहीं*\n\nयदि आप पुलिस कार्रवाई से संतुष्ट नहीं हैं, तो कृपया निम्नलिखित के साथ उत्तर दें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* खोया मोबाइल नंबर\n*पंक्ति 6:* संबंधित पुलिस स्टेशन\n\n*उदाहरण:*\nसंजय शर्मा\nराहुल शर्मा\nसदर, हजारीबाग\n9876543210\n9876543211\nहजारीबाग सदर थाना\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+        },
+        sub_missing_person: {
+            english: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nPlease reply with all details.`,
+            hindi: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nकृपया सभी विवरण भेजें।`,
         },
         // sub_cyber is handled separately above — redirects to cybercrime.gov.in / helpline 1930
         sub_cyber_other: {
