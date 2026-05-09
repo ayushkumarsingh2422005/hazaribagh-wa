@@ -25,6 +25,7 @@ interface Props {
     complaints: Complaint[];
     groups: Group[];
     complaintTypeLabels: Record<string, string>;
+    stationAliasMap: Record<string, string>;
 }
 
 /* ─── Status sections config ─────────────────────────────────────────────── */
@@ -143,18 +144,27 @@ function ComplaintCard({
 
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 
-export default function ComplaintsClient({ complaints, groups, complaintTypeLabels }: Props) {
+export default function ComplaintsClient({ complaints, groups, complaintTypeLabels, stationAliasMap }: Props) {
     const [searchQuery, setSearchQuery]       = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [policeStationFilter, setPoliceStationFilter] = useState('all');
     const [flowFilter, setFlowFilter] = useState('all');
 
     const stationOptions = useMemo(
-        () =>
-            Array.from(new Set(complaints.map(c => (c.policeStation || '').trim()).filter(Boolean))).sort(
-                (a, b) => a.localeCompare(b)
-            ),
-        [complaints]
+        () => {
+            return Array.from(
+                new Set(
+                    complaints
+                        .map(c => {
+                            const raw = (c.policeStation || '').trim();
+                            const key = raw.toLowerCase();
+                            return stationAliasMap[key] || raw;
+                        })
+                        .filter(Boolean)
+                )
+            ).sort((a, b) => a.localeCompare(b));
+        },
+        [complaints, stationAliasMap]
     );
 
     const flowOptions = useMemo(
@@ -182,7 +192,12 @@ export default function ComplaintsClient({ complaints, groups, complaintTypeLabe
         }
 
         if (policeStationFilter !== 'all') {
-            result = result.filter(c => (c.policeStation || '') === policeStationFilter);
+            result = result.filter(c => {
+                const raw = (c.policeStation || '').trim();
+                const key = raw.toLowerCase();
+                const normalized = stationAliasMap[key] || raw;
+                return normalized === policeStationFilter;
+            });
         }
 
         /* Search filter — matches complaintId, name, or phone number */
@@ -196,7 +211,7 @@ export default function ComplaintsClient({ complaints, groups, complaintTypeLabe
         }
 
         return result;
-    }, [complaints, categoryFilter, flowFilter, policeStationFilter, searchQuery, groups]);
+    }, [complaints, categoryFilter, flowFilter, policeStationFilter, searchQuery, groups, stationAliasMap]);
 
     const hasActiveFilters =
         categoryFilter !== 'all' ||

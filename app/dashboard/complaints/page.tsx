@@ -2,6 +2,7 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import Complaint from '@/models/Complaint';
+import PoliceStation from '@/models/PoliceStation';
 import connectDB from '@/lib/db';
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import ComplaintsClient from './ComplaintsClient';
@@ -21,6 +22,23 @@ async function getComplaints() {
         createdAt: c.createdAt.toISOString(),
         updatedAt: c.updatedAt.toISOString(),
     }));
+}
+
+async function getStationAliasMap(): Promise<Record<string, string>> {
+    await connectDB();
+    const stations = await PoliceStation.find({ isActive: true })
+        .select('name nameHindi')
+        .lean();
+
+    const aliasMap: Record<string, string> = {};
+    for (const s of stations) {
+        const canonical = String(s.name || '').trim();
+        const english = String(s.name || '').trim().toLowerCase();
+        const hindi = String(s.nameHindi || '').trim().toLowerCase();
+        if (english) aliasMap[english] = canonical;
+        if (hindi) aliasMap[hindi] = canonical;
+    }
+    return aliasMap;
 }
 
 export const complaintTypeLabels: Record<string, string> = {
@@ -64,6 +82,7 @@ export default async function ComplaintsPage() {
     if (!session) redirect('/login');
 
     const complaints = await getComplaints();
+    const stationAliasMap = await getStationAliasMap();
     const stats = {
         total: complaints.length,
         pending: complaints.filter(c => c.status === 'pending').length,
@@ -127,6 +146,7 @@ export default async function ComplaintsPage() {
                 complaints={complaints}
                 groups={GROUPS}
                 complaintTypeLabels={complaintTypeLabels}
+                stationAliasMap={stationAliasMap}
             />
         </DashboardLayout>
     );
