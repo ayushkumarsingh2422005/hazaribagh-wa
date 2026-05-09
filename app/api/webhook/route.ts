@@ -145,9 +145,17 @@ export async function POST(request: NextRequest) {
                 );
 
                 // ✅ SEND INTELLIGENT CHATBOT REPLY
+                let botResponse: {
+                    type?: 'text' | 'buttons' | 'list';
+                    message?: string;
+                    bodyText?: string;
+                    buttonText?: string;
+                    sections?: Array<{ rows: Array<{ title: string; description?: string; id: string }> }>;
+                    sendFollowUpMenu?: boolean;
+                } | null = null;
                 try {
                     const { processChatbotMessage, sendChatbotResponse: sendReply, getContactLanguageAndSendMenu } = await import('@/lib/chatbot');
-                    const botResponse = await processChatbotMessage(phoneNumber, messageText, buttonId);
+                    botResponse = await processChatbotMessage(phoneNumber, messageText, buttonId);
 
                     console.log(`🤖 Sending chatbot reply to ${phoneNumber} (Type: ${botResponse.type})`);
 
@@ -197,6 +205,24 @@ export async function POST(request: NextRequest) {
                     await markMessageAsRead(messageId);
                 } catch (replyError) {
                     console.error('❌ Error sending chatbot reply:', replyError);
+                    try {
+                        // Extra debug context for interactive payload failures (e.g., WhatsApp #131009)
+                        console.error('🧪 Chatbot debug context:', {
+                            phoneNumber,
+                            buttonId,
+                            incomingMessageText: messageText,
+                            botResponseType: (typeof botResponse !== 'undefined' && botResponse?.type) ? botResponse.type : 'unknown',
+                            botResponseBodyLen: (typeof botResponse !== 'undefined' && botResponse?.bodyText) ? String(botResponse.bodyText).length : 0,
+                            botResponseButtonTextLen: (typeof botResponse !== 'undefined' && botResponse?.buttonText) ? String(botResponse.buttonText).length : 0,
+                            botResponseSectionsCount: (typeof botResponse !== 'undefined' && botResponse?.sections) ? botResponse.sections.length : 0,
+                            botResponseRowsPerSection:
+                                (typeof botResponse !== 'undefined' && botResponse?.sections)
+                                    ? botResponse.sections.map((s: { rows: Array<{ title: string; description?: string; id: string }> }) => s.rows.length)
+                                    : [],
+                        });
+                    } catch (debugErr) {
+                        console.error('❌ Error logging chatbot debug context:', debugErr);
+                    }
                     // Don't throw — we still want to return 200 to WhatsApp
                 }
             }

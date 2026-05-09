@@ -68,13 +68,17 @@ function buildStationSelectionListResponse(
     stations: Array<{ name: string; nameHindi: string }>,
     page: number
 ): ChatbotResponse {
-    const PAGE_SIZE = 8;
+    // WhatsApp interactive list allows max 10 rows total across sections.
+    // We keep room for action rows (unknown + prev/next), so station rows per page must stay <= 7.
+    const PAGE_SIZE = 7;
     const totalPages = Math.max(1, Math.ceil(stations.length / PAGE_SIZE));
     const safePage = Math.min(Math.max(0, page), totalPages - 1);
     const start = safePage * PAGE_SIZE;
     const pageStations = stations.slice(start, start + PAGE_SIZE);
 
     const safeTitle = (value: string, max = 24) =>
+        value.length > max ? `${value.slice(0, max - 1)}…` : value;
+    const safeDesc = (value: string, max = 72) =>
         value.length > max ? `${value.slice(0, max - 1)}…` : value;
 
     const rows = pageStations.map((s, idx) => {
@@ -83,7 +87,7 @@ function buildStationSelectionListResponse(
         return {
             id: `station_pick_${absoluteIndex}`,
             title: safeTitle(fullName),
-            description: fullName,
+            description: safeDesc(fullName),
         };
     });
 
