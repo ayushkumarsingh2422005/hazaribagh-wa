@@ -25,7 +25,9 @@ interface ChatbotResponse {
 }
 
 async function getActivePoliceStations(): Promise<Array<{ name: string; nameHindi: string }>> {
-    const stations = await PoliceStation.find({ isActive: true }).sort({ name: 1 }).select('name nameHindi');
+    const stations = await PoliceStation.find({ isActive: true })
+        .sort({ displayOrder: 1, name: 1 })
+        .select('name nameHindi');
     return stations.map((s) => ({ name: s.name, nameHindi: s.nameHindi }));
 }
 
@@ -424,7 +426,9 @@ async function showDisclaimerAndContacts(
     phoneNumber: string,
     language: 'english' | 'hindi'
 ): Promise<ChatbotResponse> {
-    const stations = await PoliceStation.find({ isActive: true }).sort({ name: 1 }).limit(60);
+    const stations = await PoliceStation.find({ isActive: true })
+        .sort({ displayOrder: 1, name: 1 })
+        .limit(60);
 
     let message = '';
 

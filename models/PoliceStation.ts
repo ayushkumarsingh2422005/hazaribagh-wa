@@ -13,6 +13,7 @@ export interface IPoliceStation extends Document {
     contactNumber: string;
     inchargeName?: string;
     inchargeNameHindi?: string;
+    displayOrder: number;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -60,6 +61,11 @@ const PoliceStationSchema = new Schema<IPoliceStation>(
         },
         inchargeName: String,
         inchargeNameHindi: String,
+        displayOrder: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
         isActive: {
             type: Boolean,
             default: true,

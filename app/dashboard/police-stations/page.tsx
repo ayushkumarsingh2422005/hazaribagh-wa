@@ -7,7 +7,7 @@ import { MapPin, Phone, User } from 'lucide-react';
 
 async function getPoliceStations() {
     await connectDB();
-    const stations = await PoliceStation.find({}).sort({ name: 1 }).lean();
+    const stations = await PoliceStation.find({}).sort({ displayOrder: 1, name: 1 }).lean();
     return stations.map(station => ({
         ...station,
         _id: station._id.toString(),
@@ -70,6 +70,9 @@ export default async function PoliceStationsPage() {
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                                                 {station.name}
                                             </h3>
+                                            <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                                Order: {typeof station.displayOrder === 'number' ? station.displayOrder : 0}
+                                            </span>
                                             <span className={`px-2 py-0.5 text-xs font-medium ${station.isActive
                                                     ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                                     : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'

@@ -57,6 +57,7 @@ export async function PUT(
                 contactNumber: data.contactNumber,
                 inchargeName: data.inchargeName,
                 inchargeNameHindi: data.inchargeNameHindi,
+                displayOrder: Number.isFinite(Number(data.displayOrder)) ? Number(data.displayOrder) : 0,
                 isActive: data.isActive,
             },
             { new: true }

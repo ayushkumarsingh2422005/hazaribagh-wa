@@ -11,7 +11,7 @@ export async function GET() {
         }
 
         await connectDB();
-        const stations = await PoliceStation.find({}).sort({ name: 1 });
+        const stations = await PoliceStation.find({}).sort({ displayOrder: 1, name: 1 });
         return NextResponse.json({ success: true, stations });
     } catch (error) {
         console.error('Error fetching police stations:', error);
@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
             contactNumber: data.contactNumber,
             inchargeName: data.inchargeName,
             inchargeNameHindi: data.inchargeNameHindi,
+            displayOrder: Number.isFinite(Number(data.displayOrder)) ? Number(data.displayOrder) : 0,
             isActive: data.isActive !== false,
         });
 

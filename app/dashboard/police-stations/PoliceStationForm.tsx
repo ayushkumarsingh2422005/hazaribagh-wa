@@ -14,6 +14,7 @@ interface PoliceStationFormProps {
         contactNumber: string;
         inchargeName?: string;
         inchargeNameHindi?: string;
+        displayOrder?: number;
         latitude: number;
         longitude: number;
         isActive: boolean;
@@ -32,6 +33,7 @@ export default function PoliceStationForm({ initialData }: PoliceStationFormProp
         contactNumber: initialData?.contactNumber || '',
         inchargeName: initialData?.inchargeName || '',
         inchargeNameHindi: initialData?.inchargeNameHindi || '',
+        displayOrder: initialData?.displayOrder ?? 0,
         latitude: initialData?.latitude || 0,
         longitude: initialData?.longitude || 0,
         isActive: initialData?.isActive !== false,
@@ -134,6 +136,22 @@ export default function PoliceStationForm({ initialData }: PoliceStationFormProp
                         onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
                         className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Display Order
+                    </label>
+                    <input
+                        type="number"
+                        min={0}
+                        value={formData.displayOrder}
+                        onChange={(e) => setFormData({ ...formData, displayOrder: Number(e.target.value) || 0 })}
+                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        Lower number appears first in chatbot and station lists.
+                    </p>
                 </div>
 
                 <div>

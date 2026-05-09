@@ -20,6 +20,7 @@ async function getPoliceStation(id: string) {
         contactNumber: station.contactNumber,
         inchargeName: station.inchargeName || '',
         inchargeNameHindi: station.inchargeNameHindi || '',
+        displayOrder: typeof station.displayOrder === 'number' ? station.displayOrder : 0,
         latitude: station.location.coordinates[1],
         longitude: station.location.coordinates[0],
         isActive: station.isActive,

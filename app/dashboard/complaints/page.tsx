@@ -28,6 +28,7 @@ async function getStationAliasMap(): Promise<Record<string, string>> {
     await connectDB();
     const stations = await PoliceStation.find({ isActive: true })
         .select('name nameHindi')
+        .sort({ displayOrder: 1, name: 1 })
         .lean();
 
     const aliasMap: Record<string, string> = {};

@@ -7,7 +7,10 @@ import PoliceStation from '@/models/PoliceStation';
 
 async function getPoliceStations() {
     await connectDB();
-    const stations = await PoliceStation.find({ isActive: true }).sort({ name: 1 }).select('name').lean();
+    const stations = await PoliceStation.find({ isActive: true })
+        .sort({ displayOrder: 1, name: 1 })
+        .select('name')
+        .lean();
     return stations.map(s => s.name);
 }
 
