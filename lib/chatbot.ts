@@ -74,12 +74,16 @@ function buildStationSelectionListResponse(
     const start = safePage * PAGE_SIZE;
     const pageStations = stations.slice(start, start + PAGE_SIZE);
 
+    const safeTitle = (value: string, max = 24) =>
+        value.length > max ? `${value.slice(0, max - 1)}…` : value;
+
     const rows = pageStations.map((s, idx) => {
         const absoluteIndex = start + idx;
+        const fullName = language === 'english' ? s.name : s.nameHindi;
         return {
             id: `station_pick_${absoluteIndex}`,
-            title: language === 'english' ? s.name : s.nameHindi,
-            description: language === 'english' ? 'Select this police station' : 'यह पुलिस स्टेशन चुनें',
+            title: safeTitle(fullName),
+            description: fullName,
         };
     });
 
