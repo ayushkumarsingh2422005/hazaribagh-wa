@@ -170,11 +170,13 @@ export async function processChatbotMessage(
     const contact = await Contact.findOne({ phoneNumber });
     const userLanguage = contact?.language;
 
-    const greetingKeywords = ['hi', 'hello', 'hii', 'hey', 'start', 'test', 'johar', 'joh', 'jauhar'];
-    const isGreeting = greetingKeywords.some(kw => normalizedMessage.includes(kw));
+    const greetingKeywords = new Set(['hi', 'hello', 'hii', 'hey', 'start', 'test', 'johar', 'joh', 'jauhar']);
+    const messageTokens = normalizedMessage.split(/\s+/).filter(Boolean);
+    const isGreeting = messageTokens.some(token => greetingKeywords.has(token));
     
-    // If no language is set yet, or user typed a greeting, show the welcome + language selection prompt.
-    if (!userLanguage || isGreeting) {
+    // If no language is set yet, or user typed a greeting (only when not already in a flow),
+    // show the welcome + language selection prompt.
+    if (!userLanguage || (isGreeting && !userFlowState[phoneNumber])) {
         if (userFlowState[phoneNumber]) {
             delete userFlowState[phoneNumber];
         }
