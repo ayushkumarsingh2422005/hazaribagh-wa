@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
 
                 // ✅ SEND INTELLIGENT CHATBOT REPLY
                 let botResponse: {
-                    type?: 'text' | 'buttons' | 'list';
+                    type: 'text' | 'buttons' | 'list';
                     message?: string;
                     bodyText?: string;
                     buttonText?: string;
