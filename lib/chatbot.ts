@@ -24,6 +24,112 @@ interface ChatbotResponse {
     headerImageUrl?: string;
 }
 
+async function getActivePoliceStations(): Promise<Array<{ name: string; nameHindi: string }>> {
+    const stations = await PoliceStation.find({ isActive: true }).sort({ name: 1 }).select('name nameHindi');
+    return stations.map((s) => ({ name: s.name, nameHindi: s.nameHindi }));
+}
+
+async function saveDeferredComplaintWithStation(
+    phoneNumber: string,
+    language: 'english' | 'hindi',
+    stationValue: string
+): Promise<ChatbotResponse> {
+    const deferred = userFlowState[phoneNumber]?.data || {};
+    const complaintType = String(deferred.complaintType || '');
+    const complaintData = (deferred.complaintData as Record<string, unknown> | undefined) || {};
+    try {
+        const complaintId = await saveComplaint(phoneNumber, complaintType, {
+            ...complaintData,
+            policeStation: stationValue,
+        });
+        delete userFlowState[phoneNumber];
+        return {
+            type: 'text',
+            message: buildComplaintSuccess(language, complaintId),
+            language,
+            sendFollowUpMenu: true,
+        };
+    } catch (error) {
+        console.error('Error saving complaint after police station selection:', error);
+        delete userFlowState[phoneNumber];
+        return {
+            type: 'buttons',
+            bodyText: language === 'english'
+                ? `❌ *Error*\n\nSorry, there was an error saving your complaint. Please try again from menu.`
+                : `❌ *त्रुटि*\n\nक्षमा करें, शिकायत सहेजने में त्रुटि हुई। कृपया मेनू से पुनः प्रयास करें।`,
+            buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+            language,
+        };
+    }
+}
+
+function buildStationSelectionListResponse(
+    language: 'english' | 'hindi',
+    stations: Array<{ name: string; nameHindi: string }>,
+    page: number
+): ChatbotResponse {
+    const PAGE_SIZE = 8;
+    const totalPages = Math.max(1, Math.ceil(stations.length / PAGE_SIZE));
+    const safePage = Math.min(Math.max(0, page), totalPages - 1);
+    const start = safePage * PAGE_SIZE;
+    const pageStations = stations.slice(start, start + PAGE_SIZE);
+
+    const rows = pageStations.map((s, idx) => {
+        const absoluteIndex = start + idx;
+        return {
+            id: `station_pick_${absoluteIndex}`,
+            title: language === 'english' ? s.name : s.nameHindi,
+            description: language === 'english' ? 'Select this police station' : 'यह पुलिस स्टेशन चुनें',
+        };
+    });
+
+    const navRows: Array<{ id: string; title: string; description?: string }> = [
+        {
+            id: 'station_pick_unknown',
+            title: language === 'english' ? "Not sure / Don't know station" : 'स्टेशन पता नहीं है',
+            description: language === 'english' ? 'Proceed without station name' : 'बिना स्टेशन नाम के आगे बढ़ें',
+        },
+    ];
+    if (safePage > 0) {
+        navRows.push({
+            id: `station_page_${safePage - 1}`,
+            title: language === 'english' ? '⬅ Previous' : '⬅ पिछला',
+            description: language === 'english' ? 'View previous stations' : 'पिछले स्टेशन देखें',
+        });
+    }
+    if (safePage < totalPages - 1) {
+        navRows.push({
+            id: `station_page_${safePage + 1}`,
+            title: language === 'english' ? 'Next ➡' : 'अगला ➡',
+            description: language === 'english' ? 'View more stations' : 'और स्टेशन देखें',
+        });
+    }
+
+    return {
+        type: 'list',
+        bodyText: language === 'english'
+            ? `🏢 *Select Concerned Police Station*\n\nChoose from the list below. (${safePage + 1}/${totalPages})`
+            : `🏢 *संबंधित पुलिस स्टेशन चुनें*\n\nनीचे सूची से चुनें। (${safePage + 1}/${totalPages})`,
+        buttonText: language === 'english' ? 'Choose Station' : 'स्टेशन चुनें',
+        sections: [
+            { title: language === 'english' ? 'Stations' : 'पुलिस स्टेशन', rows },
+            { title: language === 'english' ? 'Actions' : 'कार्रवाई', rows: navRows },
+        ],
+        language,
+    };
+}
+
+function buildComplaintSuccess(language: 'english' | 'hindi', complaintId: string | null): string {
+    const idLine = complaintId
+        ? language === 'english'
+            ? `\n\n🆔 *Complaint ID: ${complaintId}*\n_Please save this ID to track your complaint._`
+            : `\n\n🆔 *शिकायत आईडी: ${complaintId}*\n_इस आईडी को सुरक्षित रखें, आपकी शिकायत ट्रैक करने के काम आएगी।_`
+        : '';
+    return language === 'english'
+        ? `✅ *Complaint Registered Successfully*\n\nYour complaint has been registered. Our team will review it and take appropriate action.${idLine}\n\nYou will be contacted soon. Thank you for your patience.`
+        : `✅ *शिकायत सफलतापूर्वक दर्ज*\n\nआपकी शिकायत दर्ज कर ली गई है। हमारी टीम इसकी समीक्षा करेगी और उचित कार्रवाई करेगी।${idLine}\n\nजल्द ही आपसे संपर्क किया जाएगा। आपके धैर्य के लिए धन्यवाद।`;
+}
+
 // Store user flow state in memory (in production, use Redis or database)
 const userFlowState: Record<string, { step: string; data?: Record<string, unknown> }> = {};
 
@@ -101,6 +207,13 @@ export async function processChatbotMessage(
 
     // Check if user is in a form flow (waiting for input)
     if (userFlowState[phoneNumber]?.step) {
+        if (userFlowState[phoneNumber].step === 'awaiting_police_station_selection') {
+            const language = userLanguage || 'english';
+            const stations = await getActivePoliceStations();
+            const page = Number(userFlowState[phoneNumber].data?.stationPage || 0);
+            return buildStationSelectionListResponse(language, stations, Number.isNaN(page) ? 0 : page);
+        }
+
         if (userFlowState[phoneNumber].step === 'awaiting_info_location') {
             const language = userLanguage || 'english';
             return {
@@ -116,6 +229,19 @@ export async function processChatbotMessage(
         const result = await handleFormSubmission(phoneNumber, incomingMessage, userFlowState[phoneNumber]);
 
         if (result.success) {
+            if (result.awaitStationSelection && result.deferredComplaintType && result.deferredComplaintData) {
+                const stations = await getActivePoliceStations();
+                userFlowState[phoneNumber] = {
+                    step: 'awaiting_police_station_selection',
+                    data: {
+                        complaintType: result.deferredComplaintType,
+                        complaintData: result.deferredComplaintData,
+                        stationPage: 0,
+                    },
+                };
+                return buildStationSelectionListResponse(result.language, stations, 0);
+            }
+
             if (result.awaitLocation && result.deferredComplaintType && result.deferredComplaintData) {
                 userFlowState[phoneNumber] = {
                     step: 'awaiting_info_location',
@@ -196,6 +322,56 @@ async function handleInteractiveResponse(
         );
 
         return await showDisclaimerAndContacts(phoneNumber, language);
+    }
+
+    // Actionable police station selection (no typing) with paging support
+    if (interactiveId === 'station_pick_unknown' || interactiveId.startsWith('station_pick_') || interactiveId.startsWith('station_page_')) {
+        const contact = await Contact.findOne({ phoneNumber });
+        const language = contact?.language || 'english';
+        const flowState = userFlowState[phoneNumber];
+
+        if (!flowState || flowState.step !== 'awaiting_police_station_selection') {
+            return {
+                type: 'buttons',
+                bodyText: language === 'english'
+                    ? 'Station selection session expired. Please submit your complaint details again from menu.'
+                    : 'स्टेशन चयन सेशन समाप्त हो गया है। कृपया मेनू से शिकायत विवरण फिर से भेजें।',
+                buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+                language,
+            };
+        }
+
+        const stations = await getActivePoliceStations();
+
+        if (interactiveId === 'station_pick_unknown') {
+            return await saveDeferredComplaintWithStation(phoneNumber, language, 'Not Known');
+        }
+
+        if (interactiveId.startsWith('station_page_')) {
+            const nextPage = Number(interactiveId.replace('station_page_', ''));
+            userFlowState[phoneNumber] = {
+                ...flowState,
+                data: {
+                    ...(flowState.data || {}),
+                    stationPage: Number.isNaN(nextPage) ? 0 : Math.max(0, nextPage),
+                },
+            };
+            return buildStationSelectionListResponse(language, stations, Number.isNaN(nextPage) ? 0 : nextPage);
+        }
+
+        const pickedIndex = Number(interactiveId.replace('station_pick_', ''));
+        if (Number.isNaN(pickedIndex) || pickedIndex < 0 || pickedIndex >= stations.length) {
+            return {
+                type: 'buttons',
+                bodyText: language === 'english'
+                    ? 'Invalid station selection. Please select again from the list.'
+                    : 'अमान्य स्टेशन चयन। कृपया सूची से फिर चुनें।',
+                buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+                language,
+            };
+        }
+
+        return await saveDeferredComplaintWithStation(phoneNumber, language, stations[pickedIndex].name);
     }
 
     // Main service selection

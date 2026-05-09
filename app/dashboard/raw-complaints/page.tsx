@@ -2,6 +2,7 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import RawComplaint from '@/models/RawComplaint';
+import PoliceStation from '@/models/PoliceStation';
 import connectDB from '@/lib/db';
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import RawComplaintsClient from './RawComplaintsClient';
@@ -28,11 +29,18 @@ async function getRawComplaints() {
     }));
 }
 
+async function getPoliceStations() {
+    await connectDB();
+    const stations = await PoliceStation.find({ isActive: true }).sort({ name: 1 }).select('name').lean();
+    return stations.map(s => s.name);
+}
+
 export default async function RawComplaintsPage() {
     const session = await getSession();
     if (!session) redirect('/login');
 
     const rawComplaints = await getRawComplaints();
+    const policeStations = await getPoliceStations();
     const stats = {
         total: rawComplaints.length,
         pending: rawComplaints.filter(c => c.status === 'pending').length,
@@ -95,6 +103,7 @@ export default async function RawComplaintsPage() {
                 rawComplaints={rawComplaints}
                 groups={GROUPS}
                 complaintTypeLabels={complaintTypeLabels}
+                policeStations={policeStations}
             />
         </DashboardLayout>
     );

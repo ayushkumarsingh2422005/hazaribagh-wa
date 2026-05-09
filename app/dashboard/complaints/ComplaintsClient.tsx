@@ -146,6 +146,26 @@ function ComplaintCard({
 export default function ComplaintsClient({ complaints, groups, complaintTypeLabels }: Props) {
     const [searchQuery, setSearchQuery]       = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [policeStationFilter, setPoliceStationFilter] = useState('all');
+    const [flowFilter, setFlowFilter] = useState('all');
+
+    const stationOptions = useMemo(
+        () =>
+            Array.from(new Set(complaints.map(c => (c.policeStation || '').trim()).filter(Boolean))).sort(
+                (a, b) => a.localeCompare(b)
+            ),
+        [complaints]
+    );
+
+    const flowOptions = useMemo(
+        () =>
+            Array.from(new Set(complaints.map(c => c.complaintType))).sort((a, b) => {
+                const la = complaintTypeLabels[a] || a;
+                const lb = complaintTypeLabels[b] || b;
+                return la.localeCompare(lb);
+            }),
+        [complaints, complaintTypeLabels]
+    );
 
     /* Apply search + category filters */
     const filtered = useMemo(() => {
@@ -155,6 +175,14 @@ export default function ComplaintsClient({ complaints, groups, complaintTypeLabe
         if (categoryFilter !== 'all') {
             const group = groups.find(g => g.label === categoryFilter);
             if (group) result = result.filter(c => group.types.includes(c.complaintType));
+        }
+
+        if (flowFilter !== 'all') {
+            result = result.filter(c => c.complaintType === flowFilter);
+        }
+
+        if (policeStationFilter !== 'all') {
+            result = result.filter(c => (c.policeStation || '') === policeStationFilter);
         }
 
         /* Search filter — matches complaintId, name, or phone number */
@@ -168,13 +196,19 @@ export default function ComplaintsClient({ complaints, groups, complaintTypeLabe
         }
 
         return result;
-    }, [complaints, categoryFilter, searchQuery, groups]);
+    }, [complaints, categoryFilter, flowFilter, policeStationFilter, searchQuery, groups]);
 
-    const hasActiveFilters = categoryFilter !== 'all' || searchQuery.trim() !== '';
+    const hasActiveFilters =
+        categoryFilter !== 'all' ||
+        flowFilter !== 'all' ||
+        policeStationFilter !== 'all' ||
+        searchQuery.trim() !== '';
 
     const clearAll = () => {
         setSearchQuery('');
         setCategoryFilter('all');
+        setPoliceStationFilter('all');
+        setFlowFilter('all');
     };
 
     const totalShown = filtered.length;
@@ -206,8 +240,8 @@ export default function ComplaintsClient({ complaints, groups, complaintTypeLabe
                     )}
                 </div>
 
-                {/* Category dropdown + result count */}
-                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                {/* Category/Flow/Station filters + result count */}
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
                     <div className="flex items-center gap-2">
                         <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                             Category:
@@ -227,6 +261,44 @@ export default function ComplaintsClient({ complaints, groups, complaintTypeLabe
                                     </option>
                                 );
                             })}
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            Flow:
+                        </label>
+                        <select
+                            id="flow-filter"
+                            value={flowFilter}
+                            onChange={e => setFlowFilter(e.target.value)}
+                            className="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="all">All Flows</option>
+                            {flowOptions.map(flow => (
+                                <option key={flow} value={flow}>
+                                    {complaintTypeLabels[flow] || flow}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            Police Station:
+                        </label>
+                        <select
+                            id="station-filter"
+                            value={policeStationFilter}
+                            onChange={e => setPoliceStationFilter(e.target.value)}
+                            className="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="all">All Stations</option>
+                            {stationOptions.map(station => (
+                                <option key={station} value={station}>
+                                    {station}
+                                </option>
+                            ))}
                         </select>
                     </div>
 

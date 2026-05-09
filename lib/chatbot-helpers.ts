@@ -374,6 +374,7 @@ export async function handleFormSubmission(
     language: 'english' | 'hindi';
     sendFollowUpMenu?: boolean;
     awaitLocation?: boolean;
+    awaitStationSelection?: boolean;
     deferredComplaintType?: string;
     deferredComplaintData?: Record<string, unknown>;
 }> {
@@ -410,6 +411,28 @@ export async function handleFormSubmission(
                 : `📍 *अंतिम चरण आवश्यक*\n\nशिकायत दर्ज पूरी करने के लिए कृपया अब अपना *लाइव लोकेशन* साझा करें।\n\nव्हाट्सएप में भेजे गए लोकेशन बटन पर टैप करके अपना वर्तमान स्थान भेजें।`,
             language,
             awaitLocation: true,
+            deferredComplaintType: flowState.step,
+            deferredComplaintData: validationResult.data || {},
+        };
+    }
+
+    // Selected flows require final police-station selection from master data.
+    const stationSelectionSteps = new Set([
+        'sub_passport_delay',
+        'sub_passport_other',
+        'sub_character_delay',
+        'sub_character_other',
+        'sub_traffic_jam',
+        'sub_traffic_challan',
+    ]);
+    if (stationSelectionSteps.has(flowState.step)) {
+        return {
+            success: true,
+            message: language === 'english'
+                ? `🏢 *Final Step Required*\n\nPlease select/type the concerned police station to complete complaint registration.`
+                : `🏢 *अंतिम चरण आवश्यक*\n\nशिकायत दर्ज पूरी करने के लिए कृपया संबंधित पुलिस स्टेशन चुनें/टाइप करें।`,
+            language,
+            awaitStationSelection: true,
             deferredComplaintType: flowState.step,
             deferredComplaintData: validationResult.data || {},
         };

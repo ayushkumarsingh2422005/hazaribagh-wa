@@ -24,6 +24,7 @@ interface Props {
     rawComplaints: RawComplaintRow[];
     groups: Group[];
     complaintTypeLabels: Record<string, string>;
+    policeStations: string[];
 }
 
 const STATUS_SECTIONS = [
@@ -130,9 +131,11 @@ export default function RawComplaintsClient({
     rawComplaints,
     groups,
     complaintTypeLabels,
+    policeStations,
 }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [policeStationFilter, setPoliceStationFilter] = useState('all');
 
     const filtered = useMemo(() => {
         let result = rawComplaints;
@@ -140,6 +143,11 @@ export default function RawComplaintsClient({
         if (categoryFilter !== 'all') {
             const group = groups.find(g => g.label === categoryFilter);
             if (group) result = result.filter(c => group.types.includes(c.complaintTypeKey));
+        }
+
+        if (policeStationFilter !== 'all') {
+            const stationQuery = policeStationFilter.toLowerCase();
+            result = result.filter(c => c.rawText.toLowerCase().includes(stationQuery));
         }
 
         const q = searchQuery.trim().toLowerCase();
@@ -154,13 +162,14 @@ export default function RawComplaintsClient({
         }
 
         return result;
-    }, [rawComplaints, categoryFilter, searchQuery, groups]);
+    }, [rawComplaints, categoryFilter, policeStationFilter, searchQuery, groups]);
 
-    const hasActiveFilters = categoryFilter !== 'all' || searchQuery.trim() !== '';
+    const hasActiveFilters = categoryFilter !== 'all' || policeStationFilter !== 'all' || searchQuery.trim() !== '';
 
     const clearAll = () => {
         setSearchQuery('');
         setCategoryFilter('all');
+        setPoliceStationFilter('all');
     };
 
     const totalShown = filtered.length;
@@ -189,7 +198,7 @@ export default function RawComplaintsClient({
                     )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
                     <div className="flex items-center gap-2">
                         <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                             Category:
@@ -209,6 +218,25 @@ export default function RawComplaintsClient({
                                     </option>
                                 );
                             })}
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            Police Station:
+                        </label>
+                        <select
+                            id="raw-station-filter"
+                            value={policeStationFilter}
+                            onChange={e => setPoliceStationFilter(e.target.value)}
+                            className="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="all">All Stations</option>
+                            {policeStations.map(station => (
+                                <option key={station} value={station}>
+                                    {station}
+                                </option>
+                            ))}
                         </select>
                     </div>
 

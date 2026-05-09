@@ -12,10 +12,11 @@ interface Review {
     createdAt: string;
 }
 
-export default function ReviewsClient() {
+export default function ReviewsClient({ policeStations }: { policeStations: string[] }) {
     const [reviews, setReviews] = useState<Review[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [policeStationFilter, setPoliceStationFilter] = useState('all');
 
     useEffect(() => {
         fetchReviews();
@@ -37,6 +38,12 @@ export default function ReviewsClient() {
         }
     }
 
+    const filteredReviews = reviews.filter(review =>
+        policeStationFilter === 'all'
+            ? true
+            : review.content.toLowerCase().includes(policeStationFilter.toLowerCase())
+    );
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -48,6 +55,23 @@ export default function ReviewsClient() {
                     <p className="text-slate-500 dark:text-slate-400 mt-1">
                         View feedback and suggestions from users
                     </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        Police Station:
+                    </label>
+                    <select
+                        value={policeStationFilter}
+                        onChange={e => setPoliceStationFilter(e.target.value)}
+                        className="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                        <option value="all">All Stations</option>
+                        {policeStations.map(station => (
+                            <option key={station} value={station}>
+                                {station}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
 
@@ -62,12 +86,12 @@ export default function ReviewsClient() {
                 <div className="flex justify-center p-12">
                     <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
                 </div>
-            ) : reviews.length === 0 ? (
+            ) : filteredReviews.length === 0 ? (
                 <div className="bg-white dark:bg-slate-800 p-12 text-center border border-slate-200 dark:border-slate-700">
                     <Star className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-slate-900 dark:text-white">No reviews found</h3>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">
-                        User reviews and suggestions will appear here.
+                        Try changing the police station filter.
                     </p>
                 </div>
             ) : (
@@ -83,7 +107,7 @@ export default function ReviewsClient() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                {reviews.map((review) => (
+                                {filteredReviews.map((review) => (
                                     <tr key={review._id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-medium text-slate-900 dark:text-white">
