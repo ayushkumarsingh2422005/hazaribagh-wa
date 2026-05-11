@@ -58,6 +58,7 @@ export async function PUT(
                 inchargeName: data.inchargeName,
                 inchargeNameHindi: data.inchargeNameHindi,
                 displayOrder: Number.isFinite(Number(data.displayOrder)) ? Number(data.displayOrder) : 0,
+                showInAssociatedPsList: data.showInAssociatedPsList !== false,
                 isActive: data.isActive,
             },
             { new: true }

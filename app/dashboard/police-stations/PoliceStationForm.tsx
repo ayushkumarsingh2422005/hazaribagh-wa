@@ -18,6 +18,7 @@ interface PoliceStationFormProps {
         latitude: number;
         longitude: number;
         isActive: boolean;
+        showInAssociatedPsList?: boolean;
     };
 }
 
@@ -37,6 +38,7 @@ export default function PoliceStationForm({ initialData }: PoliceStationFormProp
         latitude: initialData?.latitude || 0,
         longitude: initialData?.longitude || 0,
         isActive: initialData?.isActive !== false,
+        showInAssociatedPsList: initialData?.showInAssociatedPsList !== false,
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -218,17 +220,37 @@ export default function PoliceStationForm({ initialData }: PoliceStationFormProp
                     />
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <input
-                        type="checkbox"
-                        id="isActive"
-                        checked={formData.isActive}
-                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                        className="w-4 h-4"
-                    />
-                    <label htmlFor="isActive" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Active
-                    </label>
+                <div className="flex flex-col gap-3 md:col-span-2">
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="showInAssociatedPsList"
+                            checked={formData.showInAssociatedPsList}
+                            onChange={(e) =>
+                                setFormData({ ...formData, showInAssociatedPsList: e.target.checked })
+                            }
+                            className="w-4 h-4"
+                        />
+                        <label htmlFor="showInAssociatedPsList" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Show in &quot;associated police station&quot; chatbot list
+                        </label>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 pl-6 -mt-2">
+                        Unchecked stations stay in the disclaimer contact list, GPS nearest search, and WhatsApp alerts;
+                        they are only hidden from the end-of-flow station picker.
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="isActive"
+                            checked={formData.isActive}
+                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                            className="w-4 h-4"
+                        />
+                        <label htmlFor="isActive" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Active
+                        </label>
+                    </div>
                 </div>
             </div>
 

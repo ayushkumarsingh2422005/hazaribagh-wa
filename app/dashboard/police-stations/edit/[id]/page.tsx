@@ -24,6 +24,7 @@ async function getPoliceStation(id: string) {
         latitude: station.location.coordinates[1],
         longitude: station.location.coordinates[0],
         isActive: station.isActive,
+        showInAssociatedPsList: (station as { showInAssociatedPsList?: boolean }).showInAssociatedPsList !== false,
     };
 }
 

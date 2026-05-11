@@ -79,6 +79,11 @@ export default async function PoliceStationsPage() {
                                                 }`}>
                                                 {station.isActive ? 'Active' : 'Inactive'}
                                             </span>
+                                            {(station as { showInAssociatedPsList?: boolean }).showInAssociatedPsList === false && (
+                                                <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                                    Off PS picker
+                                                </span>
+                                            )}
                                         </div>
                                         <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
                                             {station.nameHindi}

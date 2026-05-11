@@ -14,6 +14,8 @@ export interface IPoliceStation extends Document {
     inchargeName?: string;
     inchargeNameHindi?: string;
     displayOrder: number;
+    /** When false, station is hidden from chatbot "associated PS" list only (disclaimer, GPS, alerts unchanged). */
+    showInAssociatedPsList: boolean;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -65,6 +67,10 @@ const PoliceStationSchema = new Schema<IPoliceStation>(
             type: Number,
             default: 0,
             min: 0,
+        },
+        showInAssociatedPsList: {
+            type: Boolean,
+            default: true,
         },
         isActive: {
             type: Boolean,

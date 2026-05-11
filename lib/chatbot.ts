@@ -24,8 +24,12 @@ interface ChatbotResponse {
     headerImageUrl?: string;
 }
 
+/** Active stations eligible for the chatbot "associated PS" interactive list (dashboard checkbox). */
 async function getActivePoliceStations(): Promise<Array<{ name: string; nameHindi: string }>> {
-    const stations = await PoliceStation.find({ isActive: true })
+    const stations = await PoliceStation.find({
+        isActive: true,
+        $nor: [{ showInAssociatedPsList: false }],
+    })
         .sort({ displayOrder: 1, name: 1 })
         .select('name nameHindi');
     return stations.map((s) => ({ name: s.name, nameHindi: s.nameHindi }));
@@ -73,6 +77,24 @@ function buildStationSelectionListResponse(
     stations: Array<{ name: string; nameHindi: string }>,
     page: number
 ): ChatbotResponse {
+    if (stations.length === 0) {
+        return {
+            type: 'buttons',
+            bodyText:
+                language === 'english'
+                    ? `🏢 *Select Concerned Police Station*\n\nNo stations are enabled for this list right now. You can continue without choosing a station, or open the main menu.`
+                    : `🏢 *संबंधित पुलिस स्टेशन चुनें*\n\nइस सूची के लिए अभी कोई स्टेशन सक्षम नहीं है। आप बिना स्टेशन चुने आगे बढ़ सकते हैं या मुख्य मेनू खोलें।`,
+            buttons: [
+                {
+                    id: 'station_pick_unknown',
+                    title: language === 'english' ? 'Not sure / Unknown' : 'स्टेशन पता नहीं',
+                },
+                { id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' },
+            ],
+            language,
+        };
+    }
+
     // WhatsApp interactive list allows max 10 rows total across sections.
     // We keep room for action rows (unknown + prev/next), so station rows per page must stay <= 7.
     const PAGE_SIZE = 7;
