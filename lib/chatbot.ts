@@ -938,7 +938,7 @@ function getInformationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
             {
                 title: 'विकल्प',
                 rows: [
-                    { id: 'sub_info_extortion', title: 'अड़ेबाजी सूचना', description: 'अड़ेबाजी संबंधी सूचना दें' },
+                    { id: 'sub_info_extortion', title: 'अड्डेबाजी से संबंधित', description: 'अड्डेबाजी संबंधी सूचना दें' },
                     { id: 'sub_info_misbehavior', title: 'छेड़खानी सूचना', description: 'छेड़खानी संबंधी सूचना दें' },
                     { id: 'sub_info_drugs', title: 'नशाखोरी/ड्रग्स', description: 'नशाखोरी/ड्रग्स की सूचना दें' },
                     { id: 'sub_info_absconders', title: 'फरार अपराधी', description: 'फरार अपराधियों की सूचना दें' },
@@ -1099,7 +1099,7 @@ async function handleSubServiceSelection(
         },
         sub_info_extortion: {
             english: `ℹ️ *Extortion Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Information details\n\nYou will then share your live location, then select the concerned police station from the list.\n\n*Example:*\nRavi Kumar\nSuresh Kumar\nKorra, Hazaribagh\n9876543210\nLocal youths are demanding money from shopkeepers near the market every evening.\n\nPlease reply with complete details.`,
-            hindi: `ℹ️ *अड़ेबाजी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* सूचना का विवरण\n\nइसके बाद लाइव लोकेशन साझा करें, फिर सूची से संबंधित पुलिस स्टेशन चुनें।\n\n*उदाहरण:*\nरवि कुमार\nसुरेश कुमार\nकोर्रा, हजारीबाग\n9876543210\nबाजार के पास कुछ युवक रोज दुकानदारों से जबरन पैसे मांग रहे हैं।\n\nकृपया पूरी जानकारी भेजें।`,
+            hindi: `ℹ️ *अड्डेबाजी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* सूचना का विवरण\n\nइसके बाद लाइव लोकेशन साझा करें, फिर सूची से संबंधित पुलिस स्टेशन चुनें।\n\n*उदाहरण:*\nरवि कुमार\nसुरेश कुमार\nकोर्रा, हजारीबाग\n9876543210\nबाजार के पास कुछ युवक रोज दुकानदारों से जबरन पैसे मांग रहे हैं।\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_misbehavior: {
             english: `ℹ️ *Harassment Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Information details\n\nYou will then share your live location, then select the concerned police station from the list.\n\n*Example:*\nPooja Kumari\nMahesh Prasad\nSadar, Hazaribagh\n9876543211\nSome boys harass school girls near the bus stand in the morning.\n\nPlease reply with complete details.`,
