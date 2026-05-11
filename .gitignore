@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# User-uploaded missing-person photos (keep folder via .gitkeep)
+/public/uploads/missing-person/*
+!/public/uploads/missing-person/.gitkeep

@@ -109,6 +109,81 @@ export async function POST(request: NextRequest) {
                     return NextResponse.json({ success: true });
                 }
 
+                // Missing person flow: user sends image of missing person
+                if (message.type === 'image' && message.image?.id) {
+                    const mediaId = message.image.id as string;
+                    console.log(`🖼️ Image from ${phoneNumber}, media id: ${mediaId}`);
+
+                    await ChatMessage.create({
+                        phoneNumber,
+                        message: '[Photo received — missing person]',
+                        direction: 'incoming',
+                        messageId,
+                        timestamp: new Date(parseInt(message.timestamp, 10) * 1000),
+                        status: 'delivered',
+                    });
+
+                    await Contact.findOneAndUpdate(
+                        { phoneNumber },
+                        {
+                            phoneNumber,
+                            lastMessageAt: new Date(),
+                            $inc: { unreadCount: 1 },
+                        },
+                        { upsert: true, new: true }
+                    );
+
+                    let botResponse: {
+                        type: 'text' | 'buttons' | 'list';
+                        message?: string;
+                        bodyText?: string;
+                        buttonText?: string;
+                        sections?: Array<{ rows: Array<{ title: string; description?: string; id: string }> }>;
+                        sendFollowUpMenu?: boolean;
+                    } | null = null;
+
+                    try {
+                        const { handleMissingPersonImageMessage, sendChatbotResponse: sendReply, getContactLanguageAndSendMenu } =
+                            await import('@/lib/chatbot');
+                        botResponse = await handleMissingPersonImageMessage(phoneNumber, mediaId);
+
+                        const response = await sendReply(phoneNumber, botResponse);
+
+                        if (response?.messages?.[0]?.id) {
+                            const outgoingText = getPersistableOutgoingText(botResponse);
+                            if (outgoingText.trim()) {
+                                try {
+                                    await ChatMessage.create({
+                                        phoneNumber,
+                                        message: outgoingText,
+                                        direction: 'outgoing',
+                                        messageId: response.messages[0].id,
+                                        timestamp: new Date(),
+                                        status: 'sent',
+                                    });
+                                } catch (saveError) {
+                                    console.error('❌ Failed to persist outgoing chatbot message (image flow):', saveError);
+                                }
+                            }
+                        }
+
+                        if (botResponse.sendFollowUpMenu) {
+                            try {
+                                sendTypingOn(phoneNumber, messageId).catch(() => { });
+                                await new Promise(r => setTimeout(r, 1500));
+                                await getContactLanguageAndSendMenu(phoneNumber);
+                            } catch (menuError) {
+                                console.error('❌ Error sending follow-up service menu (image flow):', menuError);
+                            }
+                        }
+                    } catch (replyError) {
+                        console.error('❌ Error handling missing-person image:', replyError);
+                    }
+
+                    await markMessageAsRead(messageId);
+                    return NextResponse.json({ success: true });
+                }
+
                 // Check if this is a button response, list selection, or regular text
                 const messageText =
                     message.text?.body ||

@@ -39,6 +39,8 @@ export interface IComplaint extends Document {
     challanNumber?: string;
     lostMobileNumber?: string;
     remarks?: string;
+    /** Public URL path for missing-person photo (e.g. /uploads/missing-person/uuid.jpg) */
+    missingPersonPhotoUrl?: string;
     suggestion?: string;
     status: 'pending' | 'in_progress' | 'resolved';
     assignedTo?: string;
@@ -102,6 +104,7 @@ const ComplaintSchema = new Schema<IComplaint>(
         challanNumber: String,
         lostMobileNumber: String,
         remarks: String,
+        missingPersonPhotoUrl: String,
         suggestion: String,
         status: {
             type: String,

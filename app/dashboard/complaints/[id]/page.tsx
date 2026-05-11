@@ -64,6 +64,16 @@ export default async function ComplaintDetailPage({
         redirect('/dashboard/complaints');
     }
 
+    const missingPhotoPath = (complaint as { missingPersonPhotoUrl?: string }).missingPersonPhotoUrl;
+    const publicBase = (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+    const missingPersonPhotoSrc =
+        missingPhotoPath &&
+        (missingPhotoPath.startsWith('http://') || missingPhotoPath.startsWith('https://'))
+            ? missingPhotoPath
+            : missingPhotoPath
+              ? `${publicBase}${missingPhotoPath.startsWith('/') ? missingPhotoPath : `/${missingPhotoPath}`}`
+              : '';
+
     return (
         <DashboardLayout username={session.username as string}>
             <div className="mb-8">
@@ -175,6 +185,19 @@ export default async function ComplaintDetailPage({
                                 <div>
                                     <label className="text-sm text-slate-500 dark:text-slate-400">Challan Number</label>
                                     <p className="text-slate-900 dark:text-white">{complaint.challanNumber}</p>
+                                </div>
+                            )}
+
+                            {missingPersonPhotoSrc && (
+                                <div>
+                                    <label className="text-sm text-slate-500 dark:text-slate-400">Missing person photo</label>
+                                    <div className="mt-2">
+                                        <img
+                                            src={missingPersonPhotoSrc}
+                                            alt="Missing person"
+                                            className="max-h-80 max-w-full rounded border border-slate-200 dark:border-slate-700 object-contain"
+                                        />
+                                    </div>
                                 </div>
                             )}
 

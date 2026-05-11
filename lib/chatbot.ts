@@ -160,6 +160,21 @@ function buildStationSelectionListResponse(
     };
 }
 
+function buildMissingPersonPhotoPrompt(language: 'english' | 'hindi'): ChatbotResponse {
+    return {
+        type: 'buttons',
+        bodyText:
+            language === 'english'
+                ? `📷 *Missing person photo*\n\nPlease send a **recent, clear photo** of the missing person (face visible if possible).\n\nIf you do not have a photo, tap *No photo / Skip* — you can still continue.`
+                : `📷 *लापता व्यक्ति की फोटो*\n\nकृपया लापता व्यक्ति की **हाल की स्पष्ट फोटो** भेजें (संभव हो तो चेहरा दिखे)।\n\nफोटो न हो तो *फोटो नहीं / आगे* चुनें — आप बिना फोटो भी आगे बढ़ सकते हैं।`,
+        buttons: [
+            { id: 'missing_photo_skip', title: language === 'english' ? 'No photo / Skip' : 'फोटो नहीं / आगे' },
+            { id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' },
+        ],
+        language,
+    };
+}
+
 function buildInformationSubmissionThankYou(language: 'english' | 'hindi'): string {
     return language === 'english'
         ? `✅ *Thank you*\n\nYour information has been received. Hazaribagh Police appreciates your cooperation.`
@@ -286,6 +301,22 @@ export async function processChatbotMessage(
             };
         }
 
+        if (userFlowState[phoneNumber].step === 'awaiting_missing_person_photo') {
+            const language = userLanguage || 'english';
+            return {
+                type: 'buttons',
+                bodyText:
+                    language === 'english'
+                        ? `📷 *Please send a photo*\n\nTap **📎** and choose **Gallery** or **Camera** to send an image of the missing person.\n\nIf you have no photo, tap *No photo / Skip*.`
+                        : `📷 *कृपया फोटो भेजें*\n\n**📎** से गैलरी या कैमरा से लापता व्यक्ति की तस्वीर भेजें।\n\nफोटो न हो तो *फोटो नहीं / आगे* चुनें।`,
+                buttons: [
+                    { id: 'missing_photo_skip', title: language === 'english' ? 'No photo / Skip' : 'फोटो नहीं / आगे' },
+                    { id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' },
+                ],
+                language,
+            };
+        }
+
         const result = await handleFormSubmission(phoneNumber, incomingMessage, userFlowState[phoneNumber]);
 
         if (result.success) {
@@ -300,6 +331,17 @@ export async function processChatbotMessage(
                     },
                 };
                 return buildStationSelectionListResponse(result.language, stations, 0);
+            }
+
+            if (result.awaitMissingPersonPhoto && result.deferredComplaintType && result.deferredComplaintData) {
+                userFlowState[phoneNumber] = {
+                    step: 'awaiting_missing_person_photo',
+                    data: {
+                        complaintType: result.deferredComplaintType,
+                        complaintData: result.deferredComplaintData,
+                    },
+                };
+                return buildMissingPersonPhotoPrompt(result.language);
             }
 
             if (result.awaitLocation && result.deferredComplaintType && result.deferredComplaintData) {
@@ -382,6 +424,36 @@ async function handleInteractiveResponse(
         );
 
         return await showDisclaimerAndContacts(phoneNumber, language);
+    }
+
+    if (interactiveId === 'missing_photo_skip') {
+        const contact = await Contact.findOne({ phoneNumber });
+        const language = contact?.language || 'english';
+        const flowState = userFlowState[phoneNumber];
+
+        if (!flowState || flowState.step !== 'awaiting_missing_person_photo') {
+            return {
+                type: 'buttons',
+                bodyText:
+                    language === 'english'
+                        ? 'This step has expired. Please start the Missing Person flow again from the menu.'
+                        : 'यह चरण समाप्त हो गया है। कृपया मेनू से लापता व्यक्ति प्रवाह फिर से शुरू करें।',
+                buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+                language,
+            };
+        }
+
+        const data = flowState.data || {};
+        userFlowState[phoneNumber] = {
+            step: 'awaiting_police_station_selection',
+            data: {
+                complaintType: data.complaintType,
+                complaintData: data.complaintData,
+                stationPage: 0,
+            },
+        };
+        const stations = await getActivePoliceStations();
+        return buildStationSelectionListResponse(language, stations, 0);
     }
 
     // Actionable police station selection (no typing) with paging support
@@ -899,7 +971,7 @@ function getMissingPersonForm(language: 'english' | 'hindi'): ChatbotResponse {
     if (language === 'english') {
         return {
             type: 'buttons',
-            bodyText: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nAfter this, you will be asked to select the concerned police station.`,
+            bodyText: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nAfter this, you will be asked to send a photo of the missing person (optional), then select the concerned police station.`,
             buttons: [{ id: 'menu', title: 'Main Menu' }],
             language,
         };
@@ -907,7 +979,7 @@ function getMissingPersonForm(language: 'english' | 'hindi'): ChatbotResponse {
 
     return {
         type: 'buttons',
-        bodyText: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nइसके बाद आपसे संबंधित पुलिस स्टेशन चुनने के लिए कहा जाएगा।`,
+        bodyText: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nइसके बाद लापता व्यक्ति की फोटो (वैकल्पिक), फिर संबंधित पुलिस स्टेशन चुनने के लिए कहा जाएगा।`,
         buttons: [{ id: 'menu', title: 'मुख्य मेनू' }],
         language,
     };
@@ -1101,8 +1173,8 @@ async function handleSubServiceSelection(
             hindi: `📱 *पुलिस कार्रवाई से संतुष्ट नहीं*\n\nयदि आप पुलिस कार्रवाई से संतुष्ट नहीं हैं, तो कृपया निम्नलिखित के साथ उत्तर दें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* खोया मोबाइल नंबर\n\nइसके बाद आप सूची से संबंधित पुलिस स्टेशन चुनेंगे।\n\n*उदाहरण:*\nसंजय शर्मा\nराहुल शर्मा\nसदर, हजारीबाग\n9876543210\n9876543211\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_missing_person: {
-            english: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nPlease reply with all details.`,
-            hindi: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nकृपया सभी विवरण भेजें।`,
+            english: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nAfter your text, you will be asked for a photo (optional), then to select the police station.\n\nPlease reply with all details.`,
+            hindi: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nटेक्स्ट के बाद फोटो (वैकल्पिक), फिर थाना चुनने के लिए कहा जाएगा।\n\nकृपया सभी विवरण भेजें।`,
         },
         // sub_cyber is handled separately above — redirects to cybercrime.gov.in / helpline 1930
         sub_cyber_other: {
@@ -1447,6 +1519,65 @@ export async function handleLocationMessage(
         language,
         sendFollowUpMenu: true,  // location result is terminal → cycle ends
     };
+}
+
+/**
+ * Inbound image during Missing Person flow: save file and move to police station list.
+ */
+export async function handleMissingPersonImageMessage(
+    phoneNumber: string,
+    mediaId: string
+): Promise<ChatbotResponse> {
+    await connectDB();
+
+    const contact = await Contact.findOne({ phoneNumber });
+    const language = contact?.language || 'english';
+    const flow = userFlowState[phoneNumber];
+
+    if (!flow || flow.step !== 'awaiting_missing_person_photo') {
+        return {
+            type: 'buttons',
+            bodyText:
+                language === 'english'
+                    ? '📷 We are not collecting a photo at this step. Open *Missing Person* from the menu to submit a full report.'
+                    : '📷 अभी फोटो लेने का चरण नहीं है। पूरी रिपोर्ट के लिए मेनू से *लापता व्यक्ति* चुनें।',
+            buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+            language,
+        };
+    }
+
+    try {
+        const { saveWhatsappImageToUploads } = await import('./whatsapp-media');
+        const relativePath = await saveWhatsappImageToUploads(mediaId);
+        const data = (flow.data || {}) as Record<string, unknown>;
+        const prev = (data.complaintData as Record<string, unknown>) || {};
+        const complaintData = { ...prev, missingPersonPhotoUrl: relativePath };
+
+        userFlowState[phoneNumber] = {
+            step: 'awaiting_police_station_selection',
+            data: {
+                complaintType: String(data.complaintType || 'sub_missing_person'),
+                complaintData,
+                stationPage: 0,
+            },
+        };
+        const stations = await getActivePoliceStations();
+        return buildStationSelectionListResponse(language, stations, 0);
+    } catch (err) {
+        console.error('Missing person image save failed:', err);
+        return {
+            type: 'buttons',
+            bodyText:
+                language === 'english'
+                    ? `❌ *Could not save the photo*\n\nPlease try sending the image again, or tap *No photo / Skip* to continue without a photo.`
+                    : `❌ *फोटो सहेजी नहीं जा सकी*\n\nकृपया फोटो दोबारा भेजें, या *फोटो नहीं / आगे* से बिना फोटो जारी रखें।`,
+            buttons: [
+                { id: 'missing_photo_skip', title: language === 'english' ? 'No photo / Skip' : 'फोटो नहीं / आगे' },
+                { id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' },
+            ],
+            language,
+        };
+    }
 }
 
 // ─── Inspector / DSP office directory ────────────────────────────────────────

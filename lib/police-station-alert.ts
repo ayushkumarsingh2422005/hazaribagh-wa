@@ -44,6 +44,8 @@ export async function notifyPoliceStationComplaintAlert(params: {
     complaintId: string | null;
     complaintType: string;
     complainantName?: string;
+    /** Site-relative path e.g. /uploads/missing-person/uuid.jpg */
+    missingPersonPhotoUrl?: string;
 }): Promise<void> {
     if (shouldSkipPoliceStationAlert(params.policeStationName)) return;
 
@@ -88,12 +90,20 @@ export async function notifyPoliceStationComplaintAlert(params: {
             ? `\n*Complainant name:* ${params.complainantName.trim()}`
             : '';
         const idLine = params.complaintId ? `\n*Complaint ID:* ${params.complaintId}` : '';
+        const rel = String(params.missingPersonPhotoUrl || '').trim();
+        const base = (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+        const photoLine =
+            rel && base
+                ? `\n*Photo:* ${base}${rel.startsWith('/') ? rel : `/${rel}`}`
+                : rel
+                  ? `\n*Photo path:* ${rel}`
+                  : '';
 
         const text = `🔔 *Hazaribagh Police — New registration*
 
 *Station:* ${doc.name}
 *Type:* ${typeReadable}${idLine}
-*Citizen WhatsApp:* ${params.citizenPhone}${nameLine}
+*Citizen WhatsApp:* ${params.citizenPhone}${nameLine}${photoLine}
 
 Please review in the admin dashboard.`;
 

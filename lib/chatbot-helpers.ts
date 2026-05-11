@@ -360,6 +360,7 @@ export async function saveComplaint(
         complaintId: complaint.complaintId || null,
         complaintType: complaint.complaintType,
         complainantName: String(data.name || ''),
+        missingPersonPhotoUrl: String(data.missingPersonPhotoUrl || ''),
     });
 
     // complaintId is set by the pre-save hook
@@ -380,6 +381,7 @@ export async function handleFormSubmission(
     sendFollowUpMenu?: boolean;
     awaitLocation?: boolean;
     awaitStationSelection?: boolean;
+    awaitMissingPersonPhoto?: boolean;
     deferredComplaintType?: string;
     deferredComplaintData?: Record<string, unknown>;
 }> {
@@ -420,6 +422,18 @@ export async function handleFormSubmission(
         };
     }
 
+    // Missing person: collect optional photo before police station list.
+    if (flowState.step === 'sub_missing_person') {
+        return {
+            success: true,
+            message: '',
+            language,
+            awaitMissingPersonPhoto: true,
+            deferredComplaintType: flowState.step,
+            deferredComplaintData: validationResult.data || {},
+        };
+    }
+
     // Selected flows require final police-station selection from master data.
     const stationSelectionSteps = new Set([
         'sub_passport_delay',
@@ -430,7 +444,6 @@ export async function handleFormSubmission(
         'sub_traffic_challan',
         'sub_traffic_other',
         'sub_lost_mobile_not_satisfied',
-        'sub_missing_person',
         'sub_petition_not_visited',
         'sub_petition_not_satisfied',
         'sub_petition_other',
