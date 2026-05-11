@@ -1,6 +1,7 @@
 import Complaint from '@/models/Complaint';
 import Contact from '@/models/Contact';
 import RawComplaint from '@/models/RawComplaint';
+import { notifyPoliceStationComplaintAlert } from './police-station-alert';
 
 /**
  * Validate form input based on complaint type
@@ -54,14 +55,14 @@ export function validateFormInput(
         };
     }
 
-    // Petition issues
+    // Petition issues (police station chosen from list after form)
     if (formType.startsWith('sub_petition')) {
-        if (lines.length < 6) {
+        if (lines.length < 5) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Issue Details\n\n*Example:*\nAmit Singh\nRakesh Singh\nWard 5, Hazaribagh\n9876543210\nHazaribagh Sadar Thana\nDetail of your issue here\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nअमित सिंह\nराकेश सिंह\nवार्ड 5, हजारीबाग\n9876543210\nहजारीबाग सदर थाना\nअपनी समस्या का विवरण यहाँ लिखें\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Issue Details\n\n*Example:*\nAmit Singh\nRakesh Singh\nWard 5, Hazaribagh\n9876543210\nPolice did not visit regarding my petition filed 5 days ago\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* समस्या विवरण\n\n*उदाहरण:*\nअमित सिंह\nराकेश सिंह\nवार्ड 5, हजारीबाग\n9876543210\n5 दिन पहले दायर याचिका के संबंध में पुलिस नहीं आई\n\nकृपया पुनः प्रयास करें।`,
             };
         }
 
@@ -71,20 +72,19 @@ export function validateFormInput(
                 name: lines[0],
                 fatherName: lines[1],
                 address: lines[2],
-                policeStation: lines[4],
-                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(5).join(' ')}`,
+                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(4).join(' ')}`,
             },
         };
     }
 
-    // Information inputs
+    // Information inputs (police station chosen from list after live location)
     if (formType.startsWith('sub_info_')) {
-        if (lines.length < 6) {
+        if (lines.length < 5) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Information details\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* सूचना का विवरण\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Information details\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* सूचना का विवरण\n\nकृपया पुनः प्रयास करें।`,
             };
         }
 
@@ -94,8 +94,7 @@ export function validateFormInput(
                 name: lines[0],
                 fatherName: lines[1],
                 address: lines[2],
-                policeStation: lines[4],
-                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(5).join(' ')}`,
+                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(4).join(' ')}`,
             },
         };
     }
@@ -184,13 +183,13 @@ export function validateFormInput(
         };
     }
 
-    // Traffic Other (PDF: Name, Father, Address, Mobile, Station, Report issue)
+    // Traffic Other (police station chosen from list after form)
     if (formType === 'sub_traffic_other') {
-        if (lines.length < 6) {
+        if (lines.length < 5) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Concerned Police Station\n*Line 6:* Report issue\n\nPlease try again.`
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Report issue\n\nPlease try again.`
                     : `❌ *अधूरी जानकारी*\n\nकृपया प्रति पंक्ति एक विवरण भेजें।\n\nकृपया पुनः प्रयास करें।`,
             };
         }
@@ -200,8 +199,7 @@ export function validateFormInput(
                 name: lines[0],
                 fatherName: lines[1],
                 address: lines[2],
-                policeStation: lines[4],
-                remarks: `Mobile: ${lines[3]}\nIssue: ${lines.slice(5).join(' ')}`,
+                remarks: `Mobile: ${lines[3]}\nIssue: ${lines.slice(4).join(' ')}`,
             },
         };
     }
@@ -246,14 +244,14 @@ export function validateFormInput(
         };
     }
 
-    // Lost Mobile (only "Not Satisfied" is handled here; "Report Lost Mobile" redirects to CEIR portal)
+    // Lost Mobile (only "Not Satisfied" is handled here; police station chosen from list after form)
     if (formType === 'sub_lost_mobile_not_satisfied') {
-        if (lines.length < 6) {
+        if (lines.length < 5) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Lost Mobile Number\n*Line 6:* Concerned Police Station\n\n*Example:*\nSanjay Sharma\nRahul Sharma\nSadar, Hazaribagh\n9876543210\n9876543211\nHazaribagh Sadar Thana\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* खोया मोबाइल नंबर\n*पंक्ति 6:* संबंधित पुलिस स्टेशन\n\n*उदाहरण:*\nसंजय शर्मा\nराहुल शर्मा\nसदर, हजारीबाग\n9876543210\n9876543211\nहजारीबाग सदर थाना\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Lost Mobile Number\n\n*Example:*\nSanjay Sharma\nRahul Sharma\nSadar, Hazaribagh\n9876543210\n9876543211\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* खोया मोबाइल नंबर\n\n*उदाहरण:*\nसंजय शर्मा\nराहुल शर्मा\nसदर, हजारीबाग\n9876543210\n9876543211\n\nकृपया पुनः प्रयास करें।`,
             };
         }
         return {
@@ -263,8 +261,7 @@ export function validateFormInput(
                 fatherName: lines[1],
                 address: lines[2],
                 lostMobileNumber: lines[4],
-                policeStation: lines[5],
-                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(6).join(' ')}`, // If they provide extra info
+                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(5).join(' ')}`,
             },
         };
     }
@@ -378,6 +375,15 @@ export async function saveComplaint(
         status: 'pending',
     });
 
+    // WhatsApp alert to the selected police station contact (skipped if station unknown / unmatched)
+    await notifyPoliceStationComplaintAlert({
+        policeStationName: String(data.policeStation || ''),
+        citizenPhone: phoneNumber,
+        complaintId: complaint.complaintId || null,
+        complaintType: complaint.complaintType,
+        complainantName: String(data.name || ''),
+    });
+
     // complaintId is set by the pre-save hook
     return complaint.complaintId || null;
 }
@@ -422,14 +428,13 @@ export async function handleFormSubmission(
         };
     }
 
-    // Information flow requires one extra step:
-    // collect live location first, then register complaint.
+    // Information flow: live location first, then police station list, then register.
     if (flowState.step.startsWith('sub_info_')) {
         return {
             success: true,
             message: language === 'english'
-                ? `📍 *Final Step Required*\n\nPlease share your *live location* now to complete complaint registration.\n\nTap the location button sent by WhatsApp and submit your current location.`
-                : `📍 *अंतिम चरण आवश्यक*\n\nशिकायत दर्ज पूरी करने के लिए कृपया अब अपना *लाइव लोकेशन* साझा करें।\n\nव्हाट्सएप में भेजे गए लोकेशन बटन पर टैप करके अपना वर्तमान स्थान भेजें।`,
+                ? `📍 *Next Step: Live Location*\n\nPlease share your *live location* now. After that, you will select the concerned police station from the list to complete registration.`
+                : `📍 *अगला चरण: लाइव लोकेशन*\n\nकृपया अब अपना *लाइव लोकेशन* साझा करें। उसके बाद पंजीकरण पूरा करने के लिए आपको सूची से संबंधित पुलिस स्टेशन चुनना होगा।`,
             language,
             awaitLocation: true,
             deferredComplaintType: flowState.step,
@@ -445,7 +450,12 @@ export async function handleFormSubmission(
         'sub_character_other',
         'sub_traffic_jam',
         'sub_traffic_challan',
+        'sub_traffic_other',
+        'sub_lost_mobile_not_satisfied',
         'sub_missing_person',
+        'sub_petition_not_visited',
+        'sub_petition_not_satisfied',
+        'sub_petition_other',
     ]);
     if (stationSelectionSteps.has(flowState.step)) {
         return {
