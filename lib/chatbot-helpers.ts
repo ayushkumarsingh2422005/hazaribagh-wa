@@ -99,28 +99,6 @@ export function validateFormInput(
         };
     }
 
-    // Find my Police Station (PDF Section D — place name request)
-    if (formType === 'sub_location_find_station') {
-        if (lines.length < 5) {
-            return {
-                isValid: false,
-                errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Your place name / landmark\n\n*Example:*\nAmit Singh\nRakesh Singh\nPelawal area, Hazaribagh\n9876543210\nNear Pelawal OP\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* अपने स्थान का नाम / लैंडमार्क\n\n*उदाहरण:*\nअमित सिंह\nराकेश सिंह\nपेलावल, हजारीबाग\n9876543210\nपेलावल ओपी के पास\n\nकृपया पुनः प्रयास करें।`,
-            };
-        }
-        return {
-            isValid: true,
-            data: {
-                name: lines[0],
-                fatherName: lines[1],
-                address: lines[2],
-                location: lines[4],
-                remarks: `Mobile: ${lines[3]}${lines.length > 5 ? `\n\n${lines.slice(5).join('\n')}` : ''}`,
-            },
-        };
-    }
-
     // Suggestion (PDF: Name, Father, Address, Mobile, Station, Suggestion)
     if (formType === 'suggestion_form') {
         if (lines.length < 6) {

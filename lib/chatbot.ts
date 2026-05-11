@@ -400,6 +400,13 @@ async function handleInteractiveResponse(
         return await saveDeferredComplaintWithStation(phoneNumber, language, stations[pickedIndex].name);
     }
 
+    // Police office directory selection (Find my Police Station)
+    if (interactiveId.startsWith('office_')) {
+        const contact = await Contact.findOne({ phoneNumber });
+        const language = contact?.language || 'english';
+        return handleOfficeSelection(interactiveId, language);
+    }
+
     // Main service selection
     if (interactiveId.startsWith('service_')) {
         const contact = await Contact.findOne({ phoneNumber });
@@ -498,11 +505,11 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
             sections: [
                 {
                     rows: [
-                        { id: 'service_passport', title: 'पासपोर्ट समस्याएं', description: 'पासपोर्ट सत्यापन समस्याएं' },
+                        { id: 'service_passport', title: 'पासपोर्ट से संबंधित', description: 'पासपोर्ट सत्यापन समस्याएं' },
                         { id: 'service_character', title: 'चरित्र सत्यापन', description: 'चरित्र सत्यापन समस्याएं' },
                         { id: 'service_location', title: 'स्थान सेवा', description: 'स्टेशन स्थान व थाना खोजें' },
                         { id: 'service_lost_phone', title: 'खोया मोबाइल फोन', description: 'खोया फोन रिपोर्ट करें' },
-                        { id: 'service_traffic', title: 'यातायात समस्याएं', description: 'यातायात संबंधी प्रश्न' },
+                        { id: 'service_traffic', title: 'यातायात की समस्या', description: 'यातायात संबंधी प्रश्न' },
                         { id: 'service_missing_person', title: 'लापता व्यक्ति', description: 'लापता व्यक्ति की जानकारी दें' },
                         { id: 'service_information', title: 'सूचना', description: 'कार्रवाई योग्य सूचना साझा करें' },
                         { id: 'service_suggestion', title: 'सुझाव', description: 'पुलिस सेवाओं से संबंधित सुझाव' },
@@ -682,8 +689,8 @@ function getLocationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         },
                         {
                             id: 'sub_location_find_station',
-                            title: 'Find my Police Station',
-                            description: 'Submit name, address & place name',
+                            title: 'Office Directory',
+                            description: 'Find INSP / DSP office location',
                         },
                     ],
                 },
@@ -710,8 +717,8 @@ function getLocationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                     },
                     {
                         id: 'sub_location_find_station',
-                        title: 'मेरा पुलिस स्टेशन खोजें',
-                        description: 'नाम, पता व स्थान का नाम भेजें',
+                        title: 'कार्यालय निर्देशिका',
+                        description: 'INSP / DSP कार्यालय का स्थान पाएं',
                     },
                 ],
             },
@@ -840,7 +847,7 @@ function getTrafficSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         { id: 'sub_traffic_rules', title: 'यातायात नियम/जुर्माना', description: 'उल्लंघन और जुर्माने के बारे में जानें' },
                         { id: 'sub_traffic_jam', title: 'ट्रैफ़िक जाम रिपोर्ट', description: 'यातायात भीड़ की रिपोर्ट करें' },
                         { id: 'sub_traffic_challan', title: 'ट्रैफ़िक चालान मुद्दे', description: 'चालान संबंधी प्रश्न' },
-                        { id: 'sub_traffic_other', title: 'अन्य समस्याएं', description: 'अन्य यातायात समस्याएं' },
+                        { id: 'sub_traffic_other', title: 'अन्य समस्याएं', description: 'अन्य यातायात की समस्या' },
                     ],
                 },
                 {
@@ -965,6 +972,12 @@ async function handleSubServiceSelection(
         return await getLocationService(phoneNumber, language);
     }
 
+    // Find my Police Station — show INSP / DSP office list, no form, no complaint
+    if (subServiceId === 'sub_location_find_station') {
+        delete userFlowState[phoneNumber];
+        return getOfficeDirectoryMenu(language);
+    }
+
     // Handle traffic rules separately (it returns ChatbotResponse)
     if (subServiceId === 'sub_traffic_rules') {
         return await getTrafficRulesInfo(language);
@@ -1036,10 +1049,6 @@ async function handleSubServiceSelection(
             english: `📝 *Other Petition Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Issue Details\n\nAfter this you will select the concerned police station from the list.\n\n*Example:*\nNeha Kumari\nManoj Prasad\nKorra, Hazaribagh\n9876543212\nNeed an update on the status of my petition\n\nPlease reply with all details.`,
             hindi: `📝 *अन्य याचिका समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* समस्या विवरण\n\nइसके बाद आप सूची से संबंधित पुलिस स्टेशन चुनेंगे।\n\n*उदाहरण:*\nनेहा कुमारी\nमनोज प्रसाद\nकोर्रा, हजारीबाग\n9876543212\nमुझे अपनी याचिका की स्थिति का अपडेट चाहिए\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
-        sub_location_find_station: {
-            english: `📍 *Find my Police Station*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Report your place name\n\n*Example:*\nAmit Singh\nRakesh Singh\nPelawal area, Hazaribagh\n9876543210\nNear Pelawal OP main road\n\nPlease reply with all details.`,
-            hindi: `📍 *मेरा पुलिस स्टेशन खोजें*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* अपने स्थान का नाम लिखें\n\n*उदाहरण:*\nअमित सिंह\nराकेश सिंह\nपेलावल क्षेत्र, हजारीबाग\n9876543210\nपेलावल ओपी मुख्य सड़क के पास\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
-        },
         sub_traffic_jam: {
             english: `🚦 *Report Traffic Jam*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Traffic Jam Location\n*Line 4:* Remarks\n\n*Example:*\nRajeev Kumar\n9876543213\nTower Chowk\nHeavy traffic congestion for the last hour\n\nPlease reply with all details.`,
             hindi: `🚦 *ट्रैफ़िक जाम रिपोर्ट*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* ट्रैफ़िक जाम का स्थान\n*पंक्ति 4:* टिप्पणी\n\n*उदाहरण:*\nराजीव कुमार\n9876543213\nटावर चौक\nपिछले एक घंटे से भारी ट्रैफ़िक जाम है\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
@@ -1050,7 +1059,7 @@ async function handleSubServiceSelection(
         },
         sub_traffic_other: {
             english: `🚦 *Other Traffic Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Report issue\n\nAfter this you will select the concerned police station from the list.\n\n*Example:*\nPooja Dey\nAmit Dey\nCharhi, Hazaribagh\n9876543215\nTraffic light not working at Bajrangbali Chowk\n\nPlease reply with all details.`,
-            hindi: `🚦 *अन्य यातायात समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* समस्या विवरण\n\nइसके बाद आप सूची से संबंधित पुलिस स्टेशन चुनेंगे।\n\n*उदाहरण:*\nपूजा डे\nअमित डे\nचरही, हजारीबाग\n9876543215\nबजरंगबली चौक पर ट्रैफिक लाइट खराब है\n\nकृपया सभी विवरण भेजें।`,
+            hindi: `🚦 *अन्य यातायात की समस्या*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* समस्या विवरण\n\nइसके बाद आप सूची से संबंधित पुलिस स्टेशन चुनेंगे।\n\n*उदाहरण:*\nपूजा डे\nअमित डे\nचरही, हजारीबाग\n9876543215\nबजरंगबली चौक पर ट्रैफिक लाइट खराब है\n\nकृपया सभी विवरण भेजें।`,
         },
         // sub_lost_mobile is handled separately above — redirects to CEIR portal
         sub_lost_mobile_not_satisfied: {
@@ -1403,5 +1412,82 @@ export async function handleLocationMessage(
         message,
         language,
         sendFollowUpMenu: true,  // location result is terminal → cycle ends
+    };
+}
+
+// ─── Inspector / DSP office directory ────────────────────────────────────────
+// Each entry: id (used as interactiveId prefix), name, nameHindi, lat, lng, phone
+const POLICE_OFFICES: Array<{
+    id: string;
+    name: string;
+    nameHindi: string;
+    lat: number;
+    lng: number;
+    phone?: string;
+}> = [
+    // ---- DSP Offices ----
+    { id: 'office_dsp_sadar',      name: 'DSP Office - Sadar',      nameHindi: 'DSP कार्यालय - सदर',      lat: 23.9975, lng: 85.3647 },
+    { id: 'office_dsp_barkagaon',  name: 'DSP Office - Barkagaon',  nameHindi: 'DSP कार्यालय - बरकागांव',  lat: 24.0300, lng: 85.3800 },
+    { id: 'office_dsp_daru',       name: 'DSP Office - Daru',       nameHindi: 'DSP कार्यालय - दारू',      lat: 24.1000, lng: 85.4200 },
+    // ---- INSP / OP Offices ----
+    { id: 'office_insp_sadar',     name: 'Inspector Office - Sadar',     nameHindi: 'निरीक्षक कार्यालय - सदर',     lat: 23.9980, lng: 85.3650 },
+    { id: 'office_insp_katkamsandi', name: 'Inspector Office - Katkamsandi', nameHindi: 'निरीक्षक कार्यालय - कटकमसांडी', lat: 24.0700, lng: 85.3900 },
+    { id: 'office_insp_churchu',   name: 'Inspector Office - Churchu',   nameHindi: 'निरीक्षक कार्यालय - चुरचू',   lat: 23.9100, lng: 85.5200 },
+];
+
+function getOfficeDirectoryMenu(language: 'english' | 'hindi'): ChatbotResponse {
+    const rows = POLICE_OFFICES.map((o) => ({
+        id: o.id,
+        title: language === 'english' ? o.name.slice(0, 24) : o.nameHindi.slice(0, 24),
+        description: language === 'english' ? 'Tap to get location' : 'स्थान पाने के लिए चुनें',
+    }));
+
+    return {
+        type: 'list',
+        bodyText: language === 'english'
+            ? '🏢 *Police Office Directory*\n\nSelect an office below to receive its name and Google Maps location.'
+            : '🏢 *पुलिस कार्यालय निर्देशिका*\n\nनीचे से कार्यालय चुनें — नाम और Google Maps लिंक मिलेगा।',
+        buttonText: language === 'english' ? 'Select Office' : 'कार्यालय चुनें',
+        sections: [
+            {
+                title: language === 'english' ? 'DSP & Inspector Offices' : 'DSP व निरीक्षक कार्यालय',
+                rows,
+            },
+            {
+                title: language === 'english' ? 'Navigation' : 'नेविगेशन',
+                rows: [{ id: 'menu', title: language === 'english' ? '↩ Main Menu' : '↩ मुख्य मेनू', description: '' }],
+            },
+        ],
+        language,
+        sendFollowUpMenu: false,
+    };
+}
+
+function handleOfficeSelection(officeId: string, language: 'english' | 'hindi'): ChatbotResponse {
+    const office = POLICE_OFFICES.find((o) => o.id === officeId);
+    if (!office) {
+        return {
+            type: 'buttons',
+            bodyText: language === 'english'
+                ? '❌ Invalid selection. Please choose from the list.'
+                : '❌ अमान्य चयन। कृपया सूची से चुनें।',
+            buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+            language,
+            sendFollowUpMenu: false,
+        };
+    }
+
+    const mapLink = `https://www.google.com/maps?q=${office.lat},${office.lng}`;
+    const officeName = language === 'english' ? office.name : office.nameHindi;
+    const phoneLine = office.phone ? (language === 'english' ? `📞 Contact: ${office.phone}\n` : `📞 संपर्क: ${office.phone}\n`) : '';
+
+    return {
+        type: 'buttons',
+        bodyText: language === 'english'
+            ? `🏢 *${officeName}*\n\n${phoneLine}📍 Location:\n${mapLink}`
+            : `🏢 *${officeName}*\n\n${phoneLine}📍 स्थान:\n${mapLink}`,
+        buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+        language,
+        sendFollowUpMenu: false,
     };
 }
