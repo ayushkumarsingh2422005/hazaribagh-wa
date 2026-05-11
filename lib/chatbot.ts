@@ -49,12 +49,18 @@ async function saveDeferredComplaintWithStation(
             policeStation: stationValue,
         });
         const isMissingPerson = complaintType === 'sub_missing_person';
+        const isInformation = complaintType.startsWith('sub_info_');
         delete userFlowState[phoneNumber];
+
+        const message = isInformation
+            ? buildInformationSubmissionThankYou(language)
+            : isMissingPerson
+              ? buildMissingPersonComplaintSuccess(language, complaintId)
+              : buildComplaintSuccess(language, complaintId);
+
         return {
             type: 'text',
-            message: isMissingPerson
-                ? buildMissingPersonComplaintSuccess(language, complaintId)
-                : buildComplaintSuccess(language, complaintId),
+            message,
             language,
             sendFollowUpMenu: true,
         };
@@ -152,6 +158,12 @@ function buildStationSelectionListResponse(
         ],
         language,
     };
+}
+
+function buildInformationSubmissionThankYou(language: 'english' | 'hindi'): string {
+    return language === 'english'
+        ? `✅ *Thank you*\n\nYour information has been received. Hazaribagh Police appreciates your cooperation.`
+        : `✅ *धन्यवाद*\n\nआपकी सूचना प्राप्त हो गई है। हजारीबाग पुलिस आपके सहयोग के लिए धन्यवाद।`;
 }
 
 function buildComplaintSuccess(language: 'english' | 'hindi', complaintId: string | null): string {
