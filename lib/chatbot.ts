@@ -1023,7 +1023,7 @@ function getInformationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                 title: 'विकल्प',
                 rows: [
                     { id: 'sub_info_extortion', title: 'अड्डेबाजी से संबंधित', description: 'अड्डेबाजी संबंधी सूचना दें' },
-                    { id: 'sub_info_misbehavior', title: 'छेड़खानी सूचना', description: 'छेड़खानी संबंधी सूचना दें' },
+                    { id: 'sub_info_misbehavior', title: 'छेड़खानी से संबंधित', description: 'छेड़खानी संबंधी सूचना दें' },
                     { id: 'sub_info_drugs', title: 'नशाखोरी/ड्रग्स', description: 'नशाखोरी/ड्रग्स की सूचना दें' },
                     { id: 'sub_info_absconders', title: 'फरार अपराधी', description: 'फरार अपराधियों की सूचना दें' },
                     { id: 'sub_info_illegal', title: 'अवैध गतिविधियां', description: 'अवैध गतिविधियों की सूचना दें' },
