@@ -26,7 +26,7 @@ const complaintTypeLabels: Record<string, string> = {
     info_misbehavior: 'Information - Harassment',
     info_drugs: 'Information - Drugs',
     info_absconders: 'Information - Absconders',
-    info_illegal: 'Information - Illegal Activities',
+    info_illegal: 'Information - Illegal Liquor',
     info_other: 'Information - Other',
     location_find_station: 'Location - Find my Police Station',
     suggestion: 'Suggestion',

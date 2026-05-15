@@ -1002,7 +1002,7 @@ function getInformationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         { id: 'sub_info_misbehavior', title: 'Harassment Info', description: 'Share harassment-related information' },
                         { id: 'sub_info_drugs', title: 'Drugs/Intoxication', description: 'Share drug/intoxication-related information' },
                         { id: 'sub_info_absconders', title: 'Absconders Info', description: 'Share information about absconding criminals' },
-                        { id: 'sub_info_illegal', title: 'Illegal Activities', description: 'Share information about illegal activities' },
+                        { id: 'sub_info_illegal', title: 'Illegal Liquor', description: 'Share information about illegal liquor' },
                         { id: 'sub_info_other', title: 'Other Information', description: 'Share any other actionable information' },
                     ],
                 },
@@ -1026,7 +1026,7 @@ function getInformationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                     { id: 'sub_info_misbehavior', title: 'छेड़खानी से संबंधित', description: 'छेड़खानी संबंधी सूचना दें' },
                     { id: 'sub_info_drugs', title: 'नशाखोरी/ड्रग्स', description: 'नशाखोरी/ड्रग्स की सूचना दें' },
                     { id: 'sub_info_absconders', title: 'फरार अपराधी', description: 'फरार अपराधियों की सूचना दें' },
-                    { id: 'sub_info_illegal', title: 'अवैध गतिविधियां', description: 'अवैध गतिविधियों की सूचना दें' },
+                    { id: 'sub_info_illegal', title: 'अवैध शराब', description: 'अवैध शराब संबंधी सूचना दें' },
                     { id: 'sub_info_other', title: 'अन्य सूचना', description: 'अन्य महत्वपूर्ण सूचना दें' },
                 ],
             },
@@ -1198,8 +1198,8 @@ async function handleSubServiceSelection(
             hindi: `ℹ️ *फरार अपराधियों से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* सूचना का विवरण\n\nइसके बाद लाइव लोकेशन साझा करें, फिर सूची से संबंधित पुलिस स्टेशन चुनें।\n\n*उदाहरण:*\nदीपक सिंह\nमोहन सिंह\nबरही, हजारीबाग\n9876543213\nपास के जिले का एक वांछित व्यक्ति पिछले एक सप्ताह से बरही बाजार क्षेत्र में देखा गया है।\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_illegal: {
-            english: `ℹ️ *Other Illegal Activities Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Information details\n\nYou will then share your live location, then select the concerned police station from the list.\n\n*Example:*\nSunita Devi\nHarinarayan Prasad\nChurchu, Hazaribagh\n9876543214\nIllegal gambling is being organized regularly near the canal road.\n\nPlease reply with complete details.`,
-            hindi: `ℹ️ *अन्य अवैध गतिविधियों से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* सूचना का विवरण\n\nइसके बाद लाइव लोकेशन साझा करें, फिर सूची से संबंधित पुलिस स्टेशन चुनें।\n\n*उदाहरण:*\nसुनीता देवी\nहरिनारायण प्रसाद\nचर्चू, हजारीबाग\n9876543214\nनहर रोड के पास नियमित रूप से अवैध जुआ संचालित हो रहा है।\n\nकृपया पूरी जानकारी भेजें।`,
+            english: `ℹ️ *Illegal Liquor Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Information details\n\nYou will then share your live location, then select the concerned police station from the list.\n\n*Example:*\nSunita Devi\nHarinarayan Prasad\nChurchu, Hazaribagh\n9876543214\nIllegal liquor is being sold openly every evening near the canal road.\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *अवैध शराब से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* सूचना का विवरण\n\nइसके बाद लाइव लोकेशन साझा करें, फिर सूची से संबंधित पुलिस स्टेशन चुनें।\n\n*उदाहरण:*\nसुनीता देवी\nहरिनारायण प्रसाद\nचर्चू, हजारीबाग\n9876543214\nनहर रोड के पास हर शाम अवैध शराब की बिक्री खुलेआम हो रही है।\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_other: {
             english: `ℹ️ *Any Other Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Information details\n\nYou will then share your live location, then select the concerned police station from the list.\n\n*Example:*\nNitesh Kumar\nRajendra Kumar\nMuffasil, Hazaribagh\n9876543215\nSuspicious people are moving around closed houses late at night.\n\nPlease reply with complete details.`,
