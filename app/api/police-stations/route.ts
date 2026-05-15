@@ -29,6 +29,13 @@ export async function POST(request: NextRequest) {
         const data = await request.json();
         await connectDB();
 
+        const governmentNumber = String(
+            data.governmentNumber || data.contactNumber || ''
+        ).trim();
+        if (!governmentNumber) {
+            return NextResponse.json({ error: 'Government number is required' }, { status: 400 });
+        }
+
         const station = await PoliceStation.create({
             name: data.name,
             nameHindi: data.nameHindi,
@@ -39,7 +46,8 @@ export async function POST(request: NextRequest) {
                 type: 'Point',
                 coordinates: [parseFloat(data.longitude), parseFloat(data.latitude)],
             },
-            contactNumber: data.contactNumber,
+            governmentNumber,
+            personalNumber: String(data.personalNumber || '').trim(),
             inchargeName: data.inchargeName,
             inchargeNameHindi: data.inchargeNameHindi,
             displayOrder: Number.isFinite(Number(data.displayOrder)) ? Number(data.displayOrder) : 0,

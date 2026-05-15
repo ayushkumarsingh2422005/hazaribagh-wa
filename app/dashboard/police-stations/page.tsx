@@ -100,9 +100,25 @@ export default async function PoliceStationsPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2">
-                                                <Phone className="w-4 h-4 text-slate-400" />
-                                                <span className="text-slate-900 dark:text-white">{station.contactNumber}</span>
+                                            <div className="flex flex-col gap-1 text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <Phone className="w-4 h-4 shrink-0 text-slate-400" />
+                                                    <span className="text-slate-900 dark:text-white">
+                                                        <span className="text-slate-500 dark:text-slate-400">Govt: </span>
+                                                        {(station as { governmentNumber?: string }).governmentNumber ||
+                                                            station.contactNumber ||
+                                                            '—'}
+                                                    </span>
+                                                </div>
+                                                {Boolean((station as { personalNumber?: string }).personalNumber) && (
+                                                    <div className="flex items-center gap-2 pl-6">
+                                                        <Phone className="w-4 h-4 shrink-0 text-slate-400" />
+                                                        <span className="text-slate-900 dark:text-white">
+                                                            <span className="text-slate-500 dark:text-slate-400">Personal: </span>
+                                                            {(station as { personalNumber?: string }).personalNumber}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {station.inchargeName && (

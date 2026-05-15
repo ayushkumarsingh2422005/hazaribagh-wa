@@ -1,5 +1,6 @@
 import PoliceStation from '@/models/PoliceStation';
 import connectDB from './db';
+import { getAlertWhatsAppNumber } from './police-station-phones';
 import { sendWhatsAppMessage } from './whatsapp';
 
 /** User chose "unknown" station — do not WhatsApp any PS contact. */
@@ -58,13 +59,13 @@ export async function notifyPoliceStationComplaintAlert(params: {
                 isActive: true,
                 $or: [{ name: label }, { nameHindi: label }],
             })
-                .select('name nameHindi contactNumber')
+                .select('name nameHindi governmentNumber personalNumber contactNumber')
                 .lean()) || null;
 
         if (!doc) {
             const lower = label.toLowerCase();
             const candidates = await PoliceStation.find({ isActive: true })
-                .select('name nameHindi contactNumber')
+                .select('name nameHindi governmentNumber personalNumber contactNumber')
                 .lean();
             doc =
                 candidates.find(
@@ -74,14 +75,20 @@ export async function notifyPoliceStationComplaintAlert(params: {
                 ) || null;
         }
 
-        if (!doc?.contactNumber) {
-            console.warn('[PS alert] No active station or contact for:', label);
+        if (!doc) {
+            console.warn('[PS alert] No active station found for:', label);
             return;
         }
 
-        const to = normalizeIndiaWhatsAppTo(String(doc.contactNumber));
+        const alertNumber = getAlertWhatsAppNumber(doc);
+        if (!alertNumber) {
+            console.warn('[PS alert] No contact number for station:', doc.name);
+            return;
+        }
+
+        const to = normalizeIndiaWhatsAppTo(alertNumber);
         if (!to) {
-            console.warn('[PS alert] Invalid contact number for station:', doc.name, doc.contactNumber);
+            console.warn('[PS alert] Invalid contact number for station:', doc.name, alertNumber);
             return;
         }
 

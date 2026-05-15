@@ -4,6 +4,10 @@ import TrafficViolation from '@/models/TrafficViolation';
 import connectDB from './db';
 import { sendInteractiveButtons, sendWhatsAppMessage, sendInteractiveList } from './whatsapp';
 import { handleFormSubmission, saveComplaint } from './chatbot-helpers';
+import {
+    formatDisclaimerStationPhones,
+    formatGpsStationPhoneLines,
+} from './police-station-phones';
 
 interface ChatbotResponse {
     type: 'text' | 'buttons' | 'list';
@@ -552,7 +556,7 @@ async function showDisclaimerAndContacts(
         message += `📞 *Police Station Contact Numbers:*\n\n`;
 
         stations.forEach((station, index) => {
-            message += `${index + 1}. ${station.name} - ${station.contactNumber}\n`;
+            message += `${index + 1}. ${station.name} - ${formatDisclaimerStationPhones(station, 'english')}\n`;
         });
 
         message += `\n\nPlease select a service from the menu below.`;
@@ -564,7 +568,7 @@ async function showDisclaimerAndContacts(
         message += `📞 *पुलिस स्टेशन संपर्क नंबर:*\n\n`;
 
         stations.forEach((station, index) => {
-            message += `${index + 1}. ${station.nameHindi} - ${station.contactNumber}\n`;
+            message += `${index + 1}. ${station.nameHindi} - ${formatDisclaimerStationPhones(station, 'hindi')}\n`;
         });
 
         message += `\n\nकृपया नीचे दिए गए मेनू से एक सेवा चुनें।`;
@@ -1488,7 +1492,7 @@ export async function handleLocationMessage(
             const { station, distance } = item;
             const mapLink = `https://www.google.com/maps?q=${station.location.coordinates[1]},${station.location.coordinates[0]}`;
             message += `*${station.name}*\n`;
-            message += `   📞 ${station.contactNumber}\n`;
+            message += formatGpsStationPhoneLines(station, 'english');
             message += `   📏 Distance: ${distance.toFixed(2)} km\n`;
             message += `   📍 Location: ${mapLink}\n`;
             if (station.inchargeName) {
@@ -1503,7 +1507,7 @@ export async function handleLocationMessage(
             const { station, distance } = item;
             const mapLink = `https://www.google.com/maps?q=${station.location.coordinates[1]},${station.location.coordinates[0]}`;
             message += `*${station.nameHindi}*\n`;
-            message += `   📞 ${station.contactNumber}\n`;
+            message += formatGpsStationPhoneLines(station, 'hindi');
             message += `   📏 दूरी: ${distance.toFixed(2)} किमी\n`;
             message += `   📍 स्थान: ${mapLink}\n`;
             if (station.inchargeNameHindi) {

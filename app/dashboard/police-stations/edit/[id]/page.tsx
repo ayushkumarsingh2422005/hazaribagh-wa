@@ -17,7 +17,11 @@ async function getPoliceStation(id: string) {
         address: station.address,
         addressHindi: station.addressHindi,
         district: station.district,
-        contactNumber: station.contactNumber,
+        governmentNumber:
+            (station as { governmentNumber?: string }).governmentNumber ||
+            station.contactNumber ||
+            '',
+        personalNumber: (station as { personalNumber?: string }).personalNumber || '',
         inchargeName: station.inchargeName || '',
         inchargeNameHindi: station.inchargeNameHindi || '',
         displayOrder: typeof station.displayOrder === 'number' ? station.displayOrder : 0,

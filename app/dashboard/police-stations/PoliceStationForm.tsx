@@ -11,7 +11,8 @@ interface PoliceStationFormProps {
         address: string;
         addressHindi: string;
         district: string;
-        contactNumber: string;
+        governmentNumber: string;
+        personalNumber?: string;
         inchargeName?: string;
         inchargeNameHindi?: string;
         displayOrder?: number;
@@ -31,7 +32,8 @@ export default function PoliceStationForm({ initialData }: PoliceStationFormProp
         address: initialData?.address || '',
         addressHindi: initialData?.addressHindi || '',
         district: initialData?.district || 'Hazaribagh',
-        contactNumber: initialData?.contactNumber || '',
+        governmentNumber: initialData?.governmentNumber || '',
+        personalNumber: initialData?.personalNumber || '',
         inchargeName: initialData?.inchargeName || '',
         inchargeNameHindi: initialData?.inchargeNameHindi || '',
         displayOrder: initialData?.displayOrder ?? 0,
@@ -129,15 +131,30 @@ export default function PoliceStationForm({ initialData }: PoliceStationFormProp
 
                 <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Contact Number *
+                        Government Number *
                     </label>
                     <input
                         type="text"
                         required
-                        value={formData.contactNumber}
-                        onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                        value={formData.governmentNumber}
+                        onChange={(e) => setFormData({ ...formData, governmentNumber: e.target.value })}
                         className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Personal Number
+                    </label>
+                    <input
+                        type="text"
+                        value={formData.personalNumber}
+                        onChange={(e) => setFormData({ ...formData, personalNumber: e.target.value })}
+                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        Optional. WhatsApp alerts use the government number first.
+                    </p>
                 </div>
 
                 <div>

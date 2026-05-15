@@ -10,7 +10,10 @@ export interface IPoliceStation extends Document {
         type: 'Point';
         coordinates: [number, number]; // [longitude, latitude]
     };
-    contactNumber: string;
+    governmentNumber: string;
+    personalNumber?: string;
+    /** @deprecated Use governmentNumber — kept for documents not yet migrated */
+    contactNumber?: string;
     inchargeName?: string;
     inchargeNameHindi?: string;
     displayOrder: number;
@@ -57,9 +60,19 @@ const PoliceStationSchema = new Schema<IPoliceStation>(
                 required: true,
             },
         },
+        governmentNumber: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+        personalNumber: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         contactNumber: {
             type: String,
-            required: true,
+            trim: true,
         },
         inchargeName: String,
         inchargeNameHindi: String,
