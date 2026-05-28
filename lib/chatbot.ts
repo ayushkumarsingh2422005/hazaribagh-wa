@@ -4,6 +4,7 @@ import TrafficViolation from '@/models/TrafficViolation';
 import connectDB from './db';
 import { sendInteractiveButtons, sendWhatsAppMessage, sendInteractiveList } from './whatsapp';
 import { handleFormSubmission, saveComplaint } from './chatbot-helpers';
+import { buildMyActivitiesMessage } from './my-activities';
 import {
     formatDisclaimerStationPhones,
     formatGpsStationPhoneLines,
@@ -602,6 +603,7 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         { id: 'service_missing_person', title: 'Missing Person', description: 'Report missing person details' },
                         { id: 'service_information', title: 'Information', description: 'Share actionable information' },
                         { id: 'service_suggestion', title: 'Suggestion', description: 'Suggestion related to police services' },
+                        { id: 'service_my_activities', title: 'My Activities', description: 'Your complaints & status' },
                         { id: 'service_change_lang', title: 'Change Language', description: 'Switch to Hindi' },
                     ],
                 },
@@ -623,6 +625,7 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         { id: 'service_missing_person', title: 'लापता व्यक्ति', description: 'लापता व्यक्ति की जानकारी दें' },
                         { id: 'service_information', title: 'सूचना', description: 'कार्रवाई योग्य सूचना साझा करें' },
                         { id: 'service_suggestion', title: 'सुझाव', description: 'पुलिस सेवाओं से संबंधित सुझाव' },
+                        { id: 'service_my_activities', title: 'मेरी गतिविधियाँ', description: 'आपकी शिकायतें और स्थिति' },
                         { id: 'service_change_lang', title: 'भाषा बदलें', description: 'अंग्रेजी में स्विच करें' },
                     ],
                 },
@@ -675,6 +678,15 @@ async function handleServiceSelection(
         case 'service_suggestion':
             userFlowState[phoneNumber] = { step: 'suggestion_form' };
             return getSuggestionForm(language);
+        case 'service_my_activities': {
+            const message = await buildMyActivitiesMessage(phoneNumber, language);
+            return {
+                type: 'text',
+                message,
+                language,
+                sendFollowUpMenu: true,
+            };
+        }
         default:
             return getServiceMenu(language);
     }
