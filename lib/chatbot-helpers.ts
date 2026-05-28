@@ -3,6 +3,66 @@ import Contact from '@/models/Contact';
 import RawComplaint from '@/models/RawComplaint';
 import { notifyPoliceStationComplaintAlert } from './police-station-alert';
 
+function isValidMobileNumber(value: string): boolean {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length === 10) return true;
+    if (digits.length === 12 && digits.startsWith('91')) return true;
+    return false;
+}
+
+const PASSPORT_CHARACTER_FORMS = new Set([
+    'sub_passport_delay',
+    'sub_passport_other',
+    'sub_character_delay',
+    'sub_character_other',
+]);
+
+function validatePassportCharacterForm(
+    formType: string,
+    lines: string[],
+    language: 'english' | 'hindi'
+): { isValid: boolean; errorMessage?: string; data?: Record<string, unknown> } {
+    const isPassport = formType.startsWith('sub_passport');
+    const isDelay = formType.endsWith('_delay');
+
+    if (lines.length < 5) {
+        const appLabelEn = isPassport
+            ? 'Passport Application Number'
+            : 'Character Verification Application Number';
+        const appLabelHi = isPassport ? 'पासपोर्ट आवेदन संख्या' : 'चरित्र सत्यापन आवेदन संख्या';
+        const detailLabelEn = isDelay ? 'Remarks' : 'Report issue';
+        const detailLabelHi = isDelay ? 'टिप्पणी' : 'समस्या विवरण';
+
+        return {
+            isValid: false,
+            errorMessage:
+                language === 'english'
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* ${appLabelEn}\n*Line 3:* Locality / Village\n*Line 4:* Mobile Number\n*Line 5:* ${detailLabelEn}\n\n*Example:*\nRahul Kumar\nAB1234567\nKatkamsandi\n9876543210\nVerification pending for 2 months\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* ${appLabelHi}\n*पंक्ति 3:* इलाका / गाँव\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* ${detailLabelHi}\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\nकटकमसंडी\n9876543210\n2 महीने से सत्यापन लंबित\n\nकृपया पुनः प्रयास करें।`,
+        };
+    }
+
+    if (!isValidMobileNumber(lines[3])) {
+        return {
+            isValid: false,
+            errorMessage:
+                language === 'english'
+                    ? `❌ *Invalid Mobile Number*\n\n*Line 4* must be a valid 10-digit mobile number.\n\n*Example:* 9876543210\n\nPlease try again with all details.`
+                    : `❌ *अमान्य मोबाइल नंबर*\n\n*पंक्ति 4* में वैध 10 अंकों का मोबाइल नंबर होना चाहिए।\n\n*उदाहरण:* 9876543210\n\nकृपया सभी विवरण के साथ पुनः प्रयास करें।`,
+        };
+    }
+
+    return {
+        isValid: true,
+        data: {
+            name: lines[0],
+            applicationNumber: lines[1],
+            location: lines[2],
+            remarks: `Mobile: ${lines[3]}\n\n${lines.slice(4).join('\n')}`,
+        },
+    };
+}
+
 /**
  * Validate form input based on complaint type
  */
@@ -13,46 +73,8 @@ export function validateFormInput(
 ): { isValid: boolean; errorMessage?: string; data?: Record<string, unknown> } {
     const lines = userInput.trim().split('\n').map(line => line.trim()).filter(line => line);
 
-    // Passport delay validation (PDF: Applicant name, Application No., Remarks)
-    if (formType === 'sub_passport_delay') {
-        if (lines.length < 3) {
-            return {
-                isValid: false,
-                errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Remarks\n\n*Example:*\nRahul Kumar\nAB1234567\nVerification pending for 2 months\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* टिप्पणी\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\n2 महीने से सत्यापन लंबित\n\nकृपया पुनः प्रयास करें।`,
-            };
-        }
-
-        return {
-            isValid: true,
-            data: {
-                name: lines[0],
-                applicationNumber: lines[1],
-                remarks: lines.slice(2).join('\n'),
-            },
-        };
-    }
-
-    // Passport other issues (PDF: Applicant name, Application No., Report issue)
-    if (formType === 'sub_passport_other') {
-        if (lines.length < 3) {
-            return {
-                isValid: false,
-                errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name of Applicant\n*Line 2:* Passport Application Number\n*Line 3:* Report issue\n\n*Example:*\nPriya Sharma\nCD9876543\nDocument submission issue\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* पासपोर्ट आवेदन संख्या\n*पंक्ति 3:* समस्या विवरण\n\n*उदाहरण:*\nप्रिया शर्मा\nCD9876543\nदस्तावेज जमा करने में समस्या\n\nकृपया पुनः प्रयास करें।`,
-            };
-        }
-
-        return {
-            isValid: true,
-            data: {
-                name: lines[0],
-                applicationNumber: lines[1],
-                remarks: lines.slice(2).join('\n'),
-            },
-        };
+    if (PASSPORT_CHARACTER_FORMS.has(formType)) {
+        return validatePassportCharacterForm(formType, lines, language);
     }
 
     // Petition issues (police station chosen from list after form)
@@ -178,46 +200,6 @@ export function validateFormInput(
                 fatherName: lines[1],
                 address: lines[2],
                 remarks: `Mobile: ${lines[3]}\nIssue: ${lines.slice(4).join(' ')}`,
-            },
-        };
-    }
-
-    // Character delay (PDF: Name, Character verification application no., Remarks)
-    if (formType === 'sub_character_delay') {
-        if (lines.length < 3) {
-            return {
-                isValid: false,
-                errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name of Applicant\n*Line 2:* Character Verification Application Number\n*Line 3:* Remarks\n\n*Example:*\nSunil Verma\nCH12345\nVerification delayed by 15 days\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* चरित्र सत्यापन आवेदन संख्या\n*पंक्ति 3:* टिप्पणी\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\nसत्यापन 15 दिनों से लंबित है\n\nकृपया पुनः प्रयास करें।`,
-            };
-        }
-        return {
-            isValid: true,
-            data: {
-                name: lines[0],
-                applicationNumber: lines[1],
-                remarks: lines.slice(2).join('\n'),
-            },
-        };
-    }
-
-    // Character other (PDF: Name, Character application no., Report issue)
-    if (formType === 'sub_character_other') {
-        if (lines.length < 3) {
-            return {
-                isValid: false,
-                errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name of Applicant\n*Line 2:* Character Application Number\n*Line 3:* Report issue\n\n*Example:*\nSunil Verma\nCH12345\nName misspelled in application\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* चरित्र आवेदन संख्या\n*पंक्ति 3:* समस्या विवरण\n\n*उदाहरण:*\nसुनील वर्मा\nCH12345\nआवेदन में नाम की वर्तनी गलत है\n\nकृपया पुनः प्रयास करें।`,
-            };
-        }
-        return {
-            isValid: true,
-            data: {
-                name: lines[0],
-                applicationNumber: lines[1],
-                remarks: lines.slice(2).join('\n'),
             },
         };
     }
@@ -436,10 +418,6 @@ export async function handleFormSubmission(
 
     // Selected flows require final police-station selection from master data.
     const stationSelectionSteps = new Set([
-        'sub_passport_delay',
-        'sub_passport_other',
-        'sub_character_delay',
-        'sub_character_other',
         'sub_traffic_jam',
         'sub_traffic_challan',
         'sub_traffic_other',
