@@ -59,6 +59,7 @@ export const complaintTypeLabels: Record<string, string> = {
     cyber: 'Cyber Crime',
     cyber_other: 'Cyber Crime - Other',
     info_extortion: 'Information - Extortion',
+    info_adebazi: 'Information - Adebazi',
     info_misbehavior: 'Information - Harassment',
     info_drugs: 'Information - Drugs',
     info_absconders: 'Information - Absconders',
@@ -75,7 +76,7 @@ export const GROUPS = [
     { label: 'Lost Mobile Phone',     color: 'orange', types: ['lost_mobile', 'lost_mobile_not_satisfied'] },
     { label: 'Traffic Issues',        color: 'yellow', types: ['traffic_jam', 'traffic_challan', 'traffic_other'] },
     { label: 'Missing Person',        color: 'red',    types: ['missing_person'] },
-    { label: 'Information',           color: 'cyan',   types: ['info_extortion', 'info_misbehavior', 'info_drugs', 'info_absconders', 'info_illegal', 'info_other'] },
+    { label: 'Information',           color: 'cyan',   types: ['info_extortion', 'info_adebazi', 'info_misbehavior', 'info_drugs', 'info_absconders', 'info_illegal', 'info_other'] },
     { label: 'Petition',              color: 'rose',   types: ['petition_not_visited', 'petition_not_satisfied', 'petition_other'] },
     { label: 'Suggestions & Reviews', color: 'green',  types: ['suggestion'] },
 ];

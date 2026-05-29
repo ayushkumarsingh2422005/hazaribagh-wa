@@ -23,6 +23,7 @@ const complaintTypeLabels: Record<string, string> = {
     cyber: 'Cyber Crime',
     cyber_other: 'Cyber Crime - Other',
     info_extortion: 'Information - Extortion',
+    info_adebazi: 'Information - Adebazi',
     info_misbehavior: 'Information - Harassment',
     info_drugs: 'Information - Drugs',
     info_absconders: 'Information - Absconders',
@@ -190,7 +191,13 @@ export default async function ComplaintDetailPage({
 
                             {missingPersonPhotoSrc && (
                                 <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Missing person photo</label>
+                                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                                        {complaint.complaintType === 'missing_person'
+                                            ? 'Missing person photo'
+                                            : complaint.complaintType === 'info_misbehavior'
+                                              ? 'Harasser photo'
+                                              : 'Photo attachment'}
+                                    </label>
                                     <div className="mt-2">
                                         <img
                                             src={missingPersonPhotoSrc}

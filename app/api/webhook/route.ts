@@ -143,9 +143,9 @@ export async function POST(request: NextRequest) {
                     } | null = null;
 
                     try {
-                        const { handleMissingPersonImageMessage, sendChatbotResponse: sendReply, getContactLanguageAndSendMenu } =
+                        const { handleFlowPhotoMessage, sendChatbotResponse: sendReply, getContactLanguageAndSendMenu } =
                             await import('@/lib/chatbot');
-                        botResponse = await handleMissingPersonImageMessage(phoneNumber, mediaId);
+                        botResponse = await handleFlowPhotoMessage(phoneNumber, mediaId);
 
                         const response = await sendReply(phoneNumber, botResponse);
 

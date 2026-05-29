@@ -17,6 +17,7 @@ export type ComplaintType =
     | 'cyber_other'
     | 'missing_person'
     | 'info_extortion'
+    | 'info_adebazi'
     | 'info_misbehavior'
     | 'info_drugs'
     | 'info_absconders'
@@ -81,6 +82,7 @@ const ComplaintSchema = new Schema<IComplaint>(
                 'cyber_other',
                 'missing_person',
                 'info_extortion',
+                'info_adebazi',
                 'info_misbehavior',
                 'info_drugs',
                 'info_absconders',
