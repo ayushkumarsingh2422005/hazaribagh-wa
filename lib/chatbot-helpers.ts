@@ -204,24 +204,54 @@ export function validateFormInput(
         };
     }
 
-    // Lost Mobile (only "Not Satisfied" is handled here; police station chosen from list after form)
+    // Lost Mobile — "Not Satisfied" (saved directly; no police station selection)
     if (formType === 'sub_lost_mobile_not_satisfied') {
-        if (lines.length < 5) {
+        if (lines.length < 4) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Lost Mobile Number\n\n*Example:*\nSanjay Sharma\nRahul Sharma\nSadar, Hazaribagh\n9876543210\n9876543211\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* खोया मोबाइल नंबर\n\n*उदाहरण:*\nसंजय शर्मा\nराहुल शर्मा\nसदर, हजारीबाग\n9876543210\n9876543211\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Your Mobile Number\n*Line 3:* Lost Mobile Number\n*Line 4:* IMEI Number\n\n*Example:*\nSanjay Sharma\n9876543210\n9876543211\n359123456789012\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आपका मोबाइल नंबर\n*पंक्ति 3:* खोया मोबाइल नंबर\n*पंक्ति 4:* IMEI नंबर\n\n*उदाहरण:*\nसंजय शर्मा\n9876543210\n9876543211\n359123456789012\n\nकृपया पुनः प्रयास करें।`,
             };
         }
+
+        if (!isValidMobileNumber(lines[1])) {
+            return {
+                isValid: false,
+                errorMessage:
+                    language === 'english'
+                        ? `❌ *Invalid Mobile Number*\n\n*Line 2* must be a valid 10-digit mobile number.\n\nPlease try again with all details.`
+                        : `❌ *अमान्य मोबाइल नंबर*\n\n*पंक्ति 2* में वैध 10 अंकों का मोबाइल नंबर होना चाहिए।\n\nकृपया सभी विवरण के साथ पुनः प्रयास करें।`,
+            };
+        }
+
+        if (!isValidMobileNumber(lines[2])) {
+            return {
+                isValid: false,
+                errorMessage:
+                    language === 'english'
+                        ? `❌ *Invalid Lost Mobile Number*\n\n*Line 3* must be a valid 10-digit mobile number.\n\nPlease try again with all details.`
+                        : `❌ *अमान्य खोया मोबाइल नंबर*\n\n*पंक्ति 3* में वैध 10 अंकों का मोबाइल नंबर होना चाहिए।\n\nकृपया सभी विवरण के साथ पुनः प्रयास करें।`,
+            };
+        }
+
+        const imeiDigits = lines[3].replace(/\D/g, '');
+        if (imeiDigits.length < 14 || imeiDigits.length > 16) {
+            return {
+                isValid: false,
+                errorMessage:
+                    language === 'english'
+                        ? `❌ *Invalid IMEI Number*\n\n*Line 4* must be a valid IMEI number (usually 15 digits).\n\n*Example:* 359123456789012\n\nPlease try again.`
+                        : `❌ *अमान्य IMEI नंबर*\n\n*पंक्ति 4* में वैध IMEI नंबर होना चाहिए (आमतौर पर 15 अंक)।\n\n*उदाहरण:* 359123456789012\n\nकृपया पुनः प्रयास करें।`,
+            };
+        }
+
         return {
             isValid: true,
             data: {
                 name: lines[0],
-                fatherName: lines[1],
-                address: lines[2],
-                lostMobileNumber: lines[4],
-                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(5).join(' ')}`,
+                lostMobileNumber: lines[2],
+                remarks: `Contact No: ${lines[1]}\nIMEI: ${lines[3]}${lines.length > 4 ? `\n\n${lines.slice(4).join('\n')}` : ''}`,
             },
         };
     }

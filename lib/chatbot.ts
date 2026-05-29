@@ -55,13 +55,16 @@ async function saveDeferredComplaintWithStation(
         });
         const isMissingPerson = complaintType === 'sub_missing_person';
         const isInformation = complaintType.startsWith('sub_info_');
+        const isLostMobileNotSatisfied = complaintType === 'sub_lost_mobile_not_satisfied';
         delete userFlowState[phoneNumber];
 
         const message = isInformation
             ? buildInformationSubmissionThankYou(language)
             : isMissingPerson
               ? buildMissingPersonComplaintSuccess(language, complaintId)
-              : buildComplaintSuccess(language, complaintId);
+              : buildComplaintSuccess(language, complaintId, {
+                    hideComplaintId: isLostMobileNotSatisfied,
+                });
 
         return {
             type: 'text',
@@ -186,12 +189,17 @@ function buildInformationSubmissionThankYou(language: 'english' | 'hindi'): stri
         : `✅ *धन्यवाद*\n\nआपकी सूचना प्राप्त हो गई है। हजारीबाग पुलिस आपके सहयोग के लिए धन्यवाद।`;
 }
 
-function buildComplaintSuccess(language: 'english' | 'hindi', complaintId: string | null): string {
-    const idLine = complaintId
-        ? language === 'english'
-            ? `\n\n🆔 *Complaint ID: ${complaintId}*\n_Please save this ID to track your complaint._`
-            : `\n\n🆔 *शिकायत आईडी: ${complaintId}*\n_इस आईडी को सुरक्षित रखें, आपकी शिकायत ट्रैक करने के काम आएगी।_`
-        : '';
+function buildComplaintSuccess(
+    language: 'english' | 'hindi',
+    complaintId: string | null,
+    options?: { hideComplaintId?: boolean }
+): string {
+    const idLine =
+        !options?.hideComplaintId && complaintId
+            ? language === 'english'
+                ? `\n\n🆔 *Complaint ID: ${complaintId}*\n_Please save this ID to track your complaint._`
+                : `\n\n🆔 *शिकायत आईडी: ${complaintId}*\n_इस आईडी को सुरक्षित रखें, आपकी शिकायत ट्रैक करने के काम आएगी।_`
+            : '';
     return language === 'english'
         ? `✅ *Complaint Registered Successfully*\n\nYour complaint has been registered. Our team will review it and take appropriate action.${idLine}\n\nYou will be contacted soon. Thank you for your patience.`
         : `✅ *शिकायत सफलतापूर्वक दर्ज*\n\nआपकी शिकायत दर्ज कर ली गई है। हमारी टीम इसकी समीक्षा करेगी और उचित कार्रवाई करेगी।${idLine}\n\nजल्द ही आपसे संपर्क किया जाएगा। आपके धैर्य के लिए धन्यवाद।`;
@@ -1185,8 +1193,8 @@ async function handleSubServiceSelection(
         },
         // sub_lost_mobile is handled separately above — redirects to CEIR portal
         sub_lost_mobile_not_satisfied: {
-            english: `📱 *Not Satisfied with Police Action*\n\nIf you're not satisfied with police action on your lost mobile, please reply with:\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Lost Mobile Number\n\nAfter this you will select the concerned police station from the list.\n\n*Example:*\nSanjay Sharma\nRahul Sharma\nSadar, Hazaribagh\n9876543210\n9876543211\n\nPlease reply with all details.`,
-            hindi: `📱 *पुलिस कार्रवाई से संतुष्ट नहीं*\n\nयदि आप पुलिस कार्रवाई से संतुष्ट नहीं हैं, तो कृपया निम्नलिखित के साथ उत्तर दें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* खोया मोबाइल नंबर\n\nइसके बाद आप सूची से संबंधित पुलिस स्टेशन चुनेंगे।\n\n*उदाहरण:*\nसंजय शर्मा\nराहुल शर्मा\nसदर, हजारीबाग\n9876543210\n9876543211\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `📱 *Not Satisfied with Police Action*\n\nIf you're not satisfied with police action on your lost mobile, please reply (one per line):\n\n*Line 1:* Name\n*Line 2:* Your Mobile Number\n*Line 3:* Lost Mobile Number\n*Line 4:* IMEI Number\n\nAfter this you will select the concerned police station from the list.\n\n*Example:*\nSanjay Sharma\n9876543210\n9876543211\n359123456789012\n\nPlease reply with all details.`,
+            hindi: `📱 *पुलिस कार्रवाई से संतुष्ट नहीं*\n\nयदि आप खोए मोबाइल पर पुलिस कार्रवाई से संतुष्ट नहीं हैं, कृपया प्रति पंक्ति एक विवरण भेजें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आपका मोबाइल नंबर\n*पंक्ति 3:* खोया मोबाइल नंबर\n*पंक्ति 4:* IMEI नंबर\n\nइसके बाद आप सूची से संबंधित पुलिस स्टेशन चुनेंगे।\n\n*उदाहरण:*\nसंजय शर्मा\n9876543210\n9876543211\n359123456789012\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_missing_person: {
             english: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nAfter your text, you will be asked for a photo (optional), then to select the police station.\n\nPlease reply with all details.`,
