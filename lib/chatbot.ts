@@ -56,6 +56,11 @@ async function saveDeferredComplaintWithStation(
         const isMissingPerson = complaintType === 'sub_missing_person';
         const isInformation = complaintType.startsWith('sub_info_');
         const isLostMobileNotSatisfied = complaintType === 'sub_lost_mobile_not_satisfied';
+        const hideComplaintId =
+            isLostMobileNotSatisfied ||
+            complaintType === 'sub_traffic_jam' ||
+            complaintType === 'sub_traffic_challan' ||
+            complaintType === 'sub_traffic_other';
         delete userFlowState[phoneNumber];
 
         const message = isInformation
@@ -63,7 +68,7 @@ async function saveDeferredComplaintWithStation(
             : isMissingPerson
               ? buildMissingPersonComplaintSuccess(language, complaintId)
               : buildComplaintSuccess(language, complaintId, {
-                    hideComplaintId: isLostMobileNotSatisfied,
+                    hideComplaintId,
                 });
 
         return {
@@ -1180,16 +1185,16 @@ async function handleSubServiceSelection(
             hindi: `📝 *अन्य याचिका समस्याएं*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* समस्या विवरण\n\nइसके बाद आप सूची से संबंधित पुलिस स्टेशन चुनेंगे।\n\n*उदाहरण:*\nनेहा कुमारी\nमनोज प्रसाद\nकोर्रा, हजारीबाग\n9876543212\nमुझे अपनी याचिका की स्थिति का अपडेट चाहिए\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_traffic_jam: {
-            english: `🚦 *Report Traffic Jam*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Traffic Jam Location\n*Line 4:* Remarks\n\n*Example:*\nRajeev Kumar\n9876543213\nTower Chowk\nHeavy traffic congestion for the last hour\n\nPlease reply with all details.`,
-            hindi: `🚦 *ट्रैफ़िक जाम रिपोर्ट*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* ट्रैफ़िक जाम का स्थान\n*पंक्ति 4:* टिप्पणी\n\n*उदाहरण:*\nराजीव कुमार\n9876543213\nटावर चौक\nपिछले एक घंटे से भारी ट्रैफ़िक जाम है\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
+            english: `🚦 *Report Traffic Jam*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Traffic Jam Location\n*Line 4:* Police Station Name\n*Line 5:* Remarks\n\n*Example:*\nRajeev Kumar\n9876543213\nTower Chowk\nSadar P.S.\nHeavy traffic congestion for the last hour\n\nPlease reply with all details.`,
+            hindi: `🚦 *ट्रैफ़िक जाम रिपोर्ट*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* ट्रैफ़िक जाम का स्थान\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* टिप्पणी\n\n*उदाहरण:*\nराजीव कुमार\n9876543213\nटावर चौक\nसदर थाना\nपिछले एक घंटे से भारी ट्रैफ़िक जाम है\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_traffic_challan: {
-            english: `🚦 *Traffic Challan Issues*\n\nYou can submit challan online at *https://echallan.parivahan.gov.in* or visit Traffic Police Station.\n📞 Traffic Police Station: *9939257628*\n📍 https://www.google.com/maps?q=23.998764,85.365657\n\nTo report other challan-related issues, reply (one per line):\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Challan Number\n*Line 6:* Report issue\n\n*Example:*\nSanjay Gupta\nRamesh Gupta\nSadar, Hazaribagh\n9876543214\nJH12345678\nI was wearing a helmet but still received a challan\n\nPlease reply with all details.`,
-            hindi: `🚦 *ट्रैफ़िक चालान मुद्दे*\n\nचालान ऑनलाइन *https://echallan.parivahan.gov.in* पर जमा करें या ट्रैफ़िक पुलिस स्टेशन जाएं।\n📞 ट्रैफ़िक पुलिस स्टेशन: *9939257628*\n📍 https://www.google.com/maps?q=23.998764,85.365657\n\nअन्य चालान संबंधी समस्या के लिए (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* चालान नंबर\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nसंजय गुप्ता\nरमेश गुप्ता\nसदर, हजारीबाग\n9876543214\nJH12345678\nहेलमेट पहनने के बावजूद चालान कट गया\n\nकृपया सभी विवरण भेजें।`,
+            english: `🚦 *Traffic Challan Issues*\n\nYou can submit challan online at *https://echallan.parivahan.gov.in* or visit Traffic Police Station.\n📞 Traffic Police Station: *9939257628*\n📍 https://www.google.com/maps?q=23.998764,85.365657\n\nTo report other challan-related issues, reply (one per line):\n\n*Line 1:* Name\n*Line 2:* Mobile Number\n*Line 3:* Challan Number\n*Line 4:* Police Station Name\n*Line 5:* Report issue\n\n*Example:*\nSanjay Gupta\n9876543214\nJH12345678\nTraffic P.S.\nI was wearing a helmet but still received a challan\n\nPlease reply with all details.`,
+            hindi: `🚦 *ट्रैफ़िक चालान मुद्दे*\n\nचालान ऑनलाइन *https://echallan.parivahan.gov.in* पर जमा करें या ट्रैफ़िक पुलिस स्टेशन जाएं।\n📞 ट्रैफ़िक पुलिस स्टेशन: *9939257628*\n📍 https://www.google.com/maps?q=23.998764,85.365657\n\nअन्य चालान संबंधी समस्या के लिए (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* चालान नंबर\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* समस्या विवरण\n\n*उदाहरण:*\nसंजय गुप्ता\n9876543214\nJH12345678\nट्रैफिक थाना\nहेलमेट पहनने के बावजूद चालान कट गया\n\nकृपया सभी विवरण भेजें।`,
         },
         sub_traffic_other: {
-            english: `🚦 *Other Traffic Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Report issue\n\nAfter this you will select the concerned police station from the list.\n\n*Example:*\nPooja Dey\nAmit Dey\nCharhi, Hazaribagh\n9876543215\nTraffic light not working at Bajrangbali Chowk\n\nPlease reply with all details.`,
-            hindi: `🚦 *अन्य यातायात की समस्या*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* समस्या विवरण\n\nइसके बाद आप सूची से संबंधित पुलिस स्टेशन चुनेंगे।\n\n*उदाहरण:*\nपूजा डे\nअमित डे\nचरही, हजारीबाग\n9876543215\nबजरंगबली चौक पर ट्रैफिक लाइट खराब है\n\nकृपया सभी विवरण भेजें।`,
+            english: `🚦 *Other Traffic Issues*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Mobile Number\n*Line 3:* Police Station Name\n*Line 4:* Report issue\n\n*Example:*\nPooja Dey\n9876543215\nSadar P.S.\nTraffic light not working at Bajrangbali Chowk\n\nPlease reply with all details.`,
+            hindi: `🚦 *अन्य यातायात की समस्या*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* पुलिस स्टेशन का नाम\n*पंक्ति 4:* समस्या विवरण\n\n*उदाहरण:*\nपूजा डे\n9876543215\nसदर थाना\nबजरंगबली चौक पर ट्रैफिक लाइट खराब है\n\nकृपया सभी विवरण भेजें।`,
         },
         // sub_lost_mobile is handled separately above — redirects to CEIR portal
         sub_lost_mobile_not_satisfied: {
