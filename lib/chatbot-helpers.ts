@@ -22,6 +22,7 @@ const COMPLAINT_TYPES_HIDE_ID = new Set([
     'sub_traffic_challan',
     'sub_traffic_other',
     'sub_lost_mobile_not_satisfied',
+    'sub_missing_person',
 ]);
 
 function validatePassportCharacterForm(
@@ -317,23 +318,33 @@ export function validateFormInput(
         };
     }
 
-    // Missing person (station is selected in next actionable step)
+    // Missing person — police station typed in form; optional photo then save (no PS list)
     if (formType === 'sub_missing_person') {
-        if (lines.length < 5) {
+        if (lines.length < 4) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide:\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Police Station Name\n*Line 4:* Missing person details\n\n*Example:*\nAnita Kumari\n9876543210\nSadar P.S.\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* पुलिस स्टेशन का नाम\n*पंक्ति 4:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\n9876543210\nसदर थाना\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nकृपया पुनः प्रयास करें।`,
             };
         }
+
+        if (!isValidMobileNumber(lines[1])) {
+            return {
+                isValid: false,
+                errorMessage:
+                    language === 'english'
+                        ? `❌ *Invalid Mobile Number*\n\n*Line 2* must be a valid 10-digit mobile number.\n\nPlease try again with all details.`
+                        : `❌ *अमान्य मोबाइल नंबर*\n\n*पंक्ति 2* में वैध 10 अंकों का मोबाइल नंबर होना चाहिए।\n\nकृपया सभी विवरण के साथ पुनः प्रयास करें।`,
+            };
+        }
+
         return {
             isValid: true,
             data: {
                 name: lines[0],
-                fatherName: lines[1],
-                address: lines[2],
-                remarks: `Contact No: ${lines[3]}\n\n${lines.slice(4).join(' ')}`,
+                policeStation: lines[2],
+                remarks: `Contact No: ${lines[1]}\n\n${lines.slice(3).join('\n')}`,
             },
         };
     }

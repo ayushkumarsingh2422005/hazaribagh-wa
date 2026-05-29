@@ -66,7 +66,7 @@ async function saveDeferredComplaintWithStation(
         const message = isInformation
             ? buildInformationSubmissionThankYou(language)
             : isMissingPerson
-              ? buildMissingPersonComplaintSuccess(language, complaintId)
+              ? buildMissingPersonComplaintSuccess(language)
               : buildComplaintSuccess(language, complaintId, {
                     hideComplaintId,
                 });
@@ -210,15 +210,39 @@ function buildComplaintSuccess(
         : `✅ *शिकायत सफलतापूर्वक दर्ज*\n\nआपकी शिकायत दर्ज कर ली गई है। हमारी टीम इसकी समीक्षा करेगी और उचित कार्रवाई करेगी।${idLine}\n\nजल्द ही आपसे संपर्क किया जाएगा। आपके धैर्य के लिए धन्यवाद।`;
 }
 
-function buildMissingPersonComplaintSuccess(language: 'english' | 'hindi', complaintId: string | null): string {
-    const idLine = complaintId
-        ? language === 'english'
-            ? `\n\n🆔 *Complaint ID: ${complaintId}*\n_Please save this ID to track your complaint._`
-            : `\n\n🆔 *शिकायत आईडी: ${complaintId}*\n_इस आईडी को सुरक्षित रखें, आपकी शिकायत ट्रैक करने के काम आएगी।_`
-        : '';
+function buildMissingPersonComplaintSuccess(language: 'english' | 'hindi'): string {
     return language === 'english'
-        ? `✅ *Missing Person Information Submitted*\n\nYour complaint has been recorded informally. You are requested to visit the concerned police station and register the complaint formally.${idLine}`
-        : `✅ *लापता व्यक्ति संबंधी सूचना दर्ज*\n\nअनौपचारिक रूप से आपकी शिकायत दर्ज कर लिया गया है परंतु आपसे अनुरोध है कि औपचारिक रूप से थाने में जा कर शिकायत दर्ज कराए।${idLine}`;
+        ? `✅ *Missing Person Information Submitted*\n\nYour complaint has been recorded informally. You are requested to visit the concerned police station and register the complaint formally.`
+        : `✅ *लापता व्यक्ति संबंधी सूचना दर्ज*\n\nअनौपचारिक रूप से आपकी शिकायत दर्ज कर लिया गया है परंतु आपसे अनुरोध है कि औपचारिक रूप से थाने में जा कर शिकायत दर्ज कराए।`;
+}
+
+async function finalizeMissingPersonComplaint(
+    phoneNumber: string,
+    language: 'english' | 'hindi',
+    complaintData: Record<string, unknown>
+): Promise<ChatbotResponse> {
+    try {
+        await saveComplaint(phoneNumber, 'sub_missing_person', complaintData);
+        delete userFlowState[phoneNumber];
+        return {
+            type: 'text',
+            message: buildMissingPersonComplaintSuccess(language),
+            language,
+            sendFollowUpMenu: true,
+        };
+    } catch (error) {
+        console.error('Error saving missing person complaint:', error);
+        delete userFlowState[phoneNumber];
+        return {
+            type: 'buttons',
+            bodyText:
+                language === 'english'
+                    ? `❌ *Error*\n\nSorry, there was an error saving your report. Please try again from menu.`
+                    : `❌ *त्रुटि*\n\nक्षमा करें, रिपोर्ट सहेजने में त्रुटि हुई। कृपया मेनू से पुनः प्रयास करें।`,
+            buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+            language,
+        };
+    }
 }
 
 // Store user flow state in memory (in production, use Redis or database)
@@ -462,16 +486,8 @@ async function handleInteractiveResponse(
         }
 
         const data = flowState.data || {};
-        userFlowState[phoneNumber] = {
-            step: 'awaiting_police_station_selection',
-            data: {
-                complaintType: data.complaintType,
-                complaintData: data.complaintData,
-                stationPage: 0,
-            },
-        };
-        const stations = await getActivePoliceStations();
-        return buildStationSelectionListResponse(language, stations, 0);
+        const complaintData = (data.complaintData as Record<string, unknown>) || {};
+        return finalizeMissingPersonComplaint(phoneNumber, language, complaintData);
     }
 
     // Actionable police station selection (no typing) with paging support
@@ -1000,7 +1016,7 @@ function getMissingPersonForm(language: 'english' | 'hindi'): ChatbotResponse {
     if (language === 'english') {
         return {
             type: 'buttons',
-            bodyText: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nAfter this, you will be asked to send a photo of the missing person (optional), then select the concerned police station.`,
+            bodyText: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Police Station Name\n*Line 4:* Missing person details\n\n*Example:*\nAnita Kumari\n9876543210\nSadar P.S.\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nAfter this, you may send a photo of the missing person (optional).\n\nPlease reply with all details.`,
             buttons: [{ id: 'menu', title: 'Main Menu' }],
             language,
         };
@@ -1008,7 +1024,7 @@ function getMissingPersonForm(language: 'english' | 'hindi'): ChatbotResponse {
 
     return {
         type: 'buttons',
-        bodyText: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nइसके बाद लापता व्यक्ति की फोटो (वैकल्पिक), फिर संबंधित पुलिस स्टेशन चुनने के लिए कहा जाएगा।`,
+        bodyText: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* पुलिस स्टेशन का नाम\n*पंक्ति 4:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\n9876543210\nसदर थाना\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nइसके बाद लापता व्यक्ति की फोटो (वैकल्पिक) भेज सकते हैं।\n\nकृपया सभी विवरण भेजें।`,
         buttons: [{ id: 'menu', title: 'मुख्य मेनू' }],
         language,
     };
@@ -1202,8 +1218,8 @@ async function handleSubServiceSelection(
             hindi: `📱 *पुलिस कार्रवाई से संतुष्ट नहीं*\n\nयदि आप खोए मोबाइल पर पुलिस कार्रवाई से संतुष्ट नहीं हैं, कृपया प्रति पंक्ति एक विवरण भेजें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आपका मोबाइल नंबर\n*पंक्ति 3:* खोया मोबाइल नंबर\n*पंक्ति 4:* IMEI नंबर\n\nइसके बाद आप सूची से संबंधित पुलिस स्टेशन चुनेंगे।\n\n*उदाहरण:*\nसंजय शर्मा\n9876543210\n9876543211\n359123456789012\n\nकृपया सभी विवरण के साथ उत्तर दें।`,
         },
         sub_missing_person: {
-            english: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Father's Name\n*Line 3:* Address\n*Line 4:* Mobile Number\n*Line 5:* Missing person details\n\n*Example:*\nAnita Kumari\nRamesh Prasad\nSadar, Hazaribagh\n9876543210\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nAfter your text, you will be asked for a photo (optional), then to select the police station.\n\nPlease reply with all details.`,
-            hindi: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\nरमेश प्रसाद\nसदर, हजारीबाग\n9876543210\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nटेक्स्ट के बाद फोटो (वैकल्पिक), फिर थाना चुनने के लिए कहा जाएगा।\n\nकृपया सभी विवरण भेजें।`,
+            english: `🧾 *Missing Person Report*\n\nPlease provide the details below (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Police Station Name\n*Line 4:* Missing person details\n\n*Example:*\nAnita Kumari\n9876543210\nSadar P.S.\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nAfter your text, you may send a photo (optional).\n\nPlease reply with all details.`,
+            hindi: `🧾 *लापता व्यक्ति रिपोर्ट*\n\nकृपया नीचे दिए गए विवरण प्रति पंक्ति एक भेजें:\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* पुलिस स्टेशन का नाम\n*पंक्ति 4:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\n9876543210\nसदर थाना\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nटेक्स्ट के बाद फोटो (वैकल्पिक) भेज सकते हैं।\n\nकृपया सभी विवरण भेजें।`,
         },
         // sub_cyber is handled separately above — redirects to cybercrime.gov.in / helpline 1930
         sub_cyber_other: {
@@ -1551,7 +1567,7 @@ export async function handleLocationMessage(
 }
 
 /**
- * Inbound image during Missing Person flow: save file and move to police station list.
+ * Inbound image during Missing Person flow: save file and register complaint.
  */
 export async function handleMissingPersonImageMessage(
     phoneNumber: string,
@@ -1582,16 +1598,7 @@ export async function handleMissingPersonImageMessage(
         const prev = (data.complaintData as Record<string, unknown>) || {};
         const complaintData = { ...prev, missingPersonPhotoUrl: relativePath };
 
-        userFlowState[phoneNumber] = {
-            step: 'awaiting_police_station_selection',
-            data: {
-                complaintType: String(data.complaintType || 'sub_missing_person'),
-                complaintData,
-                stationPage: 0,
-            },
-        };
-        const stations = await getActivePoliceStations();
-        return buildStationSelectionListResponse(language, stations, 0);
+        return finalizeMissingPersonComplaint(phoneNumber, language, complaintData);
     } catch (err) {
         console.error('Missing person image save failed:', err);
         return {
