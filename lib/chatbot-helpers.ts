@@ -216,7 +216,7 @@ function validatePassportCharacterForm(
     const isPassport = formType.startsWith('sub_passport');
     const isDelay = formType.endsWith('_delay');
 
-    if (lines.length < 5) {
+    if (lines.length < 6) {
         const appLabelEn = isPassport
             ? 'Passport Application Number'
             : 'Character Verification Application Number';
@@ -228,8 +228,8 @@ function validatePassportCharacterForm(
             isValid: false,
             errorMessage:
                 language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* ${appLabelEn}\n*Line 3:* Locality / Village\n*Line 4:* Mobile Number\n*Line 5:* ${detailLabelEn}\n\n*Example:*\nRahul Kumar\nAB1234567\nKatkamsandi\n9876543210\nVerification pending for 2 months\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* ${appLabelHi}\n*पंक्ति 3:* इलाका / गाँव\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* ${detailLabelHi}\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\nकटकमसंडी\n9876543210\n2 महीने से सत्यापन लंबित\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name of Applicant\n*Line 2:* ${appLabelEn}\n*Line 3:* Locality / Village\n*Line 4:* Mobile Number\n*Line 5:* Police Station Name\n*Line 6:* ${detailLabelEn}\n\n*Example:*\nRahul Kumar\nAB1234567\nKatkamsandi\n9876543210\nSadar P.S.\nVerification pending for 2 months\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आवेदक का नाम\n*पंक्ति 2:* ${appLabelHi}\n*पंक्ति 3:* इलाका / गाँव\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* पुलिस स्टेशन का नाम\n*पंक्ति 6:* ${detailLabelHi}\n\n*उदाहरण:*\nराहुल कुमार\nAB1234567\nकटकमसंडी\n9876543210\nसदर थाना\n2 महीने से सत्यापन लंबित\n\nकृपया पुनः प्रयास करें।`,
         };
     }
 
@@ -249,7 +249,8 @@ function validatePassportCharacterForm(
             name: lines[0],
             applicationNumber: lines[1],
             location: lines[2],
-            remarks: `Mobile: ${lines[3]}\n\n${lines.slice(4).join('\n')}`,
+            policeStation: lines[4],
+            remarks: `Mobile: ${lines[3]}\n\n${lines.slice(5).join('\n')}`,
         },
     };
 }
