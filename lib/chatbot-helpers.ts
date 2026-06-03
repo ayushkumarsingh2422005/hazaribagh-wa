@@ -411,14 +411,14 @@ export function validateFormInput(
         };
     }
 
-    // Lost Mobile — "Not Satisfied" (saved directly; no police station selection)
+    // Lost Mobile — "Not Satisfied" (police station typed; saved directly, no list)
     if (formType === 'sub_lost_mobile_not_satisfied') {
-        if (lines.length < 4) {
+        if (lines.length < 5) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Your Mobile Number\n*Line 3:* Lost Mobile Number\n*Line 4:* IMEI Number\n\n*Example:*\nSanjay Sharma\n9876543210\n9876543211\n359123456789012\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आपका मोबाइल नंबर\n*पंक्ति 3:* खोया मोबाइल नंबर\n*पंक्ति 4:* IMEI नंबर\n\n*उदाहरण:*\nसंजय शर्मा\n9876543210\n9876543211\n359123456789012\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Name\n*Line 2:* Your Mobile Number\n*Line 3:* Lost Mobile Number\n*Line 4:* IMEI Number\n*Line 5:* Police Station Name\n\n*Example:*\nSanjay Sharma\n9876543210\n9876543211\n359123456789012\nSadar P.S.\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* आपका मोबाइल नंबर\n*पंक्ति 3:* खोया मोबाइल नंबर\n*पंक्ति 4:* IMEI नंबर\n*पंक्ति 5:* पुलिस स्टेशन का नाम\n\n*उदाहरण:*\nसंजय शर्मा\n9876543210\n9876543211\n359123456789012\nसदर थाना\n\nकृपया पुनः प्रयास करें।`,
             };
         }
 
@@ -458,7 +458,8 @@ export function validateFormInput(
             data: {
                 name: lines[0],
                 lostMobileNumber: lines[2],
-                remarks: `Contact No: ${lines[1]}\nIMEI: ${lines[3]}${lines.length > 4 ? `\n\n${lines.slice(4).join('\n')}` : ''}`,
+                policeStation: lines[4],
+                remarks: `Contact No: ${lines[1]}\nIMEI: ${lines[3]}${lines.length > 5 ? `\n\n${lines.slice(5).join('\n')}` : ''}`,
             },
         };
     }
@@ -704,7 +705,6 @@ export async function handleFormSubmission(
 
     // Selected flows require final police-station selection from master data.
     const stationSelectionSteps = new Set([
-        'sub_lost_mobile_not_satisfied',
         'sub_petition_not_visited',
         'sub_petition_not_satisfied',
         'sub_petition_other',
