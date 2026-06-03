@@ -486,14 +486,14 @@ export function validateFormInput(
         };
     }
 
-    // Missing person — police station typed in form; optional photo then save (no PS list)
+    // Missing person — typed PS + lost address; optional photo then save (no PS list)
     if (formType === 'sub_missing_person') {
-        if (lines.length < 4) {
+        if (lines.length < 5) {
             return {
                 isValid: false,
                 errorMessage: language === 'english'
-                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Police Station Name\n*Line 4:* Missing person details\n\n*Example:*\nAnita Kumari\n9876543210\nSadar P.S.\nMy younger brother (age 17) is missing since yesterday evening from Lake Road area.\n\nPlease try again.`
-                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* पुलिस स्टेशन का नाम\n*पंक्ति 4:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\n9876543210\nसदर थाना\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लेक रोड क्षेत्र से लापता है।\n\nकृपया पुनः प्रयास करें।`,
+                    ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Police Station Name\n*Line 4:* Lost / Last Seen Address\n*Line 5:* Missing Person Details\n\n*Example:*\nAnita Kumari\n9876543210\nSadar P.S.\nLake Road area, near Tower Chowk, Hazaribagh\nMy younger brother (age 17) is missing since yesterday evening.\n\nPlease try again.`
+                    : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* पुलिस स्टेशन का नाम\n*पंक्ति 4:* लापता / अंतिम बार देखा गया पता\n*पंक्ति 5:* लापता व्यक्ति का विवरण\n\n*उदाहरण:*\nअनीता कुमारी\n9876543210\nसदर थाना\nलेक रोड क्षेत्र, टावर चौक के पास, हजारीबाग\nमेरा छोटा भाई (उम्र 17 वर्ष) कल शाम से लापता है।\n\nकृपया पुनः प्रयास करें।`,
             };
         }
 
@@ -512,7 +512,8 @@ export function validateFormInput(
             data: {
                 name: lines[0],
                 policeStation: lines[2],
-                remarks: `Contact No: ${lines[1]}\n\n${lines.slice(3).join('\n')}`,
+                address: lines[3],
+                remarks: `Contact No: ${lines[1]}\n\nMissing person details:\n${lines.slice(4).join('\n')}`,
             },
         };
     }
