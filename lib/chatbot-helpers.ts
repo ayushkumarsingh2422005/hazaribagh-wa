@@ -31,21 +31,8 @@ function buildInformationThankYou(language: 'english' | 'hindi'): string {
         : `✅ *धन्यवाद*\n\nआपकी सूचना प्राप्त हो गई है। हजारीबाग पुलिस आपके सहयोग के लिए धन्यवाद।`;
 }
 
-/** Info types saved immediately after the text form (no GPS step). */
-export const INFO_DIRECT_SAVE_TYPES = new Set([
-    'sub_info_drugs',
-    'sub_info_illegal',
-    'sub_info_other',
-]);
-
-/** Info types that may request an optional GPS pin after the form. */
-export const INFO_OPTIONAL_LOCATION_TYPES = new Set([
-    'sub_info_adebazi',
-    'sub_info_absconders',
-]);
-
-/** Harassment requires GPS of the incident place, then a photo step. */
-export const INFO_REQUIRED_LOCATION_TYPES = new Set(['sub_info_misbehavior']);
+/** All information types save from the text form; harassment may add an optional photo step. */
+export const INFO_HARASSMENT_PHOTO_TYPE = 'sub_info_misbehavior';
 
 function validateInfoForm(
     formType: string,
@@ -177,13 +164,13 @@ function validateInfoForm(
     }
 
     if (normalizedType === 'sub_info_other') {
-        if (lines.length < 4) {
+        if (lines.length < 5) {
             return {
                 isValid: false,
                 errorMessage:
                     language === 'english'
-                        ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Police Station Name\n*Line 4:* Information Details\n\nPlease try again.`
-                        : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* पुलिस स्टेशन का नाम\n*पंक्ति 4:* सूचना का विवरण\n\nकृपया पुनः प्रयास करें।`,
+                        ? `❌ *Incomplete Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Place / Location\n*Line 4:* Police Station Name\n*Line 5:* Information Details\n\nPlease try again.`
+                        : `❌ *अधूरी जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* स्थान / जगह\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* सूचना का विवरण\n\nकृपया पुनः प्रयास करें।`,
             };
         }
         if (!isValidMobileNumber(lines[1])) {
@@ -199,8 +186,9 @@ function validateInfoForm(
             isValid: true,
             data: {
                 name: lines[0],
-                policeStation: lines[2],
-                remarks: `Mobile: ${lines[1]}\nDetails: ${lines.slice(3).join('\n')}`,
+                location: lines[2],
+                policeStation: lines[3],
+                remarks: `Mobile: ${lines[1]}\nPlace: ${lines[2]}\nDetails: ${lines.slice(4).join('\n')}`,
             },
         };
     }
@@ -641,55 +629,42 @@ export async function handleFormSubmission(
         };
     }
 
-    // Information flows — direct save, optional GPS, or harassment GPS + photo.
+    // Information flows — typed location in form; harassment may add optional photo (no GPS).
     if (flowState.step.startsWith('sub_info_')) {
         const infoStep =
             flowState.step === 'sub_info_extortion' ? 'sub_info_adebazi' : flowState.step;
         const complaintData = validationResult.data || {};
 
-        if (INFO_DIRECT_SAVE_TYPES.has(infoStep)) {
-            try {
-                await saveComplaint(phoneNumber, infoStep, complaintData);
-                return {
-                    success: true,
-                    message: buildInformationThankYou(language),
-                    language,
-                    sendFollowUpMenu: true,
-                };
-            } catch (error) {
-                console.error('Error saving information:', error);
-                return {
-                    success: false,
-                    message:
-                        language === 'english'
-                            ? `❌ *Error*\n\nSorry, there was an error saving your information. Please try again.`
-                            : `❌ *त्रुटि*\n\nक्षमा करें, सूचना सहेजने में त्रुटि हुई। कृपया पुनः प्रयास करें।`,
-                    language,
-                };
-            }
+        if (infoStep === INFO_HARASSMENT_PHOTO_TYPE) {
+            return {
+                success: true,
+                message: '',
+                language,
+                awaitHarassmentPhoto: true,
+                deferredComplaintType: infoStep,
+                deferredComplaintData: complaintData,
+            };
         }
 
-        const locationOptional = INFO_OPTIONAL_LOCATION_TYPES.has(infoStep);
-        const locationMessage =
-            infoStep === 'sub_info_misbehavior'
-                ? language === 'english'
-                    ? `📍 *Next Step: Harassment Location*\n\nPlease share the *location of the harassment incident* using the button below. Nearby police stations and offices will be shown for reference.`
-                    : `📍 *अगला चरण: छेड़खानी का स्थान*\n\nकृपया नीचे दिए बटन से *छेड़खानी की घटना का स्थान* साझा करें। संदर्भ के लिए नजदीकी थाने और कार्यालय दिखाए जाएंगे।`
-                : locationOptional
-                  ? language === 'english'
-                      ? `📍 *Optional: Share Location*\n\nIf possible, share the location pin using the button below. You can also tap *Skip location* to submit without GPS.`
-                      : `📍 *वैकल्पिक: स्थान साझा करें*\n\nयदि संभव हो, नीचे दिए बटन से स्थान साझा करें। GPS के बिना भेजने के लिए *स्थान छोड़ें* चुनें।`
-                  : '';
-
-        return {
-            success: true,
-            message: locationMessage,
-            language,
-            awaitLocation: true,
-            locationOptional,
-            deferredComplaintType: infoStep,
-            deferredComplaintData: complaintData,
-        };
+        try {
+            await saveComplaint(phoneNumber, infoStep, complaintData);
+            return {
+                success: true,
+                message: buildInformationThankYou(language),
+                language,
+                sendFollowUpMenu: true,
+            };
+        } catch (error) {
+            console.error('Error saving information:', error);
+            return {
+                success: false,
+                message:
+                    language === 'english'
+                        ? `❌ *Error*\n\nSorry, there was an error saving your information. Please try again.`
+                        : `❌ *त्रुटि*\n\nक्षमा करें, सूचना सहेजने में त्रुटि हुई। कृपया पुनः प्रयास करें।`,
+                language,
+            };
+        }
     }
 
     // Missing person: collect optional photo before save.

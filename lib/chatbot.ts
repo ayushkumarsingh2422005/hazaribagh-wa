@@ -393,34 +393,6 @@ export async function processChatbotMessage(
             return buildStationSelectionListResponse(language, stations, Number.isNaN(page) ? 0 : page);
         }
 
-        if (userFlowState[phoneNumber].step === 'awaiting_info_location') {
-            const language = userLanguage || 'english';
-            const optional = Boolean(userFlowState[phoneNumber].data?.locationOptional);
-            const complaintType = String(userFlowState[phoneNumber].data?.complaintType || '');
-            const isHarassment = complaintType === 'sub_info_misbehavior';
-            return {
-                type: 'buttons',
-                bodyText: isHarassment
-                    ? language === 'english'
-                        ? `📍 *Harassment location pending*\n\nPlease share the *location of the harassment incident* using the location button.\n\nNearby police stations and offices will be shown for reference.`
-                        : `📍 *छेड़खानी का स्थान लंबित*\n\nकृपया स्थान बटन से *छेड़खानी की घटना का स्थान* साझा करें।\n\nसंदर्भ के लिए नजदीकी थाने और कार्यालय दिखाए जाएंगे।`
-                    : optional
-                      ? language === 'english'
-                          ? `📍 *Optional location*\n\nShare a location pin if possible, or tap *Skip location* to submit without GPS.`
-                          : `📍 *वैकल्पिक स्थान*\n\nयदि संभव हो स्थान साझा करें, या *स्थान छोड़ें* से GPS के बिना जमा करें।`
-                      : language === 'english'
-                        ? `📍 *Location Pending*\n\nPlease share the location using the button below.`
-                        : `📍 *लोकेशन लंबित*\n\nकृपया नीचे दिए बटन से स्थान साझा करें।`,
-                buttons: optional
-                    ? [
-                          { id: 'info_location_skip', title: language === 'english' ? 'Skip location' : 'स्थान छोड़ें' },
-                          { id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' },
-                      ]
-                    : [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
-                language,
-            };
-        }
-
         if (userFlowState[phoneNumber].step === 'awaiting_harassment_photo') {
             const language = userLanguage || 'english';
             return {
@@ -480,51 +452,15 @@ export async function processChatbotMessage(
                 return buildMissingPersonPhotoPrompt(result.language);
             }
 
-            if (result.awaitLocation && result.deferredComplaintType && result.deferredComplaintData) {
+            if (result.awaitHarassmentPhoto && result.deferredComplaintType && result.deferredComplaintData) {
                 userFlowState[phoneNumber] = {
-                    step: 'awaiting_info_location',
+                    step: 'awaiting_harassment_photo',
                     data: {
                         complaintType: result.deferredComplaintType,
                         complaintData: result.deferredComplaintData,
-                        locationOptional: result.locationOptional ?? false,
                     },
                 };
-
-                const { sendLocationRequest } = await import('./whatsapp');
-                const locationBody =
-                    result.message ||
-                    (result.language === 'english'
-                        ? `📍 *Share Location*\n\nPlease share the location using the button below.`
-                        : `📍 *स्थान साझा करें*\n\nकृपया नीचे दिए बटन से स्थान साझा करें।`);
-
-                await sendLocationRequest({
-                    to: phoneNumber,
-                    bodyText: locationBody,
-                });
-
-                if (result.locationOptional) {
-                    return {
-                        type: 'buttons',
-                        bodyText:
-                            result.language === 'english'
-                                ? '📍 Tap "Send Location" above if you can share a pin.\n\nOr tap *Skip location* to submit without GPS.'
-                                : '📍 यदि संभव हो तो ऊपर "स्थान भेजें" दबाएं।\n\nGPS के बिना जमा करने के लिए *स्थान छोड़ें* चुनें।',
-                        buttons: [
-                            { id: 'info_location_skip', title: result.language === 'english' ? 'Skip location' : 'स्थान छोड़ें' },
-                            { id: 'menu', title: result.language === 'english' ? 'Main Menu' : 'मुख्य मेनू' },
-                        ],
-                        language: result.language,
-                    };
-                }
-
-                return {
-                    type: 'text',
-                    message:
-                        result.language === 'english'
-                            ? '📍 Please click the "Send Location" button above to share the incident location.'
-                            : '📍 कृपया ऊपर "स्थान भेजें" बटन से घटना का स्थान साझा करें।',
-                    language: result.language,
-                };
+                return buildHarassmentPhotoPrompt(result.language);
             }
 
             // Clear flow state on success
@@ -577,29 +513,6 @@ async function handleInteractiveResponse(
         );
 
         return await showDisclaimerAndContacts(phoneNumber, language);
-    }
-
-    if (interactiveId === 'info_location_skip') {
-        const contact = await Contact.findOne({ phoneNumber });
-        const language = contact?.language || 'english';
-        const flowState = userFlowState[phoneNumber];
-
-        if (!flowState || flowState.step !== 'awaiting_info_location') {
-            return {
-                type: 'buttons',
-                bodyText:
-                    language === 'english'
-                        ? 'This step has expired. Please start the Information flow again from the menu.'
-                        : 'यह चरण समाप्त हो गया है। कृपया मेनू से सूचना प्रवाह फिर से शुरू करें।',
-                buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
-                language,
-            };
-        }
-
-        const data = flowState.data || {};
-        const complaintType = String(data.complaintType || '');
-        const complaintData = (data.complaintData as Record<string, unknown>) || {};
-        return finalizeInfoComplaint(phoneNumber, language, complaintType, complaintData);
     }
 
     if (interactiveId === 'harassment_photo_skip') {
@@ -1384,28 +1297,28 @@ async function handleSubServiceSelection(
             hindi: `💻 *अन्य साइबर मुद्दे*\n\nयदि आपके पास अन्य साइबर संबंधी मुद्दे हैं, तो कृपया उत्तर दें:\n\n*पंक्ति 1:* नाम\n*पंक्ति 2:* पिता का नाम\n*पंक्ति 3:* पता\n*पंक्ति 4:* मोबाइल नंबर\n*पंक्ति 5:* संबंधित पुलिस स्टेशन\n*पंक्ति 6:* समस्या विवरण\n\n*उदाहरण:*\nकमल रॉय\nबिजय रॉय\nसदर, हजारीबाग\n9876543210\nसाइबर पीएस\nसोशल मीडिया अकाउंट हैक के संबंध में प्रश्न\n\nकृपया विवरण के साथ उत्तर दें।`,
         },
         sub_info_adebazi: {
-            english: `ℹ️ *Adebazi Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Adebazi Details\n*Line 4:* Place of Adebazi\n*Line 5:* Police Station Name\n\n*Example:*\nRavi Kumar\n9876543210\nLocal youths gather and create nuisance daily\nKorra market area\nSadar P.S.\n\nYou may optionally share a location pin after this.\n\nPlease reply with complete details.`,
-            hindi: `ℹ️ *अड्डेबाजी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* अड्डेबाजी का विवरण\n*पंक्ति 4:* अड्डेबाजी का स्थान\n*पंक्ति 5:* पुलिस स्टेशन का नाम\n\n*उदाहरण:*\nरवि कुमार\n9876543210\nस्थानीय युवक रोज उपद्रव करते हैं\nकोर्रा बाजार क्षेत्र\nसदर थाना\n\nइसके बाद वैकल्पिक रूप से स्थान साझा कर सकते हैं।\n\nकृपया पूरी जानकारी भेजें।`,
+            english: `ℹ️ *Adebazi Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Adebazi Details\n*Line 4:* Place of Adebazi\n*Line 5:* Police Station Name\n\n*Example:*\nRavi Kumar\n9876543210\nLocal youths gather and create nuisance daily\nKorra market area\nSadar P.S.\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *अड्डेबाजी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* अड्डेबाजी का विवरण\n*पंक्ति 4:* अड्डेबाजी का स्थान\n*पंक्ति 5:* पुलिस स्टेशन का नाम\n\n*उदाहरण:*\nरवि कुमार\n9876543210\nस्थानीय युवक रोज उपद्रव करते हैं\nकोर्रा बाजार क्षेत्र\nसदर थाना\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_misbehavior: {
-            english: `ℹ️ *Harassment Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Place Name\n*Line 4:* Police Station Name\n*Line 5:* Harassment Details\n\n*Example:*\nPooja Kumari\n9876543211\nBus stand, Sadar\nSadar P.S.\nSome boys harass school girls near the bus stand every morning.\n\nYou will then share the *harassment incident location*, see nearby police offices, and may send a photo of the harasser.\n\nPlease reply with complete details.`,
-            hindi: `ℹ️ *छेड़खानी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* स्थान का नाम\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* छेड़खानी का विवरण\n\n*उदाहरण:*\nपूजा कुमारी\n9876543211\nबस स्टैंड, सदर\nसदर थाना\nसुबह बस स्टैंड पर कुछ लड़के स्कूल जाने वाली लड़कियों के साथ छेड़खानी करते हैं।\n\nइसके बाद *छेड़खानी के स्थान* का पिन साझा करें, नजदीकी थाने देखें, और छेड़खानी करने वाले की फोटो भेज सकते हैं।\n\nकृपया पूरी जानकारी भेजें।`,
+            english: `ℹ️ *Harassment Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Place Name\n*Line 4:* Police Station Name\n*Line 5:* Harassment Details\n\n*Example:*\nPooja Kumari\n9876543211\nBus stand, Sadar\nSadar P.S.\nSome boys harass school girls near the bus stand every morning.\n\nYou may optionally send a photo of the harasser after this.\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *छेड़खानी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* स्थान का नाम\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* छेड़खानी का विवरण\n\n*उदाहरण:*\nपूजा कुमारी\n9876543211\nबस स्टैंड, सदर\nसदर थाना\nसुबह बस स्टैंड पर कुछ लड़के स्कूल जाने वाली लड़कियों के साथ छेड़खानी करते हैं।\n\nइसके बाद वैकल्पिक रूप से छेड़खानी करने वाले की फोटो भेज सकते हैं।\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_drugs: {
             english: `ℹ️ *Drug / Intoxication Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Place of Drugs/Intoxication Activity\n*Line 4:* Police Station Name\n*Line 5:* Details\n\n*Example:*\nAnil Verma\n9876543212\nOld warehouse area, Pelawal\nSadar P.S.\nPeople are selling and consuming drugs near the old warehouse at night.\n\nPlease reply with complete details.`,
             hindi: `ℹ️ *नशाखोरी/ड्रग्स से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* नशाखोरी/ड्रग्स गतिविधि का स्थान\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* विवरण\n\n*उदाहरण:*\nअनिल वर्मा\n9876543212\nपेलावल, पुराने गोदाम क्षेत्र\nसदर थाना\nरात में पुराने गोदाम के पास ड्रग्स की बिक्री हो रही है।\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_absconders: {
-            english: `ℹ️ *Absconding Criminals Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Absconder's Name\n*Line 4:* Case Details (if known)\n*Line 5:* Place Last Seen\n*Line 6:* Police Station Name\n\n*Example:*\nDeepak Singh\n9876543213\nRamesh Yadav\nWanted in theft case — FIR unknown\nBarhi bazaar area\nBarhi P.S.\n\nYou may optionally share the absconder's location pin after this.\n\nPlease reply with complete details.`,
-            hindi: `ℹ️ *फरार अपराधियों की सूचना*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* फरार अपराधी का नाम\n*पंक्ति 4:* मामले का विवरण (यदि ज्ञात हो)\n*पंक्ति 5:* अंतिम बार देखा गया स्थान\n*पंक्ति 6:* पुलिस स्टेशन का नाम\n\n*उदाहरण:*\nदीपक सिंह\n9876543213\nरमेश यादव\nचोरी के मामले में वांछित\nबरही बाजार क्षेत्र\nबरही थाना\n\nइसके बाद वैकल्पिक रूप से फरार अपराधी का स्थान साझा कर सकते हैं।\n\nकृपया पूरी जानकारी भेजें।`,
+            english: `ℹ️ *Absconding Criminals Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Absconder's Name\n*Line 4:* Case Details (if known)\n*Line 5:* Place Last Seen\n*Line 6:* Police Station Name\n\n*Example:*\nDeepak Singh\n9876543213\nRamesh Yadav\nWanted in theft case — FIR unknown\nBarhi bazaar area\nBarhi P.S.\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *फरार अपराधियों की सूचना*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* फरार अपराधी का नाम\n*पंक्ति 4:* मामले का विवरण (यदि ज्ञात हो)\n*पंक्ति 5:* अंतिम बार देखा गया स्थान\n*पंक्ति 6:* पुलिस स्टेशन का नाम\n\n*उदाहरण:*\nदीपक सिंह\n9876543213\nरमेश यादव\nचोरी के मामले में वांछित\nबरही बाजार क्षेत्र\nबरही थाना\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_illegal: {
             english: `ℹ️ *Illegal Liquor Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Place of Illegal Liquor Activity\n*Line 4:* Police Station Name\n*Line 5:* Details\n\n*Example:*\nSunita Devi\n9876543214\nCanal road, Churchu\nChurchu P.S.\nIllegal liquor is being sold openly every evening near the canal road.\n\nPlease reply with complete details.`,
             hindi: `ℹ️ *अवैध शराब से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* अवैध शराब गतिविधि का स्थान\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* विवरण\n\n*उदाहरण:*\nसुनीता देवी\n9876543214\nनहर रोड, चर्चू\nचर्चू थाना\nहर शाम नहर रोड पर अवैध शराब की बिक्री हो रही है।\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_other: {
-            english: `ℹ️ *Any Other Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Police Station Name\n*Line 4:* Information Details\n\n*Example:*\nNitesh Kumar\n9876543215\nSadar P.S.\nSuspicious people are moving around closed houses late at night.\n\nPlease reply with complete details.`,
-            hindi: `ℹ️ *कोई अन्य सूचना*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* पुलिस स्टेशन का नाम\n*पंक्ति 4:* सूचना का विवरण\n\n*उदाहरण:*\nनितेश कुमार\n9876543215\nसदर थाना\nरात में बंद घरों के आसपास संदिग्ध लोग घूमते दिख रहे हैं।\n\nकृपया पूरी जानकारी भेजें।`,
+            english: `ℹ️ *Any Other Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Place / Location\n*Line 4:* Police Station Name\n*Line 5:* Information Details\n\n*Example:*\nNitesh Kumar\n9876543215\nTower Chowk area\nSadar P.S.\nSuspicious people are moving around closed houses late at night.\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *कोई अन्य सूचना*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* स्थान / जगह\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* सूचना का विवरण\n\n*उदाहरण:*\nनितेश कुमार\n9876543215\nटावर चौक क्षेत्र\nसदर थाना\nरात में बंद घरों के आसपास संदिग्ध लोग घूमते दिख रहे हैं।\n\nकृपया पूरी जानकारी भेजें।`,
         },
     };
 
@@ -1576,72 +1489,6 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 /**
- * Build nearby police station + DSP/INSP office reference text for harassment info flow.
- */
-async function buildNearbyPoliceReferenceMessage(
-    latitude: number,
-    longitude: number,
-    language: 'english' | 'hindi'
-): Promise<string> {
-    const stations = await PoliceStation.find({ isActive: true });
-    const stationsWithDistance = stations
-        .map((station) => ({
-            station,
-            distance: calculateDistance(
-                latitude,
-                longitude,
-                station.location.coordinates[1],
-                station.location.coordinates[0]
-            ),
-        }))
-        .filter((item) => item.distance <= 15)
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, 5);
-
-    const officesWithDistance = POLICE_OFFICES.map((office) => ({
-        office,
-        distance: calculateDistance(latitude, longitude, office.lat, office.lng),
-    }))
-        .filter((item) => item.distance <= 20)
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, 4);
-
-    let message =
-        language === 'english'
-            ? `📍 *Harassment incident location received*\n\n_Map pin saved for the harassment place._\n\n`
-            : `📍 *छेड़खानी के स्थान की जानकारी मिली*\n\n_छेड़खानी के स्थान का मानचित्र पिन सहेजा गया।_\n\n`;
-
-    if (stationsWithDistance.length > 0) {
-        message +=
-            language === 'english'
-                ? `*Nearby Police Stations (reference):*\n\n`
-                : `*नजदीकी पुलिस स्टेशन (संदर्भ):*\n\n`;
-        stationsWithDistance.forEach(({ station, distance }) => {
-            const mapLink = `https://www.google.com/maps?q=${station.location.coordinates[1]},${station.location.coordinates[0]}`;
-            message +=
-                language === 'english'
-                    ? `• *${station.name}* — ${distance.toFixed(1)} km\n  ${mapLink}\n`
-                    : `• *${station.nameHindi}* — ${distance.toFixed(1)} km\n  ${mapLink}\n`;
-        });
-        message += '\n';
-    }
-
-    if (officesWithDistance.length > 0) {
-        message +=
-            language === 'english'
-                ? `*Nearby DSP / Inspector Offices (reference):*\n\n`
-                : `*नजदीकी DSP / निरीक्षक कार्यालय (संदर्भ):*\n\n`;
-        officesWithDistance.forEach(({ office, distance }) => {
-            const mapLink = `https://www.google.com/maps?q=${office.lat},${office.lng}`;
-            const label = language === 'english' ? office.name : office.nameHindi;
-            message += `• *${label}* — ${distance.toFixed(1)} km\n  ${mapLink}\n`;
-        });
-    }
-
-    return message;
-}
-
-/**
  * Handle location message and find nearest police station
  */
 export async function handleLocationMessage(
@@ -1653,69 +1500,6 @@ export async function handleLocationMessage(
 
     const contact = await Contact.findOne({ phoneNumber });
     const language = contact?.language || 'english';
-
-    // Information flow: GPS pin enriches the report; harassment continues to photo step.
-    const flowState = userFlowState[phoneNumber];
-    if (flowState?.step === 'awaiting_info_location') {
-        const deferred = flowState.data || {};
-        const complaintType = String(deferred.complaintType || '');
-        const complaintData = (deferred.complaintData as Record<string, unknown> | undefined) || {};
-
-        if (!complaintType || !complaintType.startsWith('sub_info_')) {
-            delete userFlowState[phoneNumber];
-            return {
-                type: 'buttons',
-                bodyText:
-                    language === 'english'
-                        ? `❌ *Session Expired*\n\nPlease submit the information details again from the menu.`
-                        : `❌ *सेशन समाप्त*\n\nकृपया मेनू से सूचना विवरण फिर से भेजें।`,
-                buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
-                language,
-            };
-        }
-
-        try {
-            const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-            const existingRemarks = String(complaintData.remarks || '');
-            const enrichedData: Record<string, unknown> = {
-                ...complaintData,
-                location: `${latitude},${longitude}`,
-                remarks: `${existingRemarks}\n\nIncident GPS: ${latitude},${longitude}\nMap: ${mapLink}`,
-            };
-
-            if (complaintType === 'sub_info_misbehavior') {
-                const nearbyText = await buildNearbyPoliceReferenceMessage(latitude, longitude, language);
-                userFlowState[phoneNumber] = {
-                    step: 'awaiting_harassment_photo',
-                    data: {
-                        complaintType,
-                        complaintData: enrichedData,
-                    },
-                };
-                const photoPrompt = buildHarassmentPhotoPrompt(language);
-                return {
-                    type: 'buttons',
-                    bodyText: `${nearbyText}\n\n${photoPrompt.bodyText}`,
-                    buttons: photoPrompt.buttons,
-                    language,
-                };
-            }
-
-            return finalizeInfoComplaint(phoneNumber, language, complaintType, enrichedData);
-        } catch (error) {
-            console.error('Error preparing info complaint after location:', error);
-            delete userFlowState[phoneNumber];
-            return {
-                type: 'buttons',
-                bodyText:
-                    language === 'english'
-                        ? `❌ *Error*\n\nSorry, something went wrong. Please try again from the menu.`
-                        : `❌ *त्रुटि*\n\nक्षमा करें, कुछ गलत हो गया। कृपया मेनू से पुनः प्रयास करें।`,
-                buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
-                language,
-            };
-        }
-    }
 
     // Clear location flow state
     delete userFlowState[phoneNumber];
