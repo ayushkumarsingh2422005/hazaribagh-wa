@@ -673,8 +673,8 @@ export async function handleFormSubmission(
         const locationMessage =
             infoStep === 'sub_info_misbehavior'
                 ? language === 'english'
-                    ? `📍 *Next Step: Harassment Location*\n\nPlease share the *location of the harassment incident* using the button below. Nearby police stations and offices will be shown for reference.`
-                    : `📍 *अगला चरण: छेड़खानी का स्थान*\n\nकृपया नीचे दिए बटन से *छेड़खानी की घटना का स्थान* साझा करें। संदर्भ के लिए नजदीकी थाने और कार्यालय दिखाए जाएंगे।`
+                    ? `📍 *Next Step: Share Location*\n\nPlease share the *location of the harassment incident* using the button below.`
+                    : `📍 *अगला चरण: स्थान साझा करें*\n\nकृपया नीचे दिए बटन से *छेड़खानी की घटना का स्थान* साझा करें।`
                 : locationOptional
                   ? language === 'english'
                       ? `📍 *Optional: Share Location*\n\nIf possible, share the location pin using the button below. You can also tap *Skip location* to submit without GPS.`

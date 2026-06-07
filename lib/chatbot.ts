@@ -196,7 +196,7 @@ async function finalizeInfoComplaint(
 ): Promise<ChatbotResponse> {
     try {
         await saveComplaint(phoneNumber, complaintType, complaintData);
-        delete userFlowState[phoneNumber];
+        await clearFlowState(phoneNumber);
         return {
             type: 'text',
             message: buildInformationSubmissionThankYou(language),
@@ -205,7 +205,7 @@ async function finalizeInfoComplaint(
         };
     } catch (error) {
         console.error('Error saving information complaint:', error);
-        delete userFlowState[phoneNumber];
+        await clearFlowState(phoneNumber);
         return {
             type: 'buttons',
             bodyText:
@@ -290,8 +290,33 @@ async function finalizeMissingPersonComplaint(
     }
 }
 
-// Store user flow state in memory (in production, use Redis or database)
+// In-memory cache; flowSession on Contact is the source of truth across requests.
 const userFlowState: Record<string, { step: string; data?: Record<string, unknown> }> = {};
+
+type FlowState = { step: string; data?: Record<string, unknown> };
+
+async function getFlowState(phoneNumber: string): Promise<FlowState | undefined> {
+    if (userFlowState[phoneNumber]?.step) {
+        return userFlowState[phoneNumber];
+    }
+    const contact = await Contact.findOne({ phoneNumber }).select('flowSession').lean();
+    const session = contact?.flowSession as FlowState | undefined;
+    if (session?.step) {
+        userFlowState[phoneNumber] = session;
+        return session;
+    }
+    return undefined;
+}
+
+async function setFlowState(phoneNumber: string, state: FlowState): Promise<void> {
+    userFlowState[phoneNumber] = state;
+    await Contact.findOneAndUpdate({ phoneNumber }, { flowSession: state });
+}
+
+async function clearFlowState(phoneNumber: string): Promise<void> {
+    delete userFlowState[phoneNumber];
+    await Contact.findOneAndUpdate({ phoneNumber }, { $unset: { flowSession: '' } });
+}
 
 /** DSP / INSP offices used for directory and nearby reference in harassment info flow. */
 const POLICE_OFFICES: Array<{
@@ -377,10 +402,7 @@ export async function processChatbotMessage(
     // already have a language selected).
     const exitKeywords = ['menu', 'cancel', 'exit', 'stop', 'main menu', 'help', 'menue'];
     if (exitKeywords.includes(normalizedMessage)) {
-        // Clear any existing flow state
-        if (userFlowState[phoneNumber]) {
-            delete userFlowState[phoneNumber];
-        }
+        await clearFlowState(phoneNumber);
         return getServiceMenu(userLanguage);
     }
 
@@ -402,8 +424,8 @@ export async function processChatbotMessage(
                 type: 'buttons',
                 bodyText: isHarassment
                     ? language === 'english'
-                        ? `📍 *Harassment location pending*\n\nPlease share the *location of the harassment incident* using the location button.\n\nNearby police stations and offices will be shown for reference.`
-                        : `📍 *छेड़खानी का स्थान लंबित*\n\nकृपया स्थान बटन से *छेड़खानी की घटना का स्थान* साझा करें।\n\nसंदर्भ के लिए नजदीकी थाने और कार्यालय दिखाए जाएंगे।`
+                        ? `📍 *Harassment location pending*\n\nPlease share the *location of the harassment incident* using the location button.`
+                        : `📍 *छेड़खानी का स्थान लंबित*\n\nकृपया स्थान बटन से *छेड़खानी की घटना का स्थान* साझा करें।`
                     : optional
                       ? language === 'english'
                           ? `📍 *Optional location*\n\nShare a location pin if possible, or tap *Skip location* to submit without GPS.`
@@ -481,14 +503,14 @@ export async function processChatbotMessage(
             }
 
             if (result.awaitLocation && result.deferredComplaintType && result.deferredComplaintData) {
-                userFlowState[phoneNumber] = {
+                await setFlowState(phoneNumber, {
                     step: 'awaiting_info_location',
                     data: {
                         complaintType: result.deferredComplaintType,
                         complaintData: result.deferredComplaintData,
                         locationOptional: result.locationOptional ?? false,
                     },
-                };
+                });
 
                 const { sendLocationRequest } = await import('./whatsapp');
                 const locationBody =
@@ -582,7 +604,7 @@ async function handleInteractiveResponse(
     if (interactiveId === 'info_location_skip') {
         const contact = await Contact.findOne({ phoneNumber });
         const language = contact?.language || 'english';
-        const flowState = userFlowState[phoneNumber];
+        const flowState = await getFlowState(phoneNumber);
 
         if (!flowState || flowState.step !== 'awaiting_info_location') {
             return {
@@ -605,7 +627,7 @@ async function handleInteractiveResponse(
     if (interactiveId === 'harassment_photo_skip') {
         const contact = await Contact.findOne({ phoneNumber });
         const language = contact?.language || 'english';
-        const flowState = userFlowState[phoneNumber];
+        const flowState = await getFlowState(phoneNumber);
 
         if (!flowState || flowState.step !== 'awaiting_harassment_photo') {
             return {
@@ -1048,8 +1070,8 @@ async function getLocationService(phoneNumber: string, language: 'english' | 'hi
     const { sendLocationRequest } = await import('./whatsapp');
 
     const bodyText = language === 'english'
-        ? `📍 *Find Your Nearest Police Station (GPS)*\n\nGo to https://maps.google.com and use published grid references to open any station. To find the *closest* station to you, share your live location using the button below.\n\nYour location is used only to find the nearest station in Hazaribagh district.`
-        : `📍 *अपना निकटतम पुलिस स्टेशन (GPS)*\n\nhttps://maps.google.com पर जाकर प्रकाशित निर्देशांक से कोई भी स्टेशन खोल सकते हैं। *अपने निकटतम* स्टेशन के लिए नीचे दिए बटन से अपना लाइव स्थान साझा करें।\n\nआपका स्थान केवल हजारीबाग जिले में निकटतम स्टेशन खोजने के लिए उपयोग किया जाएगा।`;
+        ? `📍 *Nearest Police Station*\n\nShare your location using the button below to find the closest police station.`
+        : `📍 *निकटतम पुलिस स्टेशन*\n\nनिकटतम थाना खोजने के लिए नीचे दिए बटन से अपना स्थान साझा करें।`;
 
     await sendLocationRequest({
         to: phoneNumber,
@@ -1388,8 +1410,8 @@ async function handleSubServiceSelection(
             hindi: `ℹ️ *अड्डेबाजी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* अड्डेबाजी का विवरण\n*पंक्ति 4:* अड्डेबाजी का स्थान\n*पंक्ति 5:* पुलिस स्टेशन का नाम\n\n*उदाहरण:*\nरवि कुमार\n9876543210\nस्थानीय युवक रोज उपद्रव करते हैं\nकोर्रा बाजार क्षेत्र\nसदर थाना\n\nइसके बाद वैकल्पिक रूप से स्थान साझा कर सकते हैं।\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_misbehavior: {
-            english: `ℹ️ *Harassment Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Place Name\n*Line 4:* Police Station Name\n*Line 5:* Harassment Details\n\n*Example:*\nPooja Kumari\n9876543211\nBus stand, Sadar\nSadar P.S.\nSome boys harass school girls near the bus stand every morning.\n\nYou will then share the *harassment incident location*, see nearby police offices, and may send a photo of the harasser.\n\nPlease reply with complete details.`,
-            hindi: `ℹ️ *छेड़खानी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* स्थान का नाम\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* छेड़खानी का विवरण\n\n*उदाहरण:*\nपूजा कुमारी\n9876543211\nबस स्टैंड, सदर\nसदर थाना\nसुबह बस स्टैंड पर कुछ लड़के स्कूल जाने वाली लड़कियों के साथ छेड़खानी करते हैं।\n\nइसके बाद *छेड़खानी के स्थान* का पिन साझा करें, नजदीकी थाने देखें, और छेड़खानी करने वाले की फोटो भेज सकते हैं।\n\nकृपया पूरी जानकारी भेजें।`,
+            english: `ℹ️ *Harassment Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Place Name\n*Line 4:* Police Station Name\n*Line 5:* Harassment Details\n\n*Example:*\nPooja Kumari\n9876543211\nBus stand, Sadar\nSadar P.S.\nSome boys harass school girls near the bus stand every morning.\n\nYou will then share the incident location pin and may send a photo of the harasser.\n\nPlease reply with complete details.`,
+            hindi: `ℹ️ *छेड़खानी से संबंधित जानकारी*\n\nकृपया प्रदान करें (प्रति पंक्ति एक):\n\n*पंक्ति 1:* आपका नाम\n*पंक्ति 2:* मोबाइल नंबर\n*पंक्ति 3:* स्थान का नाम\n*पंक्ति 4:* पुलिस स्टेशन का नाम\n*पंक्ति 5:* छेड़खानी का विवरण\n\n*उदाहरण:*\nपूजा कुमारी\n9876543211\nबस स्टैंड, सदर\nसदर थाना\nसुबह बस स्टैंड पर कुछ लड़के स्कूल जाने वाली लड़कियों के साथ छेड़खानी करते हैं।\n\nइसके बाद घटना का स्थान पिन साझा करें और छेड़खानी करने वाले की फोटो (वैकल्पिक) भेज सकते हैं।\n\nकृपया पूरी जानकारी भेजें।`,
         },
         sub_info_drugs: {
             english: `ℹ️ *Drug / Intoxication Related Information*\n\nPlease provide (one per line):\n\n*Line 1:* Your Name\n*Line 2:* Mobile Number\n*Line 3:* Place of Drugs/Intoxication Activity\n*Line 4:* Police Station Name\n*Line 5:* Details\n\n*Example:*\nAnil Verma\n9876543212\nOld warehouse area, Pelawal\nSadar P.S.\nPeople are selling and consuming drugs near the old warehouse at night.\n\nPlease reply with complete details.`,
@@ -1576,72 +1598,6 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 /**
- * Build nearby police station + DSP/INSP office reference text for harassment info flow.
- */
-async function buildNearbyPoliceReferenceMessage(
-    latitude: number,
-    longitude: number,
-    language: 'english' | 'hindi'
-): Promise<string> {
-    const stations = await PoliceStation.find({ isActive: true });
-    const stationsWithDistance = stations
-        .map((station) => ({
-            station,
-            distance: calculateDistance(
-                latitude,
-                longitude,
-                station.location.coordinates[1],
-                station.location.coordinates[0]
-            ),
-        }))
-        .filter((item) => item.distance <= 15)
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, 5);
-
-    const officesWithDistance = POLICE_OFFICES.map((office) => ({
-        office,
-        distance: calculateDistance(latitude, longitude, office.lat, office.lng),
-    }))
-        .filter((item) => item.distance <= 20)
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, 4);
-
-    let message =
-        language === 'english'
-            ? `📍 *Harassment incident location received*\n\n_Map pin saved for the harassment place._\n\n`
-            : `📍 *छेड़खानी के स्थान की जानकारी मिली*\n\n_छेड़खानी के स्थान का मानचित्र पिन सहेजा गया।_\n\n`;
-
-    if (stationsWithDistance.length > 0) {
-        message +=
-            language === 'english'
-                ? `*Nearby Police Stations (reference):*\n\n`
-                : `*नजदीकी पुलिस स्टेशन (संदर्भ):*\n\n`;
-        stationsWithDistance.forEach(({ station, distance }) => {
-            const mapLink = `https://www.google.com/maps?q=${station.location.coordinates[1]},${station.location.coordinates[0]}`;
-            message +=
-                language === 'english'
-                    ? `• *${station.name}* — ${distance.toFixed(1)} km\n  ${mapLink}\n`
-                    : `• *${station.nameHindi}* — ${distance.toFixed(1)} km\n  ${mapLink}\n`;
-        });
-        message += '\n';
-    }
-
-    if (officesWithDistance.length > 0) {
-        message +=
-            language === 'english'
-                ? `*Nearby DSP / Inspector Offices (reference):*\n\n`
-                : `*नजदीकी DSP / निरीक्षक कार्यालय (संदर्भ):*\n\n`;
-        officesWithDistance.forEach(({ office, distance }) => {
-            const mapLink = `https://www.google.com/maps?q=${office.lat},${office.lng}`;
-            const label = language === 'english' ? office.name : office.nameHindi;
-            message += `• *${label}* — ${distance.toFixed(1)} km\n  ${mapLink}\n`;
-        });
-    }
-
-    return message;
-}
-
-/**
  * Handle location message and find nearest police station
  */
 export async function handleLocationMessage(
@@ -1654,15 +1610,15 @@ export async function handleLocationMessage(
     const contact = await Contact.findOne({ phoneNumber });
     const language = contact?.language || 'english';
 
-    // Information flow: GPS pin enriches the report; harassment continues to photo step.
-    const flowState = userFlowState[phoneNumber];
+    // Information flow: GPS pin is saved with the report (no nearest-PS lookup).
+    const flowState = await getFlowState(phoneNumber);
     if (flowState?.step === 'awaiting_info_location') {
         const deferred = flowState.data || {};
         const complaintType = String(deferred.complaintType || '');
         const complaintData = (deferred.complaintData as Record<string, unknown> | undefined) || {};
 
         if (!complaintType || !complaintType.startsWith('sub_info_')) {
-            delete userFlowState[phoneNumber];
+            await clearFlowState(phoneNumber);
             return {
                 type: 'buttons',
                 bodyText:
@@ -1684,27 +1640,20 @@ export async function handleLocationMessage(
             };
 
             if (complaintType === 'sub_info_misbehavior') {
-                const nearbyText = await buildNearbyPoliceReferenceMessage(latitude, longitude, language);
-                userFlowState[phoneNumber] = {
+                await setFlowState(phoneNumber, {
                     step: 'awaiting_harassment_photo',
                     data: {
                         complaintType,
                         complaintData: enrichedData,
                     },
-                };
-                const photoPrompt = buildHarassmentPhotoPrompt(language);
-                return {
-                    type: 'buttons',
-                    bodyText: `${nearbyText}\n\n${photoPrompt.bodyText}`,
-                    buttons: photoPrompt.buttons,
-                    language,
-                };
+                });
+                return buildHarassmentPhotoPrompt(language);
             }
 
             return finalizeInfoComplaint(phoneNumber, language, complaintType, enrichedData);
         } catch (error) {
             console.error('Error preparing info complaint after location:', error);
-            delete userFlowState[phoneNumber];
+            await clearFlowState(phoneNumber);
             return {
                 type: 'buttons',
                 bodyText:
@@ -1717,84 +1666,62 @@ export async function handleLocationMessage(
         }
     }
 
-    // Clear location flow state
+    // Nearest-police-station GPS service (not an information submission).
     delete userFlowState[phoneNumber];
 
-    // Get all police stations
     const stations = await PoliceStation.find({ isActive: true });
 
-    // Calculate distances and find nearest
-    const stationsWithDistance = stations.map(station => ({
-        station,
-        distance: calculateDistance(
-            latitude,
-            longitude,
-            station.location.coordinates[1], // latitude
-            station.location.coordinates[0]  // longitude
-        ),
-    }));
-
-    // Filter stations within 10km range
-    const nearbyStations = stationsWithDistance.filter(item => item.distance <= 10);
-
-    // Sort by distance and get all nearby stations
-    nearbyStations.sort((a, b) => a.distance - b.distance);
-    const nearestStations = nearbyStations;
-
-    // Build response message
-    let message = '';
-
-    if (nearestStations.length === 0) {
-        if (language === 'english') {
-            message = `📍 *No Police Station Found*\n\nIt seems you are currently outside the 10KM range of Hazaribagh Police Stations. Please try again when you are within the district, or call *112* for emergencies.`;
-        } else {
-            message = `📍 *कोई पुलिस स्टेशन नहीं मिला*\n\nऐसा लगता है कि आप वर्तमान में हजारीबाग पुलिस स्टेशनों की 10 किमी की सीमा से बाहर हैं। कृपया जिले में होने पर पुनः प्रयास करें, या आपातकालीन स्थिति के लिए *112* पर कॉल करें।`;
-        }
+    if (stations.length === 0) {
         return {
             type: 'text',
-            message,
+            message:
+                language === 'english'
+                    ? `📍 *Nearest Police Station*\n\nNo active police stations are available right now. For emergencies, call *112*.`
+                    : `📍 *निकटतम पुलिस स्टेशन*\n\nअभी कोई सक्रिय पुलिस स्टेशन उपलब्ध नहीं है। आपातकाल में *112* पर कॉल करें।`,
             language,
             sendFollowUpMenu: true,
         };
     }
 
+    const nearest = stations
+        .map((station) => ({
+            station,
+            distance: calculateDistance(
+                latitude,
+                longitude,
+                station.location.coordinates[1],
+                station.location.coordinates[0]
+            ),
+        }))
+        .sort((a, b) => a.distance - b.distance)[0];
+
+    const { station, distance } = nearest;
+    const mapLink = `https://www.google.com/maps?q=${station.location.coordinates[1]},${station.location.coordinates[0]}`;
+
+    let message = '';
     if (language === 'english') {
-        message = `📍 *Nearby Police Stations (sorted by distance)*\n\n`;
-
-        nearestStations.forEach((item) => {
-            const { station, distance } = item;
-            const mapLink = `https://www.google.com/maps?q=${station.location.coordinates[1]},${station.location.coordinates[0]}`;
-            message += `*${station.name}*\n`;
-            message += formatGpsStationPhoneLines(station, 'english');
-            message += `   📏 Distance: ${distance.toFixed(2)} km\n`;
-            message += `   📍 Location: ${mapLink}\n`;
-            if (station.inchargeName) {
-                message += `   👮 Incharge: ${station.inchargeName}\n`;
-            }
-            message += `\n`;
-        });
+        message = `📍 *Nearest Police Station*\n\n*${station.name}*\n`;
+        message += formatGpsStationPhoneLines(station, 'english');
+        message += `📏 Distance: ${distance.toFixed(2)} km\n`;
+        message += `📍 Location: ${mapLink}\n`;
+        if (station.inchargeName) {
+            message += `👮 Incharge: ${station.inchargeName}\n`;
+        }
     } else {
-        message = `📍 *आपके निकट के पुलिस स्टेशन (दूरी के अनुसार)*\n\n`;
-
-        nearestStations.forEach((item) => {
-            const { station, distance } = item;
-            const mapLink = `https://www.google.com/maps?q=${station.location.coordinates[1]},${station.location.coordinates[0]}`;
-            message += `*${station.nameHindi}*\n`;
-            message += formatGpsStationPhoneLines(station, 'hindi');
-            message += `   📏 दूरी: ${distance.toFixed(2)} किमी\n`;
-            message += `   📍 स्थान: ${mapLink}\n`;
-            if (station.inchargeNameHindi) {
-                message += `   👮 प्रभारी: ${station.inchargeNameHindi}\n`;
-            }
-            message += `\n`;
-        });
+        message = `📍 *निकटतम पुलिस स्टेशन*\n\n*${station.nameHindi}*\n`;
+        message += formatGpsStationPhoneLines(station, 'hindi');
+        message += `📏 दूरी: ${distance.toFixed(2)} किमी\n`;
+        message += `📍 स्थान: ${mapLink}\n`;
+        if (station.inchargeNameHindi) {
+            message += `👮 प्रभारी: ${station.inchargeNameHindi}\n`;
+        }
     }
 
     return {
         type: 'text',
         message,
         language,
-        sendFollowUpMenu: true,  // location result is terminal → cycle ends
+        sendFollowUpMenu: true,
     };
 }
 
@@ -1859,7 +1786,7 @@ export async function handleHarassmentPhotoMessage(
 
     const contact = await Contact.findOne({ phoneNumber });
     const language = contact?.language || 'english';
-    const flow = userFlowState[phoneNumber];
+    const flow = await getFlowState(phoneNumber);
 
     if (!flow || flow.step !== 'awaiting_harassment_photo') {
         return {
@@ -1904,7 +1831,7 @@ export async function handleFlowPhotoMessage(
     phoneNumber: string,
     mediaId: string
 ): Promise<ChatbotResponse> {
-    const flow = userFlowState[phoneNumber];
+    const flow = await getFlowState(phoneNumber);
     if (flow?.step === 'awaiting_harassment_photo') {
         return handleHarassmentPhotoMessage(phoneNumber, mediaId);
     }
