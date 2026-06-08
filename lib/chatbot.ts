@@ -708,7 +708,36 @@ async function handleInteractiveResponse(
         return await saveDeferredComplaintWithStation(phoneNumber, language, stations[pickedIndex].name);
     }
 
-    // Police office directory selection (Find my Police Station)
+    // Office directory — category / pagination (must be before office_* selection)
+    if (
+        interactiveId === 'office_cat_dsp' ||
+        interactiveId === 'office_cat_ci' ||
+        interactiveId === 'office_dir_back' ||
+        interactiveId.startsWith('office_page_')
+    ) {
+        const contact = await Contact.findOne({ phoneNumber });
+        const language = contact?.language || 'english';
+
+        if (interactiveId === 'office_dir_back') {
+            return await getOfficeDirectoryMenu(language);
+        }
+        if (interactiveId === 'office_cat_dsp') {
+            return await buildOfficeCategoryListResponse('dsp', language, 0);
+        }
+        if (interactiveId === 'office_cat_ci') {
+            return await buildOfficeCategoryListResponse('ci', language, 0);
+        }
+        const pageMatch = interactiveId.match(/^office_page_(dsp|ci)_(\d+)$/);
+        if (pageMatch) {
+            return await buildOfficeCategoryListResponse(
+                pageMatch[1] as 'dsp' | 'ci',
+                language,
+                Number(pageMatch[2])
+            );
+        }
+    }
+
+    // Police office directory — pick a specific office
     if (interactiveId.startsWith('office_')) {
         const contact = await Contact.findOne({ phoneNumber });
         const language = contact?.language || 'english';
@@ -1827,21 +1856,19 @@ export async function handleFlowPhotoMessage(
     return handleMissingPersonImageMessage(phoneNumber, mediaId);
 }
 
-function buildOfficeDirectoryRows(
-    offices: ChatbotPoliceOffice[],
-    language: 'english' | 'hindi'
-): Array<{ id: string; title: string; description: string }> {
-    return offices.slice(0, 10).map((o) => ({
-        id: o.id,
-        title: language === 'english' ? o.name.slice(0, 24) : o.nameHindi.slice(0, 24),
-        description: language === 'english' ? 'Tap to get location' : 'स्थान पाने के लिए चुनें',
-    }));
+const OFFICE_LIST_PAGE_SIZE = 6;
+
+function safeListTitle(value: string, max = 24): string {
+    return value.length > max ? `${value.slice(0, max - 1)}…` : value;
 }
 
 async function getOfficeDirectoryMenu(language: 'english' | 'hindi'): Promise<ChatbotResponse> {
-    const allOffices = await getActivePoliceOfficesForChatbot();
+    const [dspOffices, ciOffices] = await Promise.all([
+        getActivePoliceOfficesForChatbot('dsp'),
+        getActivePoliceOfficesForChatbot('ci'),
+    ]);
 
-    if (allOffices.length === 0) {
+    if (dspOffices.length === 0 && ciOffices.length === 0) {
         return {
             type: 'buttons',
             bodyText:
@@ -1854,28 +1881,118 @@ async function getOfficeDirectoryMenu(language: 'english' | 'hindi'): Promise<Ch
         };
     }
 
-    const dspOffices = allOffices.filter((o) => o.category === 'dsp');
-    const ciOffices = allOffices.filter((o) => o.category === 'ci');
+    const rows: Array<{ id: string; title: string; description: string }> = [];
+    if (dspOffices.length > 0) {
+        rows.push({
+            id: 'office_cat_dsp',
+            title: safeListTitle(language === 'english' ? 'DSP / SDPO Offices' : 'DSP / SDPO कार्यालय'),
+            description:
+                language === 'english'
+                    ? `${dspOffices.length} office(s)`
+                    : `${dspOffices.length} कार्यालय`,
+        });
+    }
+    if (ciOffices.length > 0) {
+        rows.push({
+            id: 'office_cat_ci',
+            title: safeListTitle(language === 'english' ? 'CI Offices' : 'CI कार्यालय'),
+            description:
+                language === 'english' ? `${ciOffices.length} office(s)` : `${ciOffices.length} कार्यालय`,
+        });
+    }
+    rows.push({
+        id: 'menu',
+        title: safeListTitle(language === 'english' ? '↩ Main Menu' : '↩ मुख्य मेनू'),
+        description: '',
+    });
 
     return {
         type: 'list',
         bodyText: language === 'english'
-            ? '🏢 *Police Office Directory*\n\nSelect a DSP / SDPO or CI office to get its Google Maps location.'
-            : '🏢 *पुलिस कार्यालय निर्देशिका*\n\nDSP / SDPO या CI कार्यालय चुनें — Google Maps लिंक मिलेगा।',
+            ? '🏢 *Police Office Directory*\n\nChoose DSP / SDPO or CI to see office locations.'
+            : '🏢 *पुलिस कार्यालय निर्देशिका*\n\nDSP / SDPO या CI चुनें — कार्यालय का स्थान देखें।',
+        buttonText: language === 'english' ? 'Select Category' : 'श्रेणी चुनें',
+        sections: [{ title: language === 'english' ? 'Categories' : 'श्रेणी', rows }],
+        language,
+        sendFollowUpMenu: false,
+    };
+}
+
+async function buildOfficeCategoryListResponse(
+    category: 'dsp' | 'ci',
+    language: 'english' | 'hindi',
+    page: number
+): Promise<ChatbotResponse> {
+    const offices = await getActivePoliceOfficesForChatbot(category);
+
+    if (offices.length === 0) {
+        return await getOfficeDirectoryMenu(language);
+    }
+
+    const categoryLabel =
+        category === 'dsp'
+            ? language === 'english'
+                ? 'DSP / SDPO'
+                : 'DSP / SDPO'
+            : language === 'english'
+              ? 'CI'
+              : 'CI';
+
+    const totalPages = Math.max(1, Math.ceil(offices.length / OFFICE_LIST_PAGE_SIZE));
+    const safePage = Math.min(Math.max(0, page), totalPages - 1);
+    const start = safePage * OFFICE_LIST_PAGE_SIZE;
+    const pageOffices = offices.slice(start, start + OFFICE_LIST_PAGE_SIZE);
+
+    const officeRows = pageOffices.map((o) => ({
+        id: o.id,
+        title: safeListTitle(language === 'english' ? o.name : o.nameHindi),
+        description: language === 'english' ? 'Tap for map link' : 'मानचित्र लिंक',
+    }));
+
+    const navRows: Array<{ id: string; title: string; description?: string }> = [
+        {
+            id: 'office_dir_back',
+            title: safeListTitle(language === 'english' ? '↩ Categories' : '↩ श्रेणी'),
+            description: language === 'english' ? 'Back to DSP / CI menu' : 'वापस जाएं',
+        },
+    ];
+    if (safePage > 0) {
+        navRows.push({
+            id: `office_page_${category}_${safePage - 1}`,
+            title: safeListTitle(language === 'english' ? '⬅ Previous' : '⬅ पिछला'),
+            description: language === 'english' ? 'Previous page' : 'पिछला पृष्ठ',
+        });
+    }
+    if (safePage < totalPages - 1) {
+        navRows.push({
+            id: `office_page_${category}_${safePage + 1}`,
+            title: safeListTitle(language === 'english' ? 'Next ➡' : 'अगला ➡'),
+            description: language === 'english' ? 'More offices' : 'और कार्यालय',
+        });
+    }
+    navRows.push({
+        id: 'menu',
+        title: safeListTitle(language === 'english' ? 'Main Menu' : 'मुख्य मेनू'),
+        description: '',
+    });
+
+    // WhatsApp: max 10 rows total across all sections.
+    const totalRows = officeRows.length + navRows.length;
+    if (totalRows > 10) {
+        const allowedOffices = Math.max(1, 10 - navRows.length);
+        officeRows.splice(allowedOffices);
+    }
+
+    return {
+        type: 'list',
+        bodyText:
+            language === 'english'
+                ? `🏢 *${categoryLabel} Offices*\n\nSelect an office for Google Maps. (Page ${safePage + 1}/${totalPages})`
+                : `🏢 *${categoryLabel} कार्यालय*\n\nकार्यालय चुनें। (पृष्ठ ${safePage + 1}/${totalPages})`,
         buttonText: language === 'english' ? 'Select Office' : 'कार्यालय चुनें',
         sections: [
-            {
-                title: language === 'english' ? 'DSP / SDPO Offices' : 'DSP / SDPO कार्यालय',
-                rows: buildOfficeDirectoryRows(dspOffices, language),
-            },
-            {
-                title: language === 'english' ? 'CI Offices' : 'CI कार्यालय',
-                rows: buildOfficeDirectoryRows(ciOffices, language),
-            },
-            {
-                title: language === 'english' ? 'Navigation' : 'नेविगेशन',
-                rows: [{ id: 'menu', title: language === 'english' ? '↩ Main Menu' : '↩ मुख्य मेनू', description: '' }],
-            },
+            { title: language === 'english' ? 'Offices' : 'कार्यालय', rows: officeRows },
+            { title: language === 'english' ? 'Actions' : 'कार्रवाई', rows: navRows },
         ],
         language,
         sendFollowUpMenu: false,

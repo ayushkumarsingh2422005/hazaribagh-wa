@@ -1,4 +1,6 @@
 import PoliceOffice, { type PoliceOfficeCategory } from '@/models/PoliceOffice';
+
+export type { PoliceOfficeCategory };
 import connectDB from './db';
 
 export type ChatbotPoliceOffice = {
@@ -23,10 +25,15 @@ export function parseOfficeInteractiveId(interactiveId: string): string | null {
     return interactiveId.slice('office_'.length);
 }
 
-export async function getActivePoliceOfficesForChatbot(): Promise<ChatbotPoliceOffice[]> {
+export async function getActivePoliceOfficesForChatbot(
+    category?: PoliceOfficeCategory
+): Promise<ChatbotPoliceOffice[]> {
     await connectDB();
-    const offices = await PoliceOffice.find({ isActive: true })
-        .sort({ category: 1, displayOrder: 1, name: 1 })
+    const query: { isActive: boolean; category?: PoliceOfficeCategory } = { isActive: true };
+    if (category) query.category = category;
+
+    const offices = await PoliceOffice.find(query)
+        .sort({ displayOrder: 1, name: 1 })
         .lean();
 
     return offices.map((office) => ({
