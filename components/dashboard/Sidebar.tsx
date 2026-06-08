@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
     { name: 'WhatsApp Chats', href: '/dashboard/chats', icon: MessageSquare },
     { name: 'Test WhatsApp', href: '/dashboard/test-whatsapp', icon: FlaskConical },
     { name: 'Police Stations', href: '/dashboard/police-stations', icon: LayoutDashboard },
+    { name: 'Police Offices', href: '/dashboard/police-offices', icon: LayoutDashboard },
     { name: 'Traffic Rules', href: '/dashboard/traffic-rules', icon: Settings },
     { name: 'Complaints', href: '/dashboard/complaints', icon: MessageSquare },
     { name: 'Raw complaints', href: '/dashboard/raw-complaints', icon: FileWarning },

@@ -9,6 +9,12 @@ import {
     formatDisclaimerStationPhones,
     formatGpsStationPhoneLines,
 } from './police-station-phones';
+import {
+    getActivePoliceOfficesForChatbot,
+    getPoliceOfficeByKey,
+    parseOfficeInteractiveId,
+    type ChatbotPoliceOffice,
+} from './police-offices';
 
 interface ChatbotResponse {
     type: 'text' | 'buttons' | 'list';
@@ -317,23 +323,6 @@ async function clearFlowState(phoneNumber: string): Promise<void> {
     delete userFlowState[phoneNumber];
     await Contact.findOneAndUpdate({ phoneNumber }, { $unset: { flowSession: '' } });
 }
-
-/** DSP / INSP offices used for directory and nearby reference in harassment info flow. */
-const POLICE_OFFICES: Array<{
-    id: string;
-    name: string;
-    nameHindi: string;
-    lat: number;
-    lng: number;
-    phone?: string;
-}> = [
-    { id: 'office_dsp_sadar', name: 'DSP Office - Sadar', nameHindi: 'DSP कार्यालय - सदर', lat: 23.9975, lng: 85.3647 },
-    { id: 'office_dsp_barkagaon', name: 'DSP Office - Barkagaon', nameHindi: 'DSP कार्यालय - बरकागांव', lat: 24.0300, lng: 85.3800 },
-    { id: 'office_dsp_daru', name: 'DSP Office - Daru', nameHindi: 'DSP कार्यालय - दारू', lat: 24.1000, lng: 85.4200 },
-    { id: 'office_insp_sadar', name: 'Inspector Office - Sadar', nameHindi: 'निरीक्षक कार्यालय - सदर', lat: 23.9980, lng: 85.3650 },
-    { id: 'office_insp_katkamsandi', name: 'Inspector Office - Katkamsandi', nameHindi: 'निरीक्षक कार्यालय - कटकमसांडी', lat: 24.0700, lng: 85.3900 },
-    { id: 'office_insp_churchu', name: 'Inspector Office - Churchu', nameHindi: 'निरीक्षक कार्यालय - चुरचू', lat: 23.9100, lng: 85.5200 },
-];
 
 /**
  * Process incoming message and generate appropriate response
@@ -723,7 +712,7 @@ async function handleInteractiveResponse(
     if (interactiveId.startsWith('office_')) {
         const contact = await Contact.findOne({ phoneNumber });
         const language = contact?.language || 'english';
-        return handleOfficeSelection(interactiveId, language);
+        return await handleOfficeSelection(interactiveId, language);
     }
 
     // Main service selection
@@ -1020,7 +1009,7 @@ function getLocationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                         {
                             id: 'sub_location_find_station',
                             title: 'Office Directory',
-                            description: 'Find INSP / DSP office location',
+                            description: 'DSP / SDPO / CI office locations',
                         },
                     ],
                 },
@@ -1048,7 +1037,7 @@ function getLocationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
                     {
                         id: 'sub_location_find_station',
                         title: 'कार्यालय निर्देशिका',
-                        description: 'INSP / DSP कार्यालय का स्थान पाएं',
+                        description: 'DSP / SDPO / CI कार्यालय स्थान',
                     },
                 ],
             },
@@ -1305,7 +1294,7 @@ async function handleSubServiceSelection(
     // Find my Police Station — show INSP / DSP office list, no form, no complaint
     if (subServiceId === 'sub_location_find_station') {
         delete userFlowState[phoneNumber];
-        return getOfficeDirectoryMenu(language);
+        return await getOfficeDirectoryMenu(language);
     }
 
     // Handle traffic rules separately (it returns ChatbotResponse)
@@ -1838,23 +1827,50 @@ export async function handleFlowPhotoMessage(
     return handleMissingPersonImageMessage(phoneNumber, mediaId);
 }
 
-function getOfficeDirectoryMenu(language: 'english' | 'hindi'): ChatbotResponse {
-    const rows = POLICE_OFFICES.map((o) => ({
+function buildOfficeDirectoryRows(
+    offices: ChatbotPoliceOffice[],
+    language: 'english' | 'hindi'
+): Array<{ id: string; title: string; description: string }> {
+    return offices.slice(0, 10).map((o) => ({
         id: o.id,
         title: language === 'english' ? o.name.slice(0, 24) : o.nameHindi.slice(0, 24),
         description: language === 'english' ? 'Tap to get location' : 'स्थान पाने के लिए चुनें',
     }));
+}
+
+async function getOfficeDirectoryMenu(language: 'english' | 'hindi'): Promise<ChatbotResponse> {
+    const allOffices = await getActivePoliceOfficesForChatbot();
+
+    if (allOffices.length === 0) {
+        return {
+            type: 'buttons',
+            bodyText:
+                language === 'english'
+                    ? '🏢 *Police Office Directory*\n\nNo offices are configured yet. Please try again later or contact the district control room.'
+                    : '🏢 *पुलिस कार्यालय निर्देशिका*\n\nअभी कोई कार्यालय कॉन्फ़िगर नहीं है। कृपया बाद में पुनः प्रयास करें या जिला नियंत्रण कक्ष से संपर्क करें।',
+            buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+            language,
+            sendFollowUpMenu: false,
+        };
+    }
+
+    const dspOffices = allOffices.filter((o) => o.category === 'dsp');
+    const ciOffices = allOffices.filter((o) => o.category === 'ci');
 
     return {
         type: 'list',
         bodyText: language === 'english'
-            ? '🏢 *Police Office Directory*\n\nSelect an office below to receive its name and Google Maps location.'
-            : '🏢 *पुलिस कार्यालय निर्देशिका*\n\nनीचे से कार्यालय चुनें — नाम और Google Maps लिंक मिलेगा।',
+            ? '🏢 *Police Office Directory*\n\nSelect a DSP / SDPO or CI office to get its Google Maps location.'
+            : '🏢 *पुलिस कार्यालय निर्देशिका*\n\nDSP / SDPO या CI कार्यालय चुनें — Google Maps लिंक मिलेगा।',
         buttonText: language === 'english' ? 'Select Office' : 'कार्यालय चुनें',
         sections: [
             {
-                title: language === 'english' ? 'DSP & Inspector Offices' : 'DSP व निरीक्षक कार्यालय',
-                rows,
+                title: language === 'english' ? 'DSP / SDPO Offices' : 'DSP / SDPO कार्यालय',
+                rows: buildOfficeDirectoryRows(dspOffices, language),
+            },
+            {
+                title: language === 'english' ? 'CI Offices' : 'CI कार्यालय',
+                rows: buildOfficeDirectoryRows(ciOffices, language),
             },
             {
                 title: language === 'english' ? 'Navigation' : 'नेविगेशन',
@@ -1866,9 +1882,32 @@ function getOfficeDirectoryMenu(language: 'english' | 'hindi'): ChatbotResponse 
     };
 }
 
-function handleOfficeSelection(officeId: string, language: 'english' | 'hindi'): ChatbotResponse {
-    const office = POLICE_OFFICES.find((o) => o.id === officeId);
-    if (!office) {
+function buildOfficeLocationMessage(office: ChatbotPoliceOffice, language: 'english' | 'hindi'): ChatbotResponse {
+    const mapLink = `https://www.google.com/maps?q=${office.lat},${office.lng}`;
+    const officeName = language === 'english' ? office.name : office.nameHindi;
+    const addressLine =
+        (language === 'english' ? office.address : office.addressHindi) || '';
+    const phoneLine = office.phone
+        ? language === 'english'
+            ? `📞 Contact: ${office.phone}\n`
+            : `📞 संपर्क: ${office.phone}\n`
+        : '';
+    const addressBlock = addressLine ? `${addressLine}\n\n` : '';
+
+    return {
+        type: 'buttons',
+        bodyText: language === 'english'
+            ? `🏢 *${officeName}*\n\n${addressBlock}${phoneLine}📍 Location:\n${mapLink}`
+            : `🏢 *${officeName}*\n\n${addressBlock}${phoneLine}📍 स्थान:\n${mapLink}`,
+        buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+        language,
+        sendFollowUpMenu: false,
+    };
+}
+
+async function handleOfficeSelection(officeId: string, language: 'english' | 'hindi'): Promise<ChatbotResponse> {
+    const officeKey = parseOfficeInteractiveId(officeId);
+    if (!officeKey) {
         return {
             type: 'buttons',
             bodyText: language === 'english'
@@ -1880,17 +1919,18 @@ function handleOfficeSelection(officeId: string, language: 'english' | 'hindi'):
         };
     }
 
-    const mapLink = `https://www.google.com/maps?q=${office.lat},${office.lng}`;
-    const officeName = language === 'english' ? office.name : office.nameHindi;
-    const phoneLine = office.phone ? (language === 'english' ? `📞 Contact: ${office.phone}\n` : `📞 संपर्क: ${office.phone}\n`) : '';
+    const office = await getPoliceOfficeByKey(officeKey);
+    if (!office) {
+        return {
+            type: 'buttons',
+            bodyText: language === 'english'
+                ? '❌ This office is no longer available. Please open the directory again from the menu.'
+                : '❌ यह कार्यालय अब उपलब्ध नहीं है। कृपया मेनू से निर्देशिका फिर खोलें।',
+            buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
+            language,
+            sendFollowUpMenu: false,
+        };
+    }
 
-    return {
-        type: 'buttons',
-        bodyText: language === 'english'
-            ? `🏢 *${officeName}*\n\n${phoneLine}📍 Location:\n${mapLink}`
-            : `🏢 *${officeName}*\n\n${phoneLine}📍 स्थान:\n${mapLink}`,
-        buttons: [{ id: 'menu', title: language === 'english' ? 'Main Menu' : 'मुख्य मेनू' }],
-        language,
-        sendFollowUpMenu: false,
-    };
+    return buildOfficeLocationMessage(office, language);
 }
