@@ -25,6 +25,22 @@ const COMPLAINT_TYPES_HIDE_ID = new Set([
     'sub_missing_person',
 ]);
 
+const INFO_COMPLAINT_DB_TYPES = [
+    'info_extortion',
+    'info_adebazi',
+    'info_misbehavior',
+    'info_drugs',
+    'info_absconders',
+    'info_illegal',
+    'info_other',
+] as const;
+
+/** Saved complaints where the citizen is not given a Complaint ID — exclude from My Activities. */
+export const COMPLAINT_TYPES_EXCLUDED_FROM_MY_ACTIVITIES = new Set<string>([
+    ...[...COMPLAINT_TYPES_HIDE_ID].map((step) => step.replace(/^sub_/, '')),
+    ...INFO_COMPLAINT_DB_TYPES,
+]);
+
 function buildInformationThankYou(language: 'english' | 'hindi'): string {
     return language === 'english'
         ? `✅ *Thank you*\n\nYour information has been received. Hazaribagh Police appreciates your cooperation.`

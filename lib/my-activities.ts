@@ -1,11 +1,7 @@
 import Complaint from '@/models/Complaint';
-import Review from '@/models/Review';
 import connectDB from './db';
-import {
-    getComplaintStatusLabel,
-    getComplaintTypeLabel,
-    getReviewStatusLabel,
-} from './complaint-labels';
+import { COMPLAINT_TYPES_EXCLUDED_FROM_MY_ACTIVITIES } from './chatbot-helpers';
+import { getComplaintStatusLabel, getComplaintTypeLabel } from './complaint-labels';
 
 /** Match complaints saved under slightly different WhatsApp number formats. */
 export function phoneLookupVariants(phone: string): string[] {
@@ -32,7 +28,6 @@ function formatDateIST(date: Date, language: 'english' | 'hindi'): string {
 }
 
 const MAX_COMPLAINTS = 8;
-const MAX_REVIEWS = 3;
 
 export async function buildMyActivitiesMessage(
     phoneNumber: string,
@@ -41,66 +36,51 @@ export async function buildMyActivitiesMessage(
     await connectDB();
     const variants = phoneLookupVariants(phoneNumber);
 
-    const [complaints, reviews] = await Promise.all([
-        Complaint.find({ phoneNumber: { $in: variants } })
-            .sort({ createdAt: -1 })
-            .limit(MAX_COMPLAINTS)
-            .select('complaintId complaintType status policeStation createdAt name')
-            .lean(),
-        Review.find({ phoneNumber: { $in: variants } })
-            .sort({ createdAt: -1 })
-            .limit(MAX_REVIEWS)
-            .select('status createdAt content')
-            .lean(),
-    ]);
+    const complaints = await Complaint.find({
+        phoneNumber: { $in: variants },
+        complaintType: { $nin: [...COMPLAINT_TYPES_EXCLUDED_FROM_MY_ACTIVITIES] },
+        complaintId: { $exists: true, $nin: [null, ''] },
+    })
+        .sort({ createdAt: -1 })
+        .limit(MAX_COMPLAINTS)
+        .select('complaintId complaintType status policeStation createdAt name')
+        .lean();
 
-    if (complaints.length === 0 && reviews.length === 0) {
+    if (complaints.length === 0) {
         return language === 'english'
-            ? `📋 *My activities*\n\nNo complaints or suggestions were found for this WhatsApp number.\n\nIf you recently submitted details, wait a moment and check again. Use the menu to register a new request.`
-            : `📋 *मेरी गतिविधियाँ*\n\nइस व्हाट्सएप नंबर पर कोई शिकायत या सुझाव नहीं मिला।\n\nयदि आपने अभी विवरण भेजा है, थोड़ी देर बाद पुनः देखें। नई रिक्वेस्ट के लिए मेनू का उपयोग करें।`;
+            ? `📋 *My activities*\n\nNo trackable complaints were found for this WhatsApp number.\n\nOnly complaints registered with a *Complaint ID* appear here (Passport, Character, Petition, Cyber, etc.).\n\nUse the menu to register a new complaint.`
+            : `📋 *मेरी गतिविधियाँ*\n\nइस व्हाट्सएप नंबर पर कोई ट्रैक योग्य शिकायत नहीं मिली।\n\nयहाँ केवल *शिकायत आईडी* वाली शिकायतें दिखती हैं (पासपोर्ट, चरित्र, याचिका, साइबर आदि)।\n\nनई शिकायत के लिए मेनू का उपयोग करें।`;
     }
 
     const lines: string[] = [];
     lines.push(language === 'english' ? `📋 *My activities*` : `📋 *मेरी गतिविधियाँ*`);
     lines.push(
         language === 'english'
-            ? `_Showing latest submissions from this number._`
-            : `_इस नंबर से दर्ज हाल की प्रविष्टियाँ।_`
+            ? `_Complaints with a Complaint ID from this number._`
+            : `_इस नंबर से दर्ज शिकायतें (शिकायत आईडी के साथ)._`
     );
     lines.push('');
 
-    if (complaints.length > 0) {
-        lines.push(language === 'english' ? `*Complaints (${complaints.length} recent)*` : `*शिकायतें (${complaints.length} हाल की)*`);
-        complaints.forEach((c, i) => {
-            const id = c.complaintId ? String(c.complaintId) : '—';
-            const type = getComplaintTypeLabel(String(c.complaintType), language);
-            const status = getComplaintStatusLabel(String(c.status || 'pending'), language);
-            const date = c.createdAt ? formatDateIST(new Date(c.createdAt), language) : '';
-            const ps = c.policeStation ? String(c.policeStation) : '';
-            lines.push(`${i + 1}. *${id}*`);
-            lines.push(`   ${type}`);
-            lines.push(`   ${language === 'english' ? 'Status' : 'स्थिति'}: *${status}*`);
-            if (ps && ps !== 'Not Known') {
-                lines.push(`   ${language === 'english' ? 'Station' : 'थाना'}: ${ps}`);
-            }
-            if (date) lines.push(`   ${date}`);
-            lines.push('');
-        });
-    }
-
-    if (reviews.length > 0) {
-        lines.push(language === 'english' ? `*Suggestions (${reviews.length} recent)*` : `*सुझाव (${reviews.length} हाल के)*`);
-        reviews.forEach((r, i) => {
-            const status = getReviewStatusLabel(String(r.status || 'pending'), language);
-            const date = r.createdAt ? formatDateIST(new Date(r.createdAt), language) : '';
-            const preview = String(r.content || '').trim().slice(0, 60);
-            lines.push(`${i + 1}. ${language === 'english' ? 'Suggestion' : 'सुझाव'}`);
-            lines.push(`   ${language === 'english' ? 'Status' : 'स्थिति'}: *${status}*`);
-            if (preview) lines.push(`   ${preview}${preview.length >= 60 ? '…' : ''}`);
-            if (date) lines.push(`   ${date}`);
-            lines.push('');
-        });
-    }
+    lines.push(
+        language === 'english'
+            ? `*Complaints (${complaints.length} recent)*`
+            : `*शिकायतें (${complaints.length} हाल की)*`
+    );
+    complaints.forEach((c, i) => {
+        const id = c.complaintId ? String(c.complaintId) : '—';
+        const type = getComplaintTypeLabel(String(c.complaintType), language);
+        const status = getComplaintStatusLabel(String(c.status || 'pending'), language);
+        const date = c.createdAt ? formatDateIST(new Date(c.createdAt), language) : '';
+        const ps = c.policeStation ? String(c.policeStation) : '';
+        lines.push(`${i + 1}. *${id}*`);
+        lines.push(`   ${type}`);
+        lines.push(`   ${language === 'english' ? 'Status' : 'स्थिति'}: *${status}*`);
+        if (ps && ps !== 'Not Known') {
+            lines.push(`   ${language === 'english' ? 'Station' : 'थाना'}: ${ps}`);
+        }
+        if (date) lines.push(`   ${date}`);
+        lines.push('');
+    });
 
     lines.push(
         language === 'english'
