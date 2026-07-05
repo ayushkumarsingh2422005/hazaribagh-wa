@@ -19,6 +19,7 @@ async function getComplaints() {
         policeStation: c.policeStation || '',
         remarks: c.remarks || '',
         status: c.status,
+        source: (c as { source?: string }).source || 'whatsapp',
         createdAt: c.createdAt.toISOString(),
         updatedAt: c.updatedAt.toISOString(),
     }));

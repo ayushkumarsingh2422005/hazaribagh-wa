@@ -44,6 +44,8 @@ export interface IComplaint extends Document {
     missingPersonPhotoUrl?: string;
     suggestion?: string;
     status: 'pending' | 'in_progress' | 'resolved';
+    /** whatsapp = chatbot, app = HazariBagh Sathi mobile app */
+    source?: 'whatsapp' | 'app';
     assignedTo?: string;
     resolvedAt?: Date;
     createdAt: Date;
@@ -112,6 +114,11 @@ const ComplaintSchema = new Schema<IComplaint>(
             type: String,
             enum: ['pending', 'in_progress', 'resolved'],
             default: 'pending',
+        },
+        source: {
+            type: String,
+            enum: ['whatsapp', 'app'],
+            default: 'whatsapp',
         },
         assignedTo: String,
         resolvedAt: Date,

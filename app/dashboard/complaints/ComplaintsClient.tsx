@@ -12,6 +12,7 @@ interface Complaint {
     policeStation?: string;
     remarks?: string;
     status: string;
+    source?: string;
     createdAt: string;
 }
 
@@ -113,6 +114,9 @@ function ComplaintCard({
                         </span>
                         <span className={statusBadge(complaint.status)}>
                             {complaint.status.replace('_', ' ')}
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${complaint.source === 'app' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'}`}>
+                            {complaint.source === 'app' ? 'Sathi App' : 'WhatsApp'}
                         </span>
                     </div>
                     <h3 className="text-base font-semibold text-slate-900 dark:text-white">
