@@ -1,15 +1,15 @@
-import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import Complaint from '@/models/Complaint';
-import PoliceStation from '@/models/PoliceStation';
 import connectDB from '@/lib/db';
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import ComplaintsClient from './ComplaintsClient';
+import { requireSection, buildComplaintFilter, getStationAliasMap } from '@/lib/admin-auth';
+import { GROUPS, complaintTypeLabels } from '@/lib/complaint-services';
 
-async function getComplaints() {
+async function getComplaints(filter: Record<string, unknown>) {
     await connectDB();
-    const complaints = await Complaint.find({}).sort({ createdAt: -1 }).limit(200).lean();
+    const complaints = await Complaint.find(filter).sort({ createdAt: -1 }).limit(200).lean();
     return complaints.map(c => ({
         _id: c._id.toString(),
         complaintId: c.complaintId || null,
@@ -25,69 +25,15 @@ async function getComplaints() {
     }));
 }
 
-async function getStationAliasMap(): Promise<Record<string, string>> {
-    await connectDB();
-    const stations = await PoliceStation.find({ isActive: true })
-        .select('name nameHindi')
-        .sort({ displayOrder: 1, name: 1 })
-        .lean();
-
-    const aliasMap: Record<string, string> = {};
-    for (const s of stations) {
-        const canonical = String(s.name || '').trim();
-        const english = String(s.name || '').trim().toLowerCase();
-        const hindi = String(s.nameHindi || '').trim().toLowerCase();
-        if (english) aliasMap[english] = canonical;
-        if (hindi) aliasMap[hindi] = canonical;
-    }
-    return aliasMap;
+async function getStationAliasMapLocal(): Promise<Record<string, string>> {
+    return getStationAliasMap();
 }
 
-export const complaintTypeLabels: Record<string, string> = {
-    passport_delay: 'Passport - Delay',
-    passport_other: 'Passport - Other',
-    character_delay: 'Character Verification - Delay',
-    character_other: 'Character Verification - Other',
-    petition_not_visited: 'Petition - Police Not Visited',
-    petition_not_satisfied: 'Petition - Not Satisfied',
-    petition_other: 'Petition - Other',
-    lost_mobile: 'Lost Mobile Phone',
-    lost_mobile_not_satisfied: 'Lost Mobile - Not Satisfied',
-    traffic_jam: 'Traffic - Jam',
-    traffic_challan: 'Traffic - Challan',
-    traffic_other: 'Traffic - Other',
-    missing_person: 'Missing Person',
-    cyber: 'Cyber Crime',
-    cyber_other: 'Cyber Crime - Other',
-    info_extortion: 'Information - Extortion',
-    info_adebazi: 'Information - Adebazi',
-    info_misbehavior: 'Information - Harassment',
-    info_drugs: 'Information - Drugs',
-    info_absconders: 'Information - Absconders',
-    info_illegal: 'Information - Illegal Liquor',
-    info_other: 'Information - Other',
-    location_find_station: 'Location - Find my Police Station',
-    suggestion: 'Suggestion',
-};
-
-export const GROUPS = [
-    { label: 'Passport Issues',       color: 'indigo', types: ['passport_delay', 'passport_other'] },
-    { label: 'Character Verification', color: 'violet', types: ['character_delay', 'character_other'] },
-    { label: 'Location Services',   color: 'teal',   types: ['location_find_station'] },
-    { label: 'Lost Mobile Phone',     color: 'orange', types: ['lost_mobile', 'lost_mobile_not_satisfied'] },
-    { label: 'Traffic Issues',        color: 'yellow', types: ['traffic_jam', 'traffic_challan', 'traffic_other'] },
-    { label: 'Missing Person',        color: 'red',    types: ['missing_person'] },
-    { label: 'Information',           color: 'cyan',   types: ['info_extortion', 'info_adebazi', 'info_misbehavior', 'info_drugs', 'info_absconders', 'info_illegal', 'info_other'] },
-    { label: 'Petition',              color: 'rose',   types: ['petition_not_visited', 'petition_not_satisfied', 'petition_other'] },
-    { label: 'Suggestions & Reviews', color: 'green',  types: ['suggestion'] },
-];
-
 export default async function ComplaintsPage() {
-    const session = await getSession();
-    if (!session) redirect('/login');
-
-    const complaints = await getComplaints();
-    const stationAliasMap = await getStationAliasMap();
+    const user = await requireSection('complaints');
+    const complaintFilter = await buildComplaintFilter(user);
+    const complaints = await getComplaints(complaintFilter);
+    const stationAliasMap = await getStationAliasMapLocal();
     const stats = {
         total: complaints.length,
         pending: complaints.filter(c => c.status === 'pending').length,
@@ -96,7 +42,7 @@ export default async function ComplaintsPage() {
     };
 
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="complaints">
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
                     Complaints &amp; Reports

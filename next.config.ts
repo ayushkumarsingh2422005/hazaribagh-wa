@@ -1,7 +1,15 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+/** Keep module resolution inside hazaribagh-wa (not parent Hazaribagh workspace). */
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    root: projectRoot,
+  },
+  outputFileTracingRoot: projectRoot,
 };
 
 export default nextConfig;

@@ -7,7 +7,8 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:offices": "npx --yes tsx scripts/seed-police-offices.ts"
+    "seed:offices": "npx --yes tsx scripts/seed-police-offices.ts",
+    "migrate:admins": "npx --yes tsx scripts/migrate-admin-permissions.ts"
   },
   "dependencies": {
     "@vercel/blob": "^2.3.3",

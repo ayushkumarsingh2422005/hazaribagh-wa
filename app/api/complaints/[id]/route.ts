@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import {
+    apiForbidden,
+    apiUnauthorized,
+    canAccessComplaintType,
+    expandPoliceStationNames,
+    getApiAuthAdminUser,
+} from '@/lib/admin-auth';
+import { hasSectionAccess } from '@/lib/admin-permissions';
 import connectDB from '@/lib/db';
 import Complaint from '@/models/Complaint';
 import Contact from '@/models/Contact';
@@ -10,26 +17,38 @@ export async function PUT(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const user = await getApiAuthAdminUser();
+        if (!user) return apiUnauthorized();
+        if (!hasSectionAccess(user, 'complaints')) return apiForbidden();
 
         const { id } = await params;
         const data = await request.json();
         await connectDB();
+
+        const existing = await Complaint.findById(id);
+        if (!existing) {
+            return NextResponse.json({ error: 'Complaint not found' }, { status: 404 });
+        }
+
+        if (!user.isSuperAdmin && user.policeStationNames?.length) {
+            const allowed = await expandPoliceStationNames(user.policeStationNames);
+            const ps = String(existing.policeStation || '').trim();
+            if (ps && !allowed.includes(ps)) {
+                return apiForbidden();
+            }
+        }
+
+        if (!canAccessComplaintType(user, String(existing.complaintType || ''))) {
+            return apiForbidden();
+        }
 
         const updateData: Record<string, string> = { status: data.status };
         if (data.assignedTo) updateData.assignedTo = data.assignedTo;
         if (data.status === 'resolved') updateData.resolvedAt = new Date().toISOString();
 
         const complaint = await Complaint.findByIdAndUpdate(id, updateData, { new: true });
-        if (!complaint) {
-            return NextResponse.json({ error: 'Complaint not found' }, { status: 404 });
-        }
 
-        // When resolved, notify the complainant via WhatsApp
-        if (data.status === 'resolved' && complaint.phoneNumber) {
+        if (data.status === 'resolved' && complaint?.phoneNumber) {
             try {
                 const contact = await Contact.findOne({ phoneNumber: complaint.phoneNumber });
                 const language = contact?.language || 'english';
@@ -41,7 +60,6 @@ export async function PUT(
 
                 await sendWhatsAppMessage({ to: complaint.phoneNumber, text: message });
             } catch (notifyErr) {
-                // Non-critical — log but don't fail the request
                 console.error('Failed to send resolution notification:', notifyErr);
             }
         }

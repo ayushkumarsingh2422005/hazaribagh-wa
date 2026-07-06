@@ -1,16 +1,9 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import TestWhatsAppClient from './TestWhatsAppClient';
 
 export default async function TestWhatsAppPage() {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
-
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="test_whatsapp">
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
                     Test WhatsApp API

@@ -1,21 +1,19 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import RawComplaint from '@/models/RawComplaint';
 import PoliceStation from '@/models/PoliceStation';
 import connectDB from '@/lib/db';
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import RawComplaintsClient from './RawComplaintsClient';
-import { complaintTypeLabels, GROUPS } from '../complaints/page';
+import {
+    complaintTypeLabels,
+    flowStepToComplaintTypeKey,
+    GROUPS,
+} from '@/lib/complaint-services';
+import { requireSection, buildRawComplaintFilter } from '@/lib/admin-auth';
 
-function flowStepToComplaintTypeKey(flowStep: string): string {
-    if (flowStep === 'suggestion_form') return 'suggestion';
-    return flowStep.replace(/^sub_/, '');
-}
-
-async function getRawComplaints() {
+async function getRawComplaints(filter: Record<string, unknown> = {}) {
     await connectDB();
-    const items = await RawComplaint.find({}).sort({ createdAt: -1 }).limit(200).lean();
+    const items = await RawComplaint.find(filter).sort({ createdAt: -1 }).limit(200).lean();
     return items.map(r => ({
         _id: r._id.toString(),
         rawComplaintId: r.rawComplaintId || null,
@@ -39,10 +37,10 @@ async function getPoliceStations() {
 }
 
 export default async function RawComplaintsPage() {
-    const session = await getSession();
-    if (!session) redirect('/login');
+    const user = await requireSection('raw_complaints');
+    const rawFilter = await buildRawComplaintFilter(user);
 
-    const rawComplaints = await getRawComplaints();
+    const rawComplaints = await getRawComplaints(rawFilter);
     const policeStations = await getPoliceStations();
     const stats = {
         total: rawComplaints.length,
@@ -52,7 +50,7 @@ export default async function RawComplaintsPage() {
     };
 
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="raw_complaints">
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
                     Raw / invalid-format submissions

@@ -1,41 +1,17 @@
-import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import Complaint from '@/models/Complaint';
 import connectDB from '@/lib/db';
 import ComplaintDetailClient from './ComplaintDetailClient';
 import Link from 'next/link';
+import { requireSection, buildComplaintFilter } from '@/lib/admin-auth';
+import { COMPLAINT_TYPE_LABELS } from '@/lib/complaint-services';
 
-const complaintTypeLabels: Record<string, string> = {
-    passport_delay: 'Passport - Delay in Verification',
-    passport_other: 'Passport - Other Issues',
-    character_delay: 'Character Verification - Delay',
-    character_other: 'Character Verification - Other',
-    petition_not_visited: 'Petition - Police Not Visited',
-    petition_not_satisfied: 'Petition - Not Satisfied',
-    petition_other: 'Petition - Other Issues',
-    lost_mobile: 'Lost Mobile Phone',
-    lost_mobile_not_satisfied: 'Lost Mobile - Not Satisfied',
-    traffic_jam: 'Traffic - Jam',
-    traffic_challan: 'Traffic - Challan',
-    traffic_other: 'Traffic - Other',
-    missing_person: 'Missing Person',
-    cyber: 'Cyber Crime',
-    cyber_other: 'Cyber Crime - Other',
-    info_extortion: 'Information - Extortion',
-    info_adebazi: 'Information - Adebazi',
-    info_misbehavior: 'Information - Harassment',
-    info_drugs: 'Information - Drugs',
-    info_absconders: 'Information - Absconders',
-    info_illegal: 'Information - Illegal Liquor',
-    info_other: 'Information - Other',
-    location_find_station: 'Location - Find my Police Station',
-    suggestion: 'Suggestion',
-};
+const complaintTypeLabels = COMPLAINT_TYPE_LABELS;
 
-async function getComplaint(id: string) {
+async function getComplaint(id: string, filter: Record<string, unknown> = {}) {
     await connectDB();
-    const complaint = await Complaint.findById(id).lean();
+    const complaint = await Complaint.findOne({ _id: id, ...filter }).lean();
     if (!complaint) return null;
 
     return {
@@ -53,13 +29,11 @@ export default async function ComplaintDetailPage({
 }: {
     params: Promise<{ id: string }>;
 }) {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
+    const user = await requireSection('complaints');
+    const complaintFilter = await buildComplaintFilter(user);
 
     const { id } = await params;
-    const complaint = await getComplaint(id);
+    const complaint = await getComplaint(id, complaintFilter);
 
     if (!complaint) {
         redirect('/dashboard/complaints');
@@ -76,7 +50,7 @@ export default async function ComplaintDetailPage({
               : '';
 
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="complaints">
             <div className="mb-8">
                 <div className="flex items-center gap-4 mb-4">
                     <Link

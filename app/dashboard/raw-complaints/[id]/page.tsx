@@ -1,20 +1,18 @@
-import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import RawComplaint from '@/models/RawComplaint';
 import connectDB from '@/lib/db';
 import RawComplaintDetailClient from './RawComplaintDetailClient';
 import Link from 'next/link';
-import { complaintTypeLabels } from '../../complaints/page';
+import {
+    complaintTypeLabels,
+    flowStepToComplaintTypeKey,
+} from '@/lib/complaint-services';
+import { requireSection, buildRawComplaintFilter } from '@/lib/admin-auth';
 
-function flowStepToComplaintTypeKey(flowStep: string): string {
-    if (flowStep === 'suggestion_form') return 'suggestion';
-    return flowStep.replace(/^sub_/, '');
-}
-
-async function getRawComplaint(id: string) {
+async function getRawComplaint(id: string, filter: Record<string, unknown> = {}) {
     await connectDB();
-    const complaint = await RawComplaint.findById(id).lean();
+    const complaint = await RawComplaint.findOne({ _id: id, ...filter }).lean();
     if (!complaint) return null;
 
     return {
@@ -33,13 +31,11 @@ export default async function RawComplaintDetailPage({
 }: {
     params: Promise<{ id: string }>;
 }) {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
+    const user = await requireSection('raw_complaints');
+    const rawFilter = await buildRawComplaintFilter(user);
 
     const { id } = await params;
-    const row = await getRawComplaint(id);
+    const row = await getRawComplaint(id, rawFilter);
 
     if (!row) {
         redirect('/dashboard/raw-complaints');
@@ -49,7 +45,7 @@ export default async function RawComplaintDetailPage({
         complaintTypeLabels[row.complaintTypeKey] || row.flowStep;
 
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="raw_complaints">
             <div className="mb-8">
                 <div className="flex items-center gap-4 mb-4">
                     <Link

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { apiForbidden, apiUnauthorized, getApiAuthAdminUser } from '@/lib/admin-auth';
+import { hasSectionAccess } from '@/lib/admin-permissions';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import connectDB from '@/lib/db';
 import ChatMessage from '@/models/ChatMessage';
@@ -11,10 +12,9 @@ import ChatMessage from '@/models/ChatMessage';
  */
 export async function POST(request: NextRequest) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const user = await getApiAuthAdminUser();
+        if (!user) return apiUnauthorized();
+        if (!hasSectionAccess(user, 'test_whatsapp')) return apiForbidden();
 
         const body = await request.json();
         const { to, message } = body;

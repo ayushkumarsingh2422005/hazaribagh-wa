@@ -1,5 +1,4 @@
-import { getSession } from '@/lib/auth';
-import { redirect, notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import PoliceOffice from '@/models/PoliceOffice';
 import connectDB from '@/lib/db';
@@ -30,11 +29,6 @@ export default async function EditPoliceOfficePage({
 }: {
     params: Promise<{ id: string }>;
 }) {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
-
     const { id } = await params;
     const office = await getOffice(id);
     if (!office) {
@@ -42,7 +36,7 @@ export default async function EditPoliceOfficePage({
     }
 
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="police_offices">
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
                     Edit Police Office

@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import {
+    apiForbidden,
+    apiUnauthorized,
+    buildRawComplaintFilter,
+    getApiAuthAdminUser,
+} from '@/lib/admin-auth';
+import { hasSectionAccess } from '@/lib/admin-permissions';
 import connectDB from '@/lib/db';
 import RawComplaint from '@/models/RawComplaint';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const user = await getApiAuthAdminUser();
+        if (!user) return apiUnauthorized();
+        if (!hasSectionAccess(user, 'raw_complaints')) return apiForbidden();
 
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status');
@@ -16,7 +21,8 @@ export async function GET(request: NextRequest) {
 
         await connectDB();
 
-        const query: Record<string, string> = {};
+        const scopeFilter = await buildRawComplaintFilter(user);
+        const query: Record<string, unknown> = { ...scopeFilter };
         if (status) query.status = status;
         if (flowStep) query.flowStep = flowStep;
 
@@ -30,10 +36,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const user = await getApiAuthAdminUser();
+        if (!user) return apiUnauthorized();
+        if (!hasSectionAccess(user, 'raw_complaints')) return apiForbidden();
 
         const data = await request.json();
         await connectDB();

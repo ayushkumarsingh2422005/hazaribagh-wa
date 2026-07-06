@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import {
+    apiForbidden,
+    apiUnauthorized,
+    buildComplaintFilter,
+    canAccessComplaintType,
+    expandPoliceStationNames,
+    getApiAuthAdminUser,
+} from '@/lib/admin-auth';
+import { hasSectionAccess } from '@/lib/admin-permissions';
 import connectDB from '@/lib/db';
 import Complaint from '@/models/Complaint';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const user = await getApiAuthAdminUser();
+        if (!user) return apiUnauthorized();
+        if (!hasSectionAccess(user, 'complaints')) return apiForbidden();
 
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status');
@@ -16,9 +23,13 @@ export async function GET(request: NextRequest) {
 
         await connectDB();
 
-        const query: Record<string, string> = {};
+        const complaintFilter = await buildComplaintFilter(user);
+        const query: Record<string, unknown> = { ...complaintFilter };
         if (status) query.status = status;
-        if (type) query.complaintType = type;
+        if (type) {
+            if (!canAccessComplaintType(user, type)) return apiForbidden();
+            query.complaintType = type;
+        }
 
         const complaints = await Complaint.find(query).sort({ createdAt: -1 }).limit(100);
         return NextResponse.json({ success: true, complaints });
@@ -30,6 +41,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        const user = await getApiAuthAdminUser();
+        if (!user) return apiUnauthorized();
+        if (!hasSectionAccess(user, 'complaints')) return apiForbidden();
+
         const data = await request.json();
         await connectDB();
 

@@ -1,16 +1,9 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import TrafficViolationForm from '../TrafficViolationForm';
 
 export default async function NewTrafficRulePage() {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
-
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="traffic_rules">
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
                     Add New Traffic Rule

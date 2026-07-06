@@ -1,54 +1,52 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import User from '@/models/User';
-import connectDB from '@/lib/db';
-import AdminCreationForm from './AdminCreationForm';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Users, MessageSquare, Zap } from 'lucide-react';
+import connectDB from '@/lib/db';
+import User from '@/models/User';
+import { requireAuthAdminUser } from '@/lib/admin-auth';
+import { canManageAdminUsers } from '@/lib/admin-permissions';
+import Link from 'next/link';
 
-async function getUsers() {
+async function getUserCount() {
     await connectDB();
-    // Return plain objects to avoid serialization issues with Mongoose documents in Server Components
-    const users = await User.find({}).sort({ createdAt: -1 }).lean();
-    return users.map(user => ({
-        ...user,
-        _id: user._id.toString(),
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
-    }));
+    return User.countDocuments({ isActive: { $ne: false } });
 }
 
-export default async function DashboardPage() {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
-
-    const users = await getUsers();
+export default async function DashboardPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ access?: string }>;
+}) {
+    const user = await requireAuthAdminUser();
+    const params = await searchParams;
+    const userCount = await getUserCount();
 
     return (
-        <DashboardLayout username={session.username as string}>
-            {/* Header Section */}
+        <DashboardLayout>
+            {params.access === 'denied' ? (
+                <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm">
+                    You do not have access to that section. Contact your administrator.
+                </div>
+            ) : null}
+
             <section className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
-                    Welcome Back, {session.username as string}
+                    Welcome Back, {user.username}
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 text-base">
-                    Manage your WhatsApp integration and admin users from this dashboard.
+                    {user.isSuperAdmin
+                        ? 'You have full super admin access to all modules.'
+                        : user.policeStationNames.length
+                          ? `Scoped to ${user.policeStationNames.length} police station(s).`
+                          : 'Manage your assigned dashboard modules.'}
                 </p>
             </section>
 
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                                Total Admins
-                            </p>
-                            <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">
-                                {users.length}
-                            </p>
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Active Admins</p>
+                            <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{userCount}</p>
                         </div>
                         <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                             <Users className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -59,12 +57,8 @@ export default async function DashboardPage() {
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                                WhatsApp Status
-                            </p>
-                            <p className="text-base font-semibold text-green-600 dark:text-green-400 mt-1">
-                                Connected
-                            </p>
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">WhatsApp Status</p>
+                            <p className="text-base font-semibold text-green-600 dark:text-green-400 mt-1">Connected</p>
                         </div>
                         <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                             <MessageSquare className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -75,11 +69,9 @@ export default async function DashboardPage() {
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                                Auto-Reply
-                            </p>
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Your Role</p>
                             <p className="text-base font-semibold text-indigo-600 dark:text-indigo-400 mt-1">
-                                Active
+                                {user.isSuperAdmin ? 'Super Admin' : user.canManageAdmins ? 'Manager' : 'Admin'}
                             </p>
                         </div>
                         <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
@@ -89,58 +81,20 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
-            {/* Admin Management Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Create User Section */}
-                <div className="lg:col-span-1">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-                            Add New Admin
-                        </h2>
-                        <AdminCreationForm />
-                    </div>
+            {canManageAdminUsers(user) ? (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Admin Management</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
+                        Create admins with custom section access, chat permissions, and police station scope.
+                    </p>
+                    <Link
+                        href="/dashboard/users"
+                        className="inline-flex px-4 py-2 bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+                    >
+                        Manage Admin Users
+                    </Link>
                 </div>
-
-                {/* User List Section */}
-                <div className="lg:col-span-2">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden">
-                        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                                Active Administrators
-                                <span className="ml-2 text-sm px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                    {users.length}
-                                </span>
-                            </h2>
-                        </div>
-
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {users.map((user) => (
-                                <div key={user._id} className="p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold uppercase">
-                                            {user.username.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-slate-900 dark:text-white">{user.username}</p>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Created</p>
-                                        <p className="text-sm text-slate-600 dark:text-slate-300">
-                                            {new Date(user.createdAt).toLocaleDateString(undefined, {
-                                                year: 'numeric',
-                                                month: 'short',
-                                                day: 'numeric'
-                                            })}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            ) : null}
         </DashboardLayout>
     );
 }

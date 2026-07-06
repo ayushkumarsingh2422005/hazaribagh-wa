@@ -97,6 +97,89 @@ export async function sendWhatsAppMessage({ to, text }: WhatsAppMessage) {
     }
 }
 
+/** WhatsApp session window — free-form replies allowed after user messages you */
+export const WHATSAPP_SESSION_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+export type WhatsAppOtpTemplateOptions = {
+    to: string;
+    otp: string;
+    templateName?: string;
+    languageCode?: string;
+    /** Meta auth templates often include a "Copy code" URL button — set false if yours has body only */
+    includeCopyCodeButton?: boolean;
+};
+
+/**
+ * Send OTP via an approved WhatsApp Authentication template (business-initiated).
+ * Required when the user has not messaged your number within the 24-hour session window.
+ */
+export async function sendWhatsAppOtpTemplate({
+    to,
+    otp,
+    templateName = process.env.WHATSAPP_OTP_TEMPLATE_NAME,
+    languageCode = process.env.WHATSAPP_OTP_TEMPLATE_LANGUAGE || 'en',
+    includeCopyCodeButton = process.env.WHATSAPP_OTP_TEMPLATE_COPY_BUTTON !== 'false',
+}: WhatsAppOtpTemplateOptions) {
+    if (!templateName?.trim()) {
+        throw new Error(
+            'WHATSAPP_OTP_TEMPLATE_NAME is not set. Create an Authentication template in Meta Business Manager.'
+        );
+    }
+
+    validateConfig();
+
+    const url = `${WHATSAPP_API_URL}/${PHONE_NUMBER_ID}/messages`;
+
+    const components: Array<Record<string, unknown>> = [
+        {
+            type: 'body',
+            parameters: [{ type: 'text', text: otp }],
+        },
+    ];
+
+    if (includeCopyCodeButton) {
+        components.push({
+            type: 'button',
+            sub_type: 'url',
+            index: '0',
+            parameters: [{ type: 'text', text: otp }],
+        });
+    }
+
+    const payload = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        type: 'template',
+        template: {
+            name: templateName.trim(),
+            language: { code: languageCode },
+            components,
+        },
+    };
+
+    console.log(`📤 Sending OTP template "${templateName}" to ${to} (lang: ${languageCode})`);
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error('❌ WhatsApp OTP template error:', JSON.stringify(data, null, 2));
+        throw new Error(`WhatsApp template error (${response.status}): ${data.error?.message || JSON.stringify(data)}`);
+    }
+
+    console.log(`✅ OTP template sent! Message ID: ${data.messages?.[0]?.id}`);
+    return data;
+}
+
 /**
  * Generate a dummy auto-reply message based on the incoming message
  */

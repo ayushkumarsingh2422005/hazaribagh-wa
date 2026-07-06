@@ -1,5 +1,3 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import PoliceStation from '@/models/PoliceStation';
 import connectDB from '@/lib/db';
@@ -17,15 +15,10 @@ async function getPoliceStations() {
 }
 
 export default async function PoliceStationsPage() {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
-
     const stations = await getPoliceStations();
 
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="police_stations">
             <div className="mb-8 flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">

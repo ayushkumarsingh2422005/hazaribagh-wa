@@ -1,5 +1,3 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import ReviewsClient from './ReviewsClient';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import connectDB from '@/lib/db';
@@ -15,15 +13,10 @@ async function getPoliceStations() {
 }
 
 export default async function ReviewsPage() {
-    const session = await getSession();
     const policeStations = await getPoliceStations();
 
-    if (!session) {
-        redirect('/login');
-    }
-
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="reviews">
             <ReviewsClient policeStations={policeStations} />
         </DashboardLayout>
     );

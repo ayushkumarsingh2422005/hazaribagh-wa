@@ -1,16 +1,9 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import PoliceOfficeForm from '../PoliceOfficeForm';
 
 export default async function NewPoliceOfficePage() {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
-
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="police_offices">
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
                     Add Police Office

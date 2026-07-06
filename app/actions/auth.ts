@@ -3,13 +3,15 @@
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
-import { signToken, setSession, clearSession, getSession } from '@/lib/auth';
+import { signToken, setSession, clearSession, getSession, parseSessionUserId } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { fullPermissions } from '@/lib/admin-permissions';
+import { ensureLegacyAdminMigrated } from '@/lib/admin-auth';
 
 export async function login(prevState: any, formData: FormData) {
     await connectDB();
 
-    const identifier = formData.get('identifier') as string; // username or email
+    const identifier = formData.get('identifier') as string;
     const password = formData.get('password') as string;
 
     if (!identifier || !password) {
@@ -17,7 +19,6 @@ export async function login(prevState: any, formData: FormData) {
     }
 
     try {
-        // Check if user exists by username or email
         const user = await User.findOne({
             $or: [{ email: identifier.toLowerCase() }, { username: identifier }],
         }).select('+password');
@@ -26,16 +27,20 @@ export async function login(prevState: any, formData: FormData) {
             return { error: 'Invalid credentials' };
         }
 
+        if (user.isActive === false) {
+            return { error: 'This account has been deactivated.' };
+        }
+
         const isMatch = await bcrypt.compare(password, user.password!);
 
         if (!isMatch) {
             return { error: 'Invalid credentials' };
         }
 
-        // Create session
-        const token = await signToken({ userId: user._id, username: user.username });
-        await setSession(token);
+        await ensureLegacyAdminMigrated(user);
 
+        const token = await signToken({ userId: user._id.toString(), username: user.username });
+        await setSession(token);
     } catch (error) {
         console.error('Login error:', error);
         return { error: 'Something went wrong. Please try again.' };
@@ -78,13 +83,17 @@ export async function createFirstUser(prevState: any, formData: FormData) {
             username,
             email,
             password: hashedPassword,
+            isSuperAdmin: true,
+            canManageAdmins: true,
+            canAccessChats: true,
+            permissions: fullPermissions(),
+            policeStationNames: [],
+            isActive: true,
         });
 
-        // Auto login
         const user = await User.findOne({ username });
-        const token = await signToken({ userId: user?._id, username: user?.username });
+        const token = await signToken({ userId: user!._id.toString(), username: user!.username });
         await setSession(token);
-
     } catch (error) {
         return { error: 'Failed to create admin.' };
     }
@@ -92,6 +101,7 @@ export async function createFirstUser(prevState: any, formData: FormData) {
     redirect('/dashboard');
 }
 
+/** @deprecated Use createAdminUser from app/actions/users.ts */
 export async function createOtherUser(prevState: any, formData: FormData) {
     const session = await getSession();
     if (!session) {
@@ -99,6 +109,12 @@ export async function createOtherUser(prevState: any, formData: FormData) {
     }
 
     await connectDB();
+    const actor = await User.findById(parseSessionUserId(session));
+    if (!actor) return { error: 'Unauthorized' };
+    await ensureLegacyAdminMigrated(actor);
+    if (!actor.isSuperAdmin && !actor.canManageAdmins) {
+        return { error: 'You do not have permission to create admins.' };
+    }
 
     const username = formData.get('username') as string;
     const email = formData.get('email') as string;
@@ -123,6 +139,12 @@ export async function createOtherUser(prevState: any, formData: FormData) {
             username,
             email,
             password: hashedPassword,
+            isSuperAdmin: false,
+            canManageAdmins: false,
+            canAccessChats: false,
+            permissions: fullPermissions(),
+            policeStationNames: [],
+            isActive: true,
         });
 
         return { success: 'User created successfully' };

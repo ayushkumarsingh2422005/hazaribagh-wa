@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import {
+    apiForbidden,
+    apiUnauthorized,
+    buildRawComplaintFilter,
+    canAccessComplaintType,
+    getApiAuthAdminUser,
+} from '@/lib/admin-auth';
+import { hasSectionAccess } from '@/lib/admin-permissions';
+import { flowStepToComplaintTypeKey } from '@/lib/complaint-services';
 import connectDB from '@/lib/db';
 import RawComplaint from '@/models/RawComplaint';
 import Contact from '@/models/Contact';
@@ -17,14 +25,23 @@ export async function PUT(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const user = await getApiAuthAdminUser();
+        if (!user) return apiUnauthorized();
+        if (!hasSectionAccess(user, 'raw_complaints')) return apiForbidden();
 
         const { id } = await params;
         const data = await request.json();
         await connectDB();
+
+        const scopeFilter = await buildRawComplaintFilter(user);
+        const existing = await RawComplaint.findOne({ _id: id, ...scopeFilter });
+        if (!existing) {
+            return NextResponse.json({ error: 'Raw complaint not found' }, { status: 404 });
+        }
+
+        if (!canAccessComplaintType(user, flowStepToComplaintTypeKey(existing.flowStep))) {
+            return apiForbidden();
+        }
 
         const updateData: Record<string, string | Date> = { status: data.status };
         if (data.assignedTo) updateData.assignedTo = data.assignedTo;

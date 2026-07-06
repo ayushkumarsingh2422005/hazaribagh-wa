@@ -1,16 +1,9 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { CheckCircle2, Activity, Settings } from 'lucide-react';
 
 export default async function SettingsPage() {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
-
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="settings">
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
                     Settings
@@ -21,7 +14,6 @@ export default async function SettingsPage() {
             </div>
 
             <div className="space-y-6">
-                {/* WhatsApp Configuration */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                         WhatsApp Configuration
@@ -57,7 +49,6 @@ export default async function SettingsPage() {
                     </div>
                 </div>
 
-                {/* Coming Soon */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                         Additional Settings

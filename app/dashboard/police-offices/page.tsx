@@ -1,5 +1,3 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import PoliceOffice from '@/models/PoliceOffice';
 import connectDB from '@/lib/db';
@@ -18,17 +16,12 @@ async function getPoliceOffices() {
 }
 
 export default async function PoliceOfficesPage() {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
-
     const offices = await getPoliceOffices();
     const dspCount = offices.filter((o) => o.category === 'dsp').length;
     const ciCount = offices.filter((o) => o.category === 'ci').length;
 
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="police_offices">
             <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">

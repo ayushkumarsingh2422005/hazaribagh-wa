@@ -1,5 +1,3 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import TrafficViolation from '@/models/TrafficViolation';
 import connectDB from '@/lib/db';
@@ -17,15 +15,10 @@ async function getViolations() {
 }
 
 export default async function TrafficRulesPage() {
-    const session = await getSession();
-    if (!session) {
-        redirect('/login');
-    }
-
     const violations = await getViolations();
 
     return (
-        <DashboardLayout username={session.username as string}>
+        <DashboardLayout section="traffic_rules">
             <div className="mb-8 flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">

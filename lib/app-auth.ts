@@ -4,12 +4,19 @@ import connectDB from './db';
 import AppOtp from '@/models/AppOtp';
 import AppSession from '@/models/AppSession';
 import Contact from '@/models/Contact';
-import { sendWhatsAppMessage } from './whatsapp';
+import {
+    sendWhatsAppMessage,
+    sendWhatsAppOtpTemplate,
+    WHATSAPP_SESSION_WINDOW_MS,
+} from './whatsapp';
 import { normalizeIndiaWhatsAppTo } from './police-station-alert';
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const MAX_OTP_ATTEMPTS = 5;
+
+const OTP_SESSION_MESSAGE =
+    '*Hazaribagh Police — Sathi App*\n\nYour login OTP is: *{{otp}}*\n\nValid for 10 minutes. Do not share this code with anyone.\n\n_If you did not request this, ignore this message._';
 
 export function normalizeAppPhone(input: string): string | null {
     return normalizeIndiaWhatsAppTo(input);
@@ -21,6 +28,54 @@ function generateOtp(): string {
 
 function generateSessionToken(): string {
     return crypto.randomBytes(32).toString('hex');
+}
+
+async function hasActiveWhatsAppSession(phoneNumber: string): Promise<boolean> {
+    const contact = await Contact.findOne({ phoneNumber }).select('lastMessageAt').lean();
+    if (!contact?.lastMessageAt) return false;
+    return contact.lastMessageAt.getTime() > Date.now() - WHATSAPP_SESSION_WINDOW_MS;
+}
+
+function otpTemplateConfigured(): boolean {
+    return Boolean(process.env.WHATSAPP_OTP_TEMPLATE_NAME?.trim());
+}
+
+async function sendOtpViaSessionMessage(phoneNumber: string, otp: string): Promise<void> {
+    const message = OTP_SESSION_MESSAGE.replace('{{otp}}', otp);
+    await sendWhatsAppMessage({ to: phoneNumber, text: message });
+}
+
+async function sendOtpViaTemplate(phoneNumber: string, otp: string): Promise<void> {
+    await sendWhatsAppOtpTemplate({ to: phoneNumber, otp });
+}
+
+/**
+ * Deliver OTP on WhatsApp:
+ * - Active chatbot session → formatted session message (existing style)
+ * - New / expired session → approved authentication template
+ */
+async function deliverAppOtp(phoneNumber: string, otp: string): Promise<void> {
+    const inSession = await hasActiveWhatsAppSession(phoneNumber);
+
+    if (inSession) {
+        try {
+            await sendOtpViaSessionMessage(phoneNumber, otp);
+            return;
+        } catch (err) {
+            console.warn('Session OTP message failed, falling back to template:', err);
+        }
+    }
+
+    if (!otpTemplateConfigured()) {
+        if (inSession) {
+            throw new Error('Could not deliver OTP on WhatsApp.');
+        }
+        throw new Error(
+            'OTP template is not configured. Set WHATSAPP_OTP_TEMPLATE_NAME in .env.local after approving an Authentication template in Meta Business Manager.'
+        );
+    }
+
+    await sendOtpViaTemplate(phoneNumber, otp);
 }
 
 export async function sendAppOtp(rawPhone: string): Promise<{ success: boolean; error?: string }> {
@@ -39,13 +94,19 @@ export async function sendAppOtp(rawPhone: string): Promise<{ success: boolean; 
         { upsert: true, new: true }
     );
 
-    const message =
-        `*Hazaribagh Police — Sathi App*\n\nYour login OTP is: *${otp}*\n\nValid for 10 minutes. Do not share this code with anyone.\n\n_If you did not request this, ignore this message._`;
-
     try {
-        await sendWhatsAppMessage({ to: phoneNumber, text: message });
+        await deliverAppOtp(phoneNumber, otp);
     } catch (err) {
         console.error('Failed to send OTP via WhatsApp:', err);
+        await AppOtp.deleteOne({ phoneNumber });
+        const detail = err instanceof Error ? err.message : 'Unknown error';
+        if (detail.includes('WHATSAPP_OTP_TEMPLATE_NAME')) {
+            return {
+                success: false,
+                error:
+                    'OTP could not be sent. The server needs a WhatsApp authentication template for new users. Please contact support.',
+            };
+        }
         return { success: false, error: 'Could not send OTP on WhatsApp. Please try again later.' };
     }
 
