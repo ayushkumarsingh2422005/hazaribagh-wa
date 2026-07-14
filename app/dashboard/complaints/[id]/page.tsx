@@ -2,8 +2,9 @@ import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import Complaint from '@/models/Complaint';
 import connectDB from '@/lib/db';
-import ComplaintDetailClient from './ComplaintDetailClient';
-import Link from 'next/link';
+import StatusUpdateForm from '@/components/dashboard/StatusUpdateForm';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Card } from '@/components/ui/Card';
 import { requireSection, buildComplaintFilter } from '@/lib/admin-auth';
 import { COMPLAINT_TYPE_LABELS } from '@/lib/complaint-services';
 
@@ -22,6 +23,17 @@ async function getComplaint(id: string, filter: Record<string, unknown> = {}) {
         updatedAt: complaint.updatedAt.toISOString(),
         resolvedAt: complaint.resolvedAt?.toISOString(),
     };
+}
+
+import type { ReactNode } from 'react';
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+    return (
+        <div>
+            <label className="text-xs text-slate-500 dark:text-slate-400">{label}</label>
+            <div className="text-sm text-slate-900 dark:text-white mt-0.5">{children}</div>
+        </div>
+    );
 }
 
 export default async function ComplaintDetailPage({
@@ -51,201 +63,128 @@ export default async function ComplaintDetailPage({
 
     return (
         <DashboardLayout section="complaints">
-            <div className="mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                    <Link
-                        href="/dashboard/complaints"
-                        className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
-                    >
-                        ← Back to Complaints
-                    </Link>
-                </div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-1">
-                    Complaint Details
-                </h1>
-                <div className="flex flex-wrap items-center gap-3 mt-2">
-                    {complaint.complaintId && (
-                        <span className="font-mono text-base font-semibold px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 rounded">
-                            🆔 {complaint.complaintId}
+            <PageHeader
+                title="Complaint Details"
+                size="detail"
+                backLink={{ href: '/dashboard/complaints', label: 'Back to Complaints' }}
+                meta={
+                    <>
+                        {complaint.complaintId && (
+                            <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 rounded">
+                                {complaint.complaintId}
+                            </span>
+                        )}
+                        <span className="text-slate-500 dark:text-slate-400 text-xs">
+                            {complaintTypeLabels[complaint.complaintType]}
                         </span>
-                    )}
-                    <span className="text-slate-500 dark:text-slate-400 text-sm">
-                        {complaintTypeLabels[complaint.complaintType]}
-                    </span>
-                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${(complaint as { source?: string }).source === 'app' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'}`}>
-                        {(complaint as { source?: string }).source === 'app' ? 'Sathi App' : 'WhatsApp'}
-                    </span>
-                </div>
-            </div>
+                        <span
+                            className={`text-xs px-1.5 py-0.5 rounded font-medium ${(complaint as { source?: string }).source === 'app' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'}`}
+                        >
+                            {(complaint as { source?: string }).source === 'app' ? 'Sathi App' : 'WhatsApp'}
+                        </span>
+                    </>
+                }
+            />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Details */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2">
+                    <Card className="p-4">
+                        <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-3">
                             Complaint Information
                         </h2>
-
-                        <div className="space-y-4">
-                            {complaint.complaintId && (
-                                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded border border-indigo-200 dark:border-indigo-800">
-                                    <label className="text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wide font-semibold">Complaint ID</label>
-                                    <p className="text-indigo-900 dark:text-indigo-100 font-mono font-bold text-lg mt-0.5">{complaint.complaintId}</p>
-                                </div>
-                            )}
-                            <div>
-                                <label className="text-sm text-slate-500 dark:text-slate-400">Type</label>
-                                <p className="text-slate-900 dark:text-white font-medium">
-                                    {complaintTypeLabels[complaint.complaintType]}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label className="text-sm text-slate-500 dark:text-slate-400">Name</label>
-                                <p className="text-slate-900 dark:text-white font-medium">{complaint.name}</p>
-                            </div>
-
-                            {complaint.fatherName && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Father&apos;s Name</label>
-                                    <p className="text-slate-900 dark:text-white">{complaint.fatherName}</p>
-                                </div>
-                            )}
-
-                            {complaint.address && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Address</label>
-                                    <p className="text-slate-900 dark:text-white">{complaint.address}</p>
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="text-sm text-slate-500 dark:text-slate-400">Phone Number</label>
-                                <p className="text-slate-900 dark:text-white font-medium">{complaint.phoneNumber}</p>
-                            </div>
-
+                        <div className="space-y-3">
+                            <Field label="Type">{complaintTypeLabels[complaint.complaintType]}</Field>
+                            <Field label="Name">{complaint.name}</Field>
+                            {complaint.fatherName && <Field label="Father's Name">{complaint.fatherName}</Field>}
+                            {complaint.address && <Field label="Address">{complaint.address}</Field>}
+                            <Field label="Phone Number">{complaint.phoneNumber}</Field>
                             {complaint.applicationNumber && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Application Number</label>
-                                    <p className="text-slate-900 dark:text-white">{complaint.applicationNumber}</p>
-                                </div>
+                                <Field label="Application Number">{complaint.applicationNumber}</Field>
                             )}
-
                             {complaint.applicationDate && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Application Date</label>
-                                    <p className="text-slate-900 dark:text-white">{complaint.applicationDate}</p>
-                                </div>
+                                <Field label="Application Date">{complaint.applicationDate}</Field>
                             )}
-
                             {complaint.policeStation && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Concerned Police Station</label>
-                                    <p className="text-slate-900 dark:text-white">{complaint.policeStation}</p>
-                                </div>
+                                <Field label="Concerned Police Station">{complaint.policeStation}</Field>
                             )}
-
                             {'location' in complaint && (complaint as { location?: string }).location && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Place name / landmark</label>
-                                    <p className="text-slate-900 dark:text-white">{(complaint as { location?: string }).location}</p>
-                                </div>
+                                <Field label="Place name / landmark">
+                                    {(complaint as { location?: string }).location}
+                                </Field>
                             )}
-
                             {complaint.lostMobileNumber && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Lost Mobile Number</label>
-                                    <p className="text-slate-900 dark:text-white">{complaint.lostMobileNumber}</p>
-                                </div>
+                                <Field label="Lost Mobile Number">{complaint.lostMobileNumber}</Field>
                             )}
-
                             {complaint.challanNumber && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Challan Number</label>
-                                    <p className="text-slate-900 dark:text-white">{complaint.challanNumber}</p>
-                                </div>
+                                <Field label="Challan Number">{complaint.challanNumber}</Field>
                             )}
-
                             {missingPersonPhotoSrc && (
                                 <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                                    <label className="text-xs text-slate-500 dark:text-slate-400">
                                         {complaint.complaintType === 'missing_person'
                                             ? 'Missing person photo'
                                             : complaint.complaintType === 'info_misbehavior'
                                               ? 'Harasser photo'
                                               : 'Photo attachment'}
                                     </label>
-                                    <div className="mt-2">
-                                        <img
-                                            src={missingPersonPhotoSrc}
-                                            alt="Missing person"
-                                            className="max-h-80 max-w-full rounded border border-slate-200 dark:border-slate-700 object-contain"
-                                        />
-                                    </div>
+                                    <img
+                                        src={missingPersonPhotoSrc}
+                                        alt="Attachment"
+                                        className="mt-1.5 max-h-64 max-w-full rounded border border-slate-200 dark:border-slate-700 object-contain"
+                                    />
                                 </div>
                             )}
-
                             {complaint.remarks && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Remarks</label>
-                                    <p className="text-slate-900 dark:text-white whitespace-pre-wrap">{complaint.remarks}</p>
-                                </div>
+                                <Field label="Remarks">
+                                    <span className="whitespace-pre-wrap">{complaint.remarks}</span>
+                                </Field>
                             )}
-
                             {complaint.suggestion && (
-                                <div>
-                                    <label className="text-sm text-slate-500 dark:text-slate-400">Suggestion</label>
-                                    <p className="text-slate-900 dark:text-white whitespace-pre-wrap">{complaint.suggestion}</p>
-                                </div>
+                                <Field label="Suggestion">
+                                    <span className="whitespace-pre-wrap">{complaint.suggestion}</span>
+                                </Field>
                             )}
                         </div>
-                    </div>
+                    </Card>
                 </div>
 
-                {/* Status & Actions */}
-                <div className="space-y-6">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                            Status
-                        </h2>
-
-                        <ComplaintDetailClient
-                            complaintId={complaint._id}
+                <div className="space-y-4">
+                    <Card className="p-4">
+                        <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-3">Status</h2>
+                        <StatusUpdateForm
+                            entityId={complaint._id}
+                            apiPath="/api/complaints"
                             currentStatus={complaint.status}
                             assignedTo={complaint.assignedTo || ''}
+                            successMessage="Complaint updated successfully!"
                         />
-                    </div>
+                    </Card>
 
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                            Timeline
-                        </h2>
-
-                        <div className="space-y-3 text-sm">
+                    <Card className="p-4">
+                        <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-3">Timeline</h2>
+                        <div className="space-y-2 text-sm">
                             <div>
-                                <p className="text-slate-500 dark:text-slate-400">Submitted</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Submitted</p>
                                 <p className="text-slate-900 dark:text-white">
                                     {new Date(complaint.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                 </p>
                             </div>
-
                             <div>
-                                <p className="text-slate-500 dark:text-slate-400">Last Updated</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Last Updated</p>
                                 <p className="text-slate-900 dark:text-white">
                                     {new Date(complaint.updatedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                 </p>
                             </div>
-
                             {complaint.resolvedAt && (
                                 <div>
-                                    <p className="text-slate-500 dark:text-slate-400">Resolved</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Resolved</p>
                                     <p className="text-slate-900 dark:text-white">
                                         {new Date(complaint.resolvedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                     </p>
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </Card>
                 </div>
             </div>
         </DashboardLayout>

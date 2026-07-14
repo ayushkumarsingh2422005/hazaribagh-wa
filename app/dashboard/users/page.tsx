@@ -4,6 +4,7 @@ import PoliceStation from '@/models/PoliceStation';
 import { requireSection } from '@/lib/admin-auth';
 import { canManageAdminUsers } from '@/lib/admin-permissions';
 import { listAdminUsers } from '@/app/actions/users';
+import { PageHeader } from '@/components/ui/PageHeader';
 import UsersClient from './UsersClient';
 
 async function getPoliceStations() {
@@ -22,14 +23,7 @@ export default async function UsersPage() {
 
     return (
         <DashboardLayout section="admin_users">
-            <div className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
-                    Admin Users
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400 text-base">
-                    Create admins with section-wise access, chat permissions, and police station scope
-                </p>
-            </div>
+            <PageHeader title="Admin Users" />
 
             <UsersClient
                 users={users}

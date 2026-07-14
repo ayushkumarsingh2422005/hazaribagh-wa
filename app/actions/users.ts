@@ -12,12 +12,14 @@ import {
     type SerializedAdminUser,
 } from '@/lib/admin-permissions';
 import { parseAllowedComplaintTypesFromForm } from '@/lib/complaint-services';
+import { validateAdminPhone } from '@/lib/admin-phone';
 import { requireManageAdmins, requireSection } from '@/lib/admin-auth';
 
 function serializeUser(user: {
     _id: { toString(): string };
     username: string;
     email: string;
+    phoneNumber?: string;
     isSuperAdmin?: boolean;
     canManageAdmins?: boolean;
     canAccessChats?: boolean;
@@ -33,6 +35,7 @@ function serializeUser(user: {
         _id: user._id.toString(),
         username: user.username,
         email: user.email,
+        phoneNumber: user.phoneNumber || '',
         isSuperAdmin: !!user.isSuperAdmin,
         canManageAdmins: !!user.canManageAdmins,
         canAccessChats: !!user.canAccessChats,
@@ -64,6 +67,8 @@ export async function createAdminUser(prevState: unknown, formData: FormData) {
     const permissions = isSuperAdmin ? fullPermissions() : parsePermissionsFromForm(formData);
     const policeStationNames = parsePoliceStationsFromForm(formData);
     const allowedComplaintTypes = parseAllowedComplaintTypesFromForm(formData);
+    const phoneResult = validateAdminPhone(String(formData.get('phoneNumber') || ''));
+    if (!phoneResult.ok) return { error: phoneResult.error };
 
     if (!username || !email || !password) {
         return { error: 'Username, email and password are required.' };
@@ -86,6 +91,7 @@ export async function createAdminUser(prevState: unknown, formData: FormData) {
         await User.create({
             username,
             email,
+            phoneNumber: phoneResult.phone,
             password: hashedPassword,
             isSuperAdmin,
             canManageAdmins: isSuperAdmin || canManageAdmins,
@@ -119,6 +125,8 @@ export async function updateAdminUser(prevState: unknown, formData: FormData) {
     const permissions = isSuperAdmin ? fullPermissions() : parsePermissionsFromForm(formData);
     const policeStationNames = parsePoliceStationsFromForm(formData);
     const allowedComplaintTypes = parseAllowedComplaintTypesFromForm(formData);
+    const phoneResult = validateAdminPhone(String(formData.get('phoneNumber') || ''));
+    if (!phoneResult.ok) return { error: phoneResult.error };
 
     if (!username || !email) {
         return { error: 'Username and email are required.' };
@@ -145,6 +153,7 @@ export async function updateAdminUser(prevState: unknown, formData: FormData) {
 
         target.username = username;
         target.email = email;
+        target.phoneNumber = phoneResult.phone;
         target.isSuperAdmin = isSuperAdmin;
         target.canManageAdmins = isSuperAdmin || canManageAdmins;
         target.canAccessChats = isSuperAdmin || canAccessChats;

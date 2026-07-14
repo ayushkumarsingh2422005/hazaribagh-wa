@@ -1,7 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Star, AlertCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Star, AlertCircle } from 'lucide-react';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Card } from '@/components/ui/Card';
+import { SELECT_CLASS } from '@/components/ui/field-styles';
+import { TH_CLASS, TD_CLASS } from '@/components/ui/Card';
+import { useToast } from '@/components/providers/ToastProvider';
 
 interface Review {
     _id: string;
@@ -12,31 +17,17 @@ interface Review {
     createdAt: string;
 }
 
-export default function ReviewsClient({ policeStations }: { policeStations: string[] }) {
-    const [reviews, setReviews] = useState<Review[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState('');
+export default function ReviewsClient({
+    policeStations,
+    initialReviews,
+}: {
+    policeStations: string[];
+    initialReviews: Review[];
+}) {
+    const toast = useToast();
+    const [reviews, setReviews] = useState<Review[]>(initialReviews);
     const [policeStationFilter, setPoliceStationFilter] = useState('all');
-
-    useEffect(() => {
-        fetchReviews();
-    }, []);
-
-    async function fetchReviews() {
-        try {
-            const response = await fetch('/api/reviews');
-            if (!response.ok) {
-                throw new Error('Failed to fetch reviews');
-            }
-            const data = await response.json();
-            setReviews(data);
-        } catch (err) {
-            setError('Failed to load reviews');
-            console.error(err);
-        } finally {
-            setIsLoading(false);
-        }
-    }
+    const [updating, setUpdating] = useState<string | null>(null);
 
     const filteredReviews = reviews.filter(review =>
         policeStationFilter === 'all'
@@ -44,26 +35,40 @@ export default function ReviewsClient({ policeStations }: { policeStations: stri
             : review.content.toLowerCase().includes(policeStationFilter.toLowerCase())
     );
 
+    const updateStatus = async (id: string, status: Review['status']) => {
+        setUpdating(id);
+        try {
+            const res = await fetch(`/api/reviews/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setReviews(prev => prev.map(r => (r._id === id ? { ...r, status } : r)));
+                toast.success(`Review marked as ${status}`);
+            } else {
+                toast.error(data.error || 'Failed to update review');
+            }
+        } catch {
+            toast.error('Failed to update review');
+        } finally {
+            setUpdating(null);
+        }
+    };
+
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
-                        <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
-                        Reviews & Suggestions
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        View feedback and suggestions from users
-                    </p>
-                </div>
+        <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-2">
                 <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    <label htmlFor="review-station-filter" className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
                         Police Station:
                     </label>
                     <select
+                        id="review-station-filter"
                         value={policeStationFilter}
                         onChange={e => setPoliceStationFilter(e.target.value)}
-                        className="px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={SELECT_CLASS}
                     >
                         <option value="all">All Stations</option>
                         {policeStations.map(station => (
@@ -75,65 +80,61 @@ export default function ReviewsClient({ policeStations }: { policeStations: stri
                 </div>
             </div>
 
-            {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5" />
-                    {error}
-                </div>
-            )}
-
-            {isLoading ? (
-                <div className="flex justify-center p-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-                </div>
-            ) : filteredReviews.length === 0 ? (
-                <div className="bg-white dark:bg-slate-800 p-12 text-center border border-slate-200 dark:border-slate-700">
-                    <Star className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-slate-900 dark:text-white">No reviews found</h3>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">
-                        Try changing the police station filter.
-                    </p>
-                </div>
+            {filteredReviews.length === 0 ? (
+                <EmptyState
+                    icon={Star}
+                    title="No reviews found"
+                    description={
+                        reviews.length === 0
+                            ? 'Citizen feedback will appear here once submitted.'
+                            : 'Try changing the police station filter.'
+                    }
+                />
             ) : (
-                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <Card>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
                             <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase font-medium text-slate-500 dark:text-slate-400">
                                 <tr>
-                                    <th className="px-6 py-4">User</th>
-                                    <th className="px-6 py-4">Review/Suggestion</th>
-                                    {/* <th className="px-6 py-4">Status</th> */}
-                                    <th className="px-6 py-4">Date</th>
+                                    <th className={TH_CLASS}>User</th>
+                                    <th className={TH_CLASS}>Review/Suggestion</th>
+                                    <th className={TH_CLASS}>Status</th>
+                                    <th className={TH_CLASS}>Date</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                {filteredReviews.map((review) => (
-                                    <tr key={review._id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-slate-900 dark:text-white">
-                                                {review.name}
-                                            </div>
-                                            <div className="text-xs mt-1">
-                                                {review.phoneNumber}
-                                            </div>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                {filteredReviews.map(review => (
+                                    <tr key={review._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                        <td className={TD_CLASS}>
+                                            <div className="font-medium text-slate-900 dark:text-white">{review.name}</div>
+                                            <div className="text-xs mt-1">{review.phoneNumber}</div>
                                         </td>
                                         <td className="px-6 py-4 max-w-md">
                                             <div className="whitespace-pre-wrap">{review.content}</div>
                                         </td>
-                                        {/* <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium ${review.status === 'approved'
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                : review.status === 'rejected'
-                                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                }`}>
-                                                {review.status.charAt(0).toUpperCase() + review.status.slice(1)}
-                                            </span>
-                                        </td> */}
+                                        <td className={TD_CLASS}>
+                                            <select
+                                                value={review.status}
+                                                disabled={updating === review._id}
+                                                onChange={e => updateStatus(review._id, e.target.value as Review['status'])}
+                                                className={`text-xs font-medium px-2 py-1 rounded border-0 ${
+                                                    review.status === 'approved'
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                        : review.status === 'rejected'
+                                                          ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                                }`}
+                                                aria-label={`Status for review by ${review.name}`}
+                                            >
+                                                <option value="pending">Pending</option>
+                                                <option value="approved">Approved</option>
+                                                <option value="rejected">Rejected</option>
+                                            </select>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            {new Date(review.createdAt).toLocaleDateString()}
+                                            {new Date(review.createdAt).toLocaleDateString('en-IN')}
                                             <div className="text-xs mt-0.5">
-                                                {new Date(review.createdAt).toLocaleTimeString()}
+                                                {new Date(review.createdAt).toLocaleTimeString('en-IN')}
                                             </div>
                                         </td>
                                     </tr>
@@ -141,6 +142,13 @@ export default function ReviewsClient({ policeStations }: { policeStations: stri
                             </tbody>
                         </table>
                     </div>
+                </Card>
+            )}
+
+            {policeStationFilter !== 'all' && filteredReviews.length === 0 && reviews.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
+                    <AlertCircle className="w-4 h-4" />
+                    Station filter matches text in review content — not a structured field.
                 </div>
             )}
         </div>

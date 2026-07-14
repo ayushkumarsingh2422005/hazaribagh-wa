@@ -1,6 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { login, createFirstUser } from '../actions/auth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -15,6 +17,8 @@ const initialState = {
 };
 
 export default function LoginForm({ isSetupRequired }: LoginFormProps) {
+    const searchParams = useSearchParams();
+    const resetSuccess = searchParams.get('reset') === 'success';
     const action = isSetupRequired ? createFirstUser : login;
     const [state, formAction, isPending] = useActionState(action, initialState);
 
@@ -57,23 +61,33 @@ export default function LoginForm({ isSetupRequired }: LoginFormProps) {
                     required
                 />
 
+                {resetSuccess && (
+                    <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-sm font-medium">
+                        Password updated. Sign in with your new password.
+                    </div>
+                )}
+
                 {state?.error && (
                     <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium">
                         {state.error}
                     </div>
                 )}
 
-                <Button
-                    type="submit"
-                    className="w-full"
-                    isLoading={isPending}
-                >
+                <Button type="submit" className="w-full" size="lg" isLoading={isPending}>
                     {isSetupRequired ? 'Create Admin Account' : 'Sign In'}
                 </Button>
             </form>
 
             {!isSetupRequired && (
-                <div className="mt-6 text-center text-sm text-slate-500">
+                <div className="mt-6 text-center text-sm text-slate-500 space-y-2">
+                    <p>
+                        <Link
+                            href="/login/forgot-password"
+                            className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                        >
+                            Forgot password?
+                        </Link>
+                    </p>
                     <p>Don&apos;t have an account? Contact your administrator.</p>
                 </div>
             )}

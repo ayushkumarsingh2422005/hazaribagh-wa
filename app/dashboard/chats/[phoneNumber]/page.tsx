@@ -1,5 +1,6 @@
 import ChatView from './ChatView';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default async function ChatDetailPage({
     params,
@@ -11,15 +12,11 @@ export default async function ChatDetailPage({
 
     return (
         <DashboardLayout section="chats">
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {phoneNumber}
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                    WhatsApp Conversation
-                </p>
-            </div>
-
+            <PageHeader
+                title={phoneNumber}
+                size="detail"
+                backLink={{ href: '/dashboard/chats', label: 'Back to conversations' }}
+            />
             <ChatView phoneNumber={phoneNumber} />
         </DashboardLayout>
     );

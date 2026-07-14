@@ -20,20 +20,28 @@ export const ADMIN_SECTION_META: Array<{
     label: string;
     href: string;
     description: string;
+    group: 'overview' | 'operations' | 'directory' | 'administration';
 }> = [
-    { key: 'dashboard', label: 'Dashboard', href: '/dashboard', description: 'Home overview' },
-    { key: 'chats', label: 'WhatsApp Chats', href: '/dashboard/chats', description: 'View and reply to citizen chats' },
-    { key: 'test_whatsapp', label: 'Test WhatsApp', href: '/dashboard/test-whatsapp', description: 'Send test WhatsApp messages' },
-    { key: 'police_stations', label: 'Police Stations', href: '/dashboard/police-stations', description: 'Manage police station directory' },
-    { key: 'police_offices', label: 'Police Offices', href: '/dashboard/police-offices', description: 'Manage DSP / CI offices' },
-    { key: 'traffic_rules', label: 'Traffic Rules', href: '/dashboard/traffic-rules', description: 'Manage traffic violations & fines' },
-    { key: 'complaints', label: 'Complaints', href: '/dashboard/complaints', description: 'Structured complaints & reports' },
-    { key: 'raw_complaints', label: 'Raw Complaints', href: '/dashboard/raw-complaints', description: 'Unparsed citizen messages' },
-    { key: 'reviews', label: 'Reviews', href: '/dashboard/reviews', description: 'Citizen reviews & feedback' },
-    { key: 'resources', label: 'Resources', href: '/dashboard/resources', description: 'Helpful links & resources' },
-    { key: 'admin_users', label: 'Admin Users', href: '/dashboard/users', description: 'View administrator accounts' },
-    { key: 'settings', label: 'Settings', href: '/dashboard/settings', description: 'System settings' },
+    { key: 'dashboard', label: 'Dashboard', href: '/dashboard', description: 'Home overview', group: 'overview' },
+    { key: 'chats', label: 'WhatsApp Chats', href: '/dashboard/chats', description: 'View and reply to citizen chats', group: 'operations' },
+    { key: 'test_whatsapp', label: 'Test WhatsApp', href: '/dashboard/test-whatsapp', description: 'Send test WhatsApp messages', group: 'operations' },
+    { key: 'complaints', label: 'Complaints', href: '/dashboard/complaints', description: 'Structured complaints & reports', group: 'operations' },
+    { key: 'raw_complaints', label: 'Raw Complaints', href: '/dashboard/raw-complaints', description: 'Unparsed citizen messages', group: 'operations' },
+    { key: 'reviews', label: 'Reviews', href: '/dashboard/reviews', description: 'Citizen reviews & feedback', group: 'operations' },
+    { key: 'police_stations', label: 'Police Stations', href: '/dashboard/police-stations', description: 'Manage police station directory', group: 'directory' },
+    { key: 'police_offices', label: 'Police Offices', href: '/dashboard/police-offices', description: 'Manage DSP / CI offices', group: 'directory' },
+    { key: 'traffic_rules', label: 'Traffic Rules', href: '/dashboard/traffic-rules', description: 'Manage traffic violations & fines', group: 'directory' },
+    { key: 'resources', label: 'Resources', href: '/dashboard/resources', description: 'Helpful links & resources', group: 'directory' },
+    { key: 'admin_users', label: 'Admin Users', href: '/dashboard/users', description: 'View administrator accounts', group: 'administration' },
+    { key: 'settings', label: 'Settings', href: '/dashboard/settings', description: 'System settings', group: 'administration' },
 ];
+
+export const NAV_GROUP_LABELS: Record<string, string> = {
+    overview: 'Overview',
+    operations: 'Operations',
+    directory: 'Directory',
+    administration: 'Administration',
+};
 
 export const ALL_SECTIONS: AdminSection[] = ADMIN_SECTION_META.map(s => s.key);
 
@@ -55,6 +63,7 @@ export type SerializedAdminUser = {
     _id: string;
     username: string;
     email: string;
+    phoneNumber?: string;
     isSuperAdmin: boolean;
     canManageAdmins: boolean;
     canAccessChats: boolean;

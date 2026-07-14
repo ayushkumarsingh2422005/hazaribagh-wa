@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { hasUsers } from '../actions/auth';
 import LoginForm from './LoginForm';
 
@@ -13,7 +14,9 @@ export default async function LoginPage() {
             </div>
 
             <div className="relative z-10 w-full flex justify-center">
-                <LoginForm isSetupRequired={isSetupRequired} />
+                <Suspense fallback={null}>
+                    <LoginForm isSetupRequired={isSetupRequired} />
+                </Suspense>
             </div>
         </div>
     );

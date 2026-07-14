@@ -1,6 +1,12 @@
+import Link from 'next/link';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import Resource from '@/models/Resource';
 import connectDB from '@/lib/db';
+import { Link2 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { ButtonLink } from '@/components/ui/ButtonLink';
+import { Card, CardBody, ListRow } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 async function getResources() {
     await connectDB();
@@ -26,72 +32,63 @@ export default async function ResourcesPage() {
 
     return (
         <DashboardLayout section="resources">
-            <div className="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
-                        Resources & Information
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-base">
-                        Manage disclaimers, links, and information
-                    </p>
-                </div>
-                <a
-                    href="/dashboard/resources/new"
-                    className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-                >
-                    Add New Resource
-                </a>
-            </div>
+            <PageHeader
+                title="Resources & Information"
+                actions={<ButtonLink href="/dashboard/resources/new">Add Resource</ButtonLink>}
+            />
 
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <Card>
+                <CardBody divided>
                     {resources.length === 0 ? (
-                        <div className="p-12 text-center text-slate-500 dark:text-slate-400">
-                            No resources added yet. Click Add New Resource to create one.
-                        </div>
+                        <EmptyState
+                            icon={Link2}
+                            title="No resources yet"
+                            action={<ButtonLink href="/dashboard/resources/new">Add Resource</ButtonLink>}
+                        />
                     ) : (
-                        resources.map((resource) => (
-                            <div key={resource._id} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        resources.map(resource => (
+                            <ListRow key={resource._id}>
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                                                 {resource.title}
                                             </h3>
-                                            <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                            <span className="text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                                                 {typeLabels[resource.type]}
                                             </span>
-                                            <span className={`text-xs px-2 py-1 ${resource.isActive
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30'
-                                                    : 'bg-red-100 text-red-700 dark:bg-red-900/30'
-                                                }`}>
+                                            <span
+                                                className={`text-xs px-1.5 py-0.5 ${
+                                                    resource.isActive
+                                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30'
+                                                        : 'bg-red-100 text-red-700 dark:bg-red-900/30'
+                                                }`}
+                                            >
                                                 {resource.isActive ? 'Active' : 'Inactive'}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                                            {resource.titleHindi}
-                                        </p>
-                                        <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-                                            {resource.content.substring(0, 150)}...
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{resource.titleHindi}</p>
+                                        <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2">
+                                            {resource.content}
                                         </p>
                                         {resource.url && (
-                                            <p className="text-xs text-indigo-600 dark:text-indigo-400">
-                                                Link: {resource.url}
+                                            <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 truncate">
+                                                {resource.url}
                                             </p>
                                         )}
                                     </div>
-                                    <a
+                                    <Link
                                         href={`/dashboard/resources/edit/${resource._id}`}
-                                        className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 ml-4"
+                                        className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 shrink-0"
                                     >
                                         Edit
-                                    </a>
+                                    </Link>
                                 </div>
-                            </div>
+                            </ListRow>
                         ))
                     )}
-                </div>
-            </div>
+                </CardBody>
+            </Card>
         </DashboardLayout>
     );
 }

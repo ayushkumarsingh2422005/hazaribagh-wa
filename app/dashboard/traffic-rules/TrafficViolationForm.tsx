@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/providers/ToastProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import { LABEL_CLASS, FIELD_CLASS, TEXTAREA_CLASS, FORM_GRID_CLASS } from '@/components/ui/field-styles';
 
 interface TrafficViolationFormProps {
     initialData?: {
@@ -18,7 +22,9 @@ interface TrafficViolationFormProps {
 
 export default function TrafficViolationForm({ initialData }: TrafficViolationFormProps) {
     const router = useRouter();
+    const toast = useToast();
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         crime: initialData?.crime || '',
         crimeHindi: initialData?.crimeHindi || '',
@@ -32,6 +38,7 @@ export default function TrafficViolationForm({ initialData }: TrafficViolationFo
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError('');
 
         try {
             const url = initialData?._id
@@ -47,24 +54,25 @@ export default function TrafficViolationForm({ initialData }: TrafficViolationFo
             const data = await response.json();
 
             if (data.success) {
+                toast.success(initialData?._id ? 'Rule updated' : 'Rule created');
                 router.push('/dashboard/traffic-rules');
                 router.refresh();
             } else {
-                alert('Error: ' + (data.error || 'Failed to save'));
+                setError(data.error || 'Failed to save');
             }
-        } catch (error) {
-            alert('Error saving traffic rule');
-            console.error(error);
+        } catch {
+            setError('Error saving traffic rule');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+            {error && <AlertBanner variant="error">{error}</AlertBanner>}
+            <div className={FORM_GRID_CLASS}>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Crime (English) *
                     </label>
                     <input
@@ -72,12 +80,12 @@ export default function TrafficViolationForm({ initialData }: TrafficViolationFo
                         required
                         value={formData.crime}
                         onChange={(e) => setFormData({ ...formData, crime: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Crime (Hindi) *
                     </label>
                     <input
@@ -85,12 +93,12 @@ export default function TrafficViolationForm({ initialData }: TrafficViolationFo
                         required
                         value={formData.crimeHindi}
                         onChange={(e) => setFormData({ ...formData, crimeHindi: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Section *
                     </label>
                     <input
@@ -98,13 +106,13 @@ export default function TrafficViolationForm({ initialData }: TrafficViolationFo
                         required
                         value={formData.section}
                         onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                         placeholder="e.g., 179, 184(IV)(c)"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Penalty (₹) *
                     </label>
                     <input
@@ -112,31 +120,31 @@ export default function TrafficViolationForm({ initialData }: TrafficViolationFo
                         required
                         value={formData.penalty}
                         onChange={(e) => setFormData({ ...formData, penalty: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Description (English)
                     </label>
                     <textarea
                         rows={3}
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Description (Hindi)
                     </label>
                     <textarea
                         rows={3}
                         value={formData.descriptionHindi}
                         onChange={(e) => setFormData({ ...formData, descriptionHindi: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
@@ -154,21 +162,13 @@ export default function TrafficViolationForm({ initialData }: TrafficViolationFo
                 </div>
             </div>
 
-            <div className="flex gap-4">
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-6 py-2 bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
-                >
-                    {loading ? 'Saving...' : initialData?._id ? 'Update Rule' : 'Create Rule'}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="px-6 py-2 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
+            <div className="flex flex-wrap gap-4">
+                <Button type="submit" disabled={loading} isLoading={loading}>
+                    {initialData?._id ? 'Update Rule' : 'Create Rule'}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => router.back()}>
                     Cancel
-                </button>
+                </Button>
             </div>
         </form>
     );

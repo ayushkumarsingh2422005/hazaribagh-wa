@@ -1,12 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { deleteAdminUser } from '@/app/actions/users';
 import AdminUserForm from './AdminUserForm';
 import type { SerializedAdminUser } from '@/lib/admin-permissions';
 import { ADMIN_SECTION_META } from '@/lib/admin-permissions';
 import { SERVICE_GROUPS } from '@/lib/complaint-services';
-import { Shield, Pencil, Trash2, X } from 'lucide-react';
+import { Shield, Pencil, Trash2, X, Users, Phone } from 'lucide-react';
+import { useToast } from '@/components/providers/ToastProvider';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import { Card, CardHeader, CardBody, ListRow } from '@/components/ui/Card';
 
 type PoliceStation = { name: string; nameHindi: string };
 
@@ -25,15 +31,28 @@ export default function UsersClient({
     actorIsSuperAdmin,
     actorCanManage,
 }: Props) {
+    const toast = useToast();
+    const router = useRouter();
     const [editing, setEditing] = useState<SerializedAdminUser | null>(null);
     const [showCreate, setShowCreate] = useState(false);
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     const handleDelete = async (userId: string) => {
-        if (!confirm('Delete this admin user? This cannot be undone.')) return;
+        if (confirmDelete !== userId) {
+            setConfirmDelete(userId);
+            return;
+        }
         setDeleting(userId);
-        await deleteAdminUser(userId);
+        const result = await deleteAdminUser(userId);
         setDeleting(null);
+        setConfirmDelete(null);
+        if (result.error) {
+            toast.error(result.error);
+        } else {
+            toast.success('Admin user deleted');
+            router.refresh();
+        }
     };
 
     const permSummary = (user: SerializedAdminUser) => {
@@ -55,11 +74,18 @@ export default function UsersClient({
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-4">
+            {!actorCanManage && (
+                <AlertBanner variant="info">
+                    You can view administrator accounts but cannot create or delete users. Contact a manager for
+                    changes.
+                </AlertBanner>
+            )}
+
             {actorCanManage ? (
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                <Card className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-base font-semibold text-slate-900 dark:text-white">
                             {showCreate || editing ? (editing ? 'Edit Admin' : 'New Admin') : 'Add Admin User'}
                         </h2>
                         {(showCreate || editing) && (
@@ -87,36 +113,25 @@ export default function UsersClient({
                             }}
                         />
                     ) : (
-                        <button
-                            type="button"
-                            onClick={() => setShowCreate(true)}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
-                        >
-                            + Create admin with custom permissions
-                        </button>
+                        <Button type="button" onClick={() => setShowCreate(true)}>
+                            + Create admin
+                        </Button>
                     )}
-                </div>
+                </Card>
             ) : null}
 
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                        All Administrators
-                        <span className="ml-2 text-sm px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                            {users.length}
-                        </span>
-                    </h2>
-                </div>
-
-                <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {users.map(user => (
-                        <div
-                            key={user._id}
-                            className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        >
-                            <div className="flex items-start gap-4">
+            <Card>
+                <CardHeader title="All Administrators" count={users.length} />
+                <CardBody divided>
+                    {users.length === 0 ? (
+                        <EmptyState icon={Users} title="No administrators yet" />
+                    ) : (
+                    users.map(user => (
+                        <ListRow key={user._id}>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-start gap-3">
                                 <div
-                                    className={`w-12 h-12 flex items-center justify-center font-bold uppercase text-lg ${
+                                    className={`w-9 h-9 flex items-center justify-center font-bold uppercase text-sm shrink-0 ${
                                         user.isSuperAdmin
                                             ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
                                             : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -126,7 +141,7 @@ export default function UsersClient({
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="font-semibold text-slate-900 dark:text-white text-lg">
+                                        <p className="font-semibold text-slate-900 dark:text-white text-sm">
                                             {user.username}
                                         </p>
                                         {user.isSuperAdmin ? (
@@ -141,6 +156,12 @@ export default function UsersClient({
                                         ) : null}
                                     </div>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
+                                    {user.phoneNumber ? (
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                                            <Phone className="w-3 h-3 shrink-0" aria-hidden />
+                                            {user.phoneNumber}
+                                        </p>
+                                    ) : null}
                                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{permSummary(user)}</p>
                                 </div>
                             </div>
@@ -163,8 +184,13 @@ export default function UsersClient({
                                             type="button"
                                             onClick={() => handleDelete(user._id)}
                                             disabled={deleting === user._id}
-                                            className="p-2 text-slate-500 hover:text-red-600 disabled:opacity-50"
-                                            title="Delete"
+                                            className={`p-2 disabled:opacity-50 ${
+                                                confirmDelete === user._id
+                                                    ? 'text-red-600'
+                                                    : 'text-slate-500 hover:text-red-600'
+                                            }`}
+                                            aria-label="Delete admin user"
+                                            title={confirmDelete === user._id ? 'Click again to confirm' : 'Delete'}
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -182,10 +208,12 @@ export default function UsersClient({
                                     </button>
                                 ) : null}
                             </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+                            </div>
+                        </ListRow>
+                    ))
+                    )}
+                </CardBody>
+            </Card>
         </div>
     );
 }

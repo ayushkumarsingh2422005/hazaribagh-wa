@@ -13,7 +13,7 @@ interface WhatsAppTestResult {
 }
 
 export default function TestWhatsAppClient() {
-    const [phoneNumber, setPhoneNumber] = useState('918127757516');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [message, setMessage] = useState('Hello! This is a test message from the dashboard.');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<WhatsAppTestResult | null>(null);

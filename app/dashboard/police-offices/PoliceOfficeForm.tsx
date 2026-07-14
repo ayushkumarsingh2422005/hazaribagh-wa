@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/providers/ToastProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import { LABEL_CLASS, FIELD_CLASS, TEXTAREA_CLASS, FORM_GRID_CLASS } from '@/components/ui/field-styles';
 
 interface PoliceOfficeFormProps {
     initialData?: {
@@ -22,7 +26,9 @@ interface PoliceOfficeFormProps {
 
 export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps) {
     const router = useRouter();
+    const toast = useToast();
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         officeKey: initialData?.officeKey || '',
         category: initialData?.category || ('dsp' as 'dsp' | 'ci'),
@@ -40,6 +46,7 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError('');
 
         try {
             const url = initialData?._id
@@ -55,25 +62,26 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
             const data = await response.json();
 
             if (data.success) {
+                toast.success(initialData?._id ? 'Office updated' : 'Office created');
                 router.push('/dashboard/police-offices');
                 router.refresh();
             } else {
-                alert('Error: ' + (data.error || 'Failed to save'));
+                setError(data.error || 'Failed to save');
             }
-        } catch (error) {
-            alert('Error saving police office');
-            console.error(error);
+        } catch {
+            setError('Error saving police office');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+            {error && <AlertBanner variant="error">{error}</AlertBanner>}
+            <div className={FORM_GRID_CLASS}>
                 {!initialData?._id && (
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        <label className={LABEL_CLASS}>
                             Office Key *
                         </label>
                         <input
@@ -82,7 +90,7 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                             value={formData.officeKey}
                             onChange={(e) => setFormData({ ...formData, officeKey: e.target.value })}
                             placeholder="e.g. sdpo_sadar"
-                            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                            className={FIELD_CLASS}
                         />
                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                             Unique ID for WhatsApp (office_key). Cannot be changed after create.
@@ -92,7 +100,7 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
 
                 {initialData?._id && initialData.officeKey && (
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        <label className={LABEL_CLASS}>
                             Office Key
                         </label>
                         <p className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-sm">
@@ -102,7 +110,7 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                 )}
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Category *
                     </label>
                     <select
@@ -110,7 +118,7 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                         onChange={(e) =>
                             setFormData({ ...formData, category: e.target.value as 'dsp' | 'ci' })
                         }
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     >
                         <option value="dsp">DSP / SDPO</option>
                         <option value="ci">CI (Circle Inspector)</option>
@@ -118,7 +126,7 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Name (English) *
                     </label>
                     <input
@@ -126,12 +134,12 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Name (Hindi) *
                     </label>
                     <input
@@ -139,48 +147,48 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                         required
                         value={formData.nameHindi}
                         onChange={(e) => setFormData({ ...formData, nameHindi: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Address (English)
                     </label>
                     <textarea
                         rows={3}
                         value={formData.address}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Address (Hindi)
                     </label>
                     <textarea
                         rows={3}
                         value={formData.addressHindi}
                         onChange={(e) => setFormData({ ...formData, addressHindi: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Phone
                     </label>
                     <input
                         type="text"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Display Order
                     </label>
                     <input
@@ -190,12 +198,12 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                         onChange={(e) =>
                             setFormData({ ...formData, displayOrder: Number(e.target.value) || 0 })
                         }
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Latitude *
                     </label>
                     <input
@@ -206,12 +214,12 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                         onChange={(e) =>
                             setFormData({ ...formData, latitude: parseFloat(e.target.value) })
                         }
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Longitude *
                     </label>
                     <input
@@ -222,7 +230,7 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                         onChange={(e) =>
                             setFormData({ ...formData, longitude: parseFloat(e.target.value) })
                         }
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
@@ -240,21 +248,13 @@ export default function PoliceOfficeForm({ initialData }: PoliceOfficeFormProps)
                 </div>
             </div>
 
-            <div className="flex gap-4">
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-6 py-2 bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
-                >
-                    {loading ? 'Saving...' : initialData?._id ? 'Update Office' : 'Create Office'}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="px-6 py-2 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
+            <div className="flex flex-wrap gap-4">
+                <Button type="submit" disabled={loading} isLoading={loading}>
+                    {initialData?._id ? 'Update Office' : 'Create Office'}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => router.back()}>
                     Cancel
-                </button>
+                </Button>
             </div>
         </form>
     );

@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { MessageSquare, User, AlertCircle } from 'lucide-react';
+import { ListSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Card, CardBody, ListRow } from '@/components/ui/Card';
+import { AlertBanner } from '@/components/ui/AlertBanner';
 
 interface Contact {
     _id: string;
@@ -14,20 +18,24 @@ interface Contact {
 export default function ContactsList() {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         fetchContacts();
     }, []);
 
     const fetchContacts = async () => {
+        setError('');
         try {
             const res = await fetch('/api/contacts');
             const data = await res.json();
             if (data.success) {
                 setContacts(data.contacts);
+            } else {
+                setError(data.error || 'Failed to load conversations');
             }
-        } catch (error) {
-            console.error('Error loading contacts:', error);
+        } catch {
+            setError('Could not load conversations. Please refresh the page.');
         } finally {
             setLoading(false);
         }
@@ -35,54 +43,64 @@ export default function ContactsList() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center p-12">
-                <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <Card>
+                <ListSkeleton rows={6} />
+            </Card>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="space-y-4">
+                <AlertBanner variant="error">{error}</AlertBanner>
+                <button
+                    type="button"
+                    onClick={() => {
+                        setLoading(true);
+                        fetchContacts();
+                    }}
+                    className="text-sm text-indigo-600 dark:text-indigo-400 underline"
+                >
+                    Try again
+                </button>
             </div>
         );
     }
 
     if (contacts.length === 0) {
         return (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-12 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl">
-                    💬
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                    No conversations yet
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400">
-                    Messages from WhatsApp will appear here once users start chatting.
-                </p>
-            </div>
+            <EmptyState
+                icon={MessageSquare}
+                title="No conversations yet"
+                description="Messages from WhatsApp will appear here once users start chatting."
+            />
         );
     }
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {contacts.map((contact) => (
-                    <Link
-                        key={contact._id}
-                        href={`/dashboard/chats/${contact.phoneNumber}`}
-                        className="block p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-lg">
-                                    {contact.name ? contact.name.charAt(0).toUpperCase() : '👤'}
+        <Card>
+            <CardBody divided>
+                {contacts.map(contact => (
+                    <ListRow key={contact._id} href={`/dashboard/chats/${encodeURIComponent(contact.phoneNumber)}`}>
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                    {contact.name ? (
+                                        contact.name.charAt(0).toUpperCase()
+                                    ) : (
+                                        <User className="w-4 h-4" aria-hidden />
+                                    )}
                                 </div>
-                                <div>
-                                    <p className="font-semibold text-slate-900 dark:text-white">
+                                <div className="min-w-0">
+                                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                                         {contact.name || contact.phoneNumber}
                                     </p>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                                        {contact.phoneNumber}
-                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">{contact.phoneNumber}</p>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">
-                                    {new Date(contact.lastMessageAt).toLocaleDateString(undefined, {
+                            <div className="text-right shrink-0">
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mb-0.5">
+                                    {new Date(contact.lastMessageAt).toLocaleDateString('en-IN', {
                                         month: 'short',
                                         day: 'numeric',
                                         hour: '2-digit',
@@ -90,15 +108,15 @@ export default function ContactsList() {
                                     })}
                                 </p>
                                 {contact.unreadCount > 0 && (
-                                    <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-indigo-600 rounded-full">
+                                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-indigo-600 rounded-full">
                                         {contact.unreadCount}
                                     </span>
                                 )}
                             </div>
                         </div>
-                    </Link>
+                    </ListRow>
                 ))}
-            </div>
-        </div>
+            </CardBody>
+        </Card>
     );
 }

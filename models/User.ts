@@ -5,6 +5,8 @@ import { emptyPermissions } from '@/lib/admin-permissions';
 export interface IUser extends Document {
     username: string;
     email: string;
+    /** Optional contact mobile (10 digits) */
+    phoneNumber?: string;
     password?: string;
     /** Full authority — bypasses all permission & PS checks */
     isSuperAdmin: boolean;
@@ -55,6 +57,11 @@ const UserSchema = new Schema<IUser>(
             unique: true,
             lowercase: true,
             trim: true,
+        },
+        phoneNumber: {
+            type: String,
+            trim: true,
+            default: '',
         },
         password: {
             type: String,

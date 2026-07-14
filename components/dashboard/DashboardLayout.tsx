@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
-import Sidebar from './Sidebar';
+import DashboardShell from './DashboardShell';
+import { ToastProvider } from '@/components/providers/ToastProvider';
 import { requireAuthAdminUser } from '@/lib/admin-auth';
 import { hasSectionAccess, toNavPermissions, type AdminSection } from '@/lib/admin-permissions';
 
@@ -13,19 +14,16 @@ export default async function DashboardLayout({ children, section }: DashboardLa
     const user = await requireAuthAdminUser();
 
     if (section && !hasSectionAccess(user, section)) {
-        // Home dashboard is always reachable — avoid redirect loop on ?access=denied
-        redirect('/dashboard?access=denied');
+        redirect(`/dashboard?access=denied&section=${section}`);
     }
 
     const nav = toNavPermissions(user);
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-            <Sidebar username={user.username} nav={nav} />
-
-            <main className="ml-64 min-h-screen">
-                <div className="p-6 md:p-8 lg:p-10">{children}</div>
-            </main>
-        </div>
+        <ToastProvider>
+            <DashboardShell username={user.username} nav={nav}>
+                {children}
+            </DashboardShell>
+        </ToastProvider>
     );
 }

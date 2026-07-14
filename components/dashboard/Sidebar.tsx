@@ -8,7 +8,7 @@ import {
     MessageSquare,
     FlaskConical,
     Users,
-    Settings,
+    SlidersHorizontal,
     LogOut,
     ChevronRight,
     Star,
@@ -16,9 +16,13 @@ import {
     Building2,
     MapPin,
     BookOpen,
+    ClipboardList,
+    Link2,
+    X,
 } from 'lucide-react';
 import {
     ADMIN_SECTION_META,
+    NAV_GROUP_LABELS,
     type NavPermissions,
     type AdminSection,
 } from '@/lib/admin-permissions';
@@ -30,28 +34,34 @@ const SECTION_ICONS: Record<AdminSection, React.ComponentType<{ className?: stri
     police_stations: MapPin,
     police_offices: Building2,
     traffic_rules: BookOpen,
-    complaints: MessageSquare,
+    complaints: ClipboardList,
     raw_complaints: FileWarning,
     reviews: Star,
-    resources: Settings,
+    resources: Link2,
     admin_users: Users,
-    settings: Settings,
+    settings: SlidersHorizontal,
 };
+
+const GROUP_ORDER = ['overview', 'operations', 'directory', 'administration'] as const;
 
 interface SidebarProps {
     username: string;
     nav: NavPermissions;
+    mobileOpen?: boolean;
+    onClose?: () => void;
 }
 
-export default function Sidebar({ username, nav }: SidebarProps) {
+export default function Sidebar({ username, nav, mobileOpen = false, onClose }: SidebarProps) {
     const pathname = usePathname();
 
-    const visibleItems = ADMIN_SECTION_META.filter(item => {
-        if (item.key === 'dashboard') return true;
-        if (item.key === 'chats') return nav.canAccessChats && nav.sections.chats;
-        if (item.key === 'admin_users') return nav.sections.admin_users || nav.canManageAdmins;
-        return nav.sections[item.key];
-    });
+    const isVisible = (key: AdminSection) => {
+        if (key === 'dashboard') return true;
+        if (key === 'chats') return nav.canAccessChats && nav.sections.chats;
+        if (key === 'admin_users') return nav.sections.admin_users || nav.canManageAdmins;
+        return nav.sections[key];
+    };
+
+    const visibleItems = ADMIN_SECTION_META.filter(item => isVisible(item.key));
 
     const isActive = (href: string) => {
         if (href === '/dashboard') return pathname === href;
@@ -64,48 +74,76 @@ export default function Sidebar({ username, nav }: SidebarProps) {
           ? 'Manager'
           : 'Administrator';
 
+    const sidebarClasses = `
+        fixed left-0 top-0 h-screen w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-50
+        transition-transform duration-200 ease-in-out
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0
+    `;
+
     return (
-        <aside className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
-            <div className="h-16 px-6 border-b border-slate-200 dark:border-slate-800 flex items-center">
+        <aside className={sidebarClasses}>
+            <div className="h-16 px-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                         H
                     </div>
                     <h1 className="font-bold text-base text-slate-900 dark:text-white">Hazaribagh WA</h1>
                 </div>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="lg:hidden p-1 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    aria-label="Close menu"
+                >
+                    <X className="w-5 h-5" />
+                </button>
             </div>
 
             <nav className="flex-1 p-3 overflow-y-auto">
-                <div className="space-y-1">
-                    {visibleItems.map(item => {
-                        const Icon = SECTION_ICONS[item.key];
-                        const active = isActive(item.href);
+                {GROUP_ORDER.map(group => {
+                    const items = visibleItems.filter(i => i.group === group);
+                    if (items.length === 0) return null;
 
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`
-                                    group flex items-center justify-between px-3 py-2.5 transition-colors
-                                    ${active
-                                        ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border-l-2 border-indigo-600 dark:border-indigo-400'
-                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white border-l-2 border-transparent'
-                                    }
-                                `}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Icon className={`w-5 h-5 ${active ? 'text-indigo-600 dark:text-indigo-400' : ''}`} />
-                                    <span className={`text-sm font-medium ${active ? 'font-semibold' : ''}`}>
-                                        {item.label}
-                                    </span>
-                                </div>
-                                {active ? (
-                                    <ChevronRight className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                                ) : null}
-                            </Link>
-                        );
-                    })}
-                </div>
+                    return (
+                        <div key={group} className="mb-4">
+                            <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                {NAV_GROUP_LABELS[group]}
+                            </p>
+                            <div className="space-y-1">
+                                {items.map(item => {
+                                    const Icon = SECTION_ICONS[item.key];
+                                    const active = isActive(item.href);
+
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            onClick={onClose}
+                                            className={`
+                                                group flex items-center justify-between px-3 py-2.5 transition-colors
+                                                ${active
+                                                    ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border-l-2 border-indigo-600 dark:border-indigo-400'
+                                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white border-l-2 border-transparent'
+                                                }
+                                            `}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <Icon className={`w-5 h-5 ${active ? 'text-indigo-600 dark:text-indigo-400' : ''}`} />
+                                                <span className={`text-sm font-medium ${active ? 'font-semibold' : ''}`}>
+                                                    {item.label}
+                                                </span>
+                                            </div>
+                                            {active ? (
+                                                <ChevronRight className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                            ) : null}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    );
+                })}
             </nav>
 
             <div className="border-t border-slate-200 dark:border-slate-800">

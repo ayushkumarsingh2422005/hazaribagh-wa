@@ -1,2 +1,76 @@
 @import "tailwindcss";
 
+:root {
+    --scrollbar-track: #f1f5f9;
+    --scrollbar-thumb: #cbd5e1;
+    --scrollbar-thumb-hover: #818cf8;
+    --scrollbar-thumb-active: #6366f1;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --scrollbar-track: #0f172a;
+        --scrollbar-thumb: #334155;
+        --scrollbar-thumb-hover: #6366f1;
+        --scrollbar-thumb-active: #818cf8;
+    }
+}
+
+.dark {
+    --scrollbar-track: #0f172a;
+    --scrollbar-thumb: #334155;
+    --scrollbar-thumb-hover: #6366f1;
+    --scrollbar-thumb-active: #818cf8;
+}
+
+@layer base {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background-color: var(--scrollbar-thumb);
+        border-radius: 9999px;
+        border: 2px solid var(--scrollbar-track);
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        background-color: var(--scrollbar-thumb-hover);
+    }
+
+    *::-webkit-scrollbar-thumb:active {
+        background-color: var(--scrollbar-thumb-active);
+    }
+
+    *::-webkit-scrollbar-corner {
+        background: var(--scrollbar-track);
+    }
+
+    html {
+        color-scheme: light dark;
+    }
+
+    body {
+        @apply bg-slate-50 text-slate-900 antialiased;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        body {
+            @apply bg-slate-950 text-slate-100;
+        }
+    }
+
+    .dark body {
+        @apply bg-slate-950 text-slate-100;
+    }
+}

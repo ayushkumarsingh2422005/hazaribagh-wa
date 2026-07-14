@@ -6,7 +6,6 @@ import { sendInteractiveButtons, sendWhatsAppMessage, sendInteractiveList } from
 import { handleFormSubmission, saveComplaint } from './chatbot-helpers';
 import { buildMyActivitiesMessage } from './my-activities';
 import {
-    formatDisclaimerStationPhones,
     formatGpsStationPhoneLines,
 } from './police-station-phones';
 import {
@@ -770,42 +769,26 @@ async function showDisclaimerAndContacts(
     phoneNumber: string,
     language: 'english' | 'hindi'
 ): Promise<ChatbotResponse> {
-    const stations = await PoliceStation.find({ isActive: true })
-        .sort({ displayOrder: 1, name: 1 })
-        .limit(60);
-
     let message = '';
 
     if (language === 'english') {
         message = `✅ *You have selected English language.*\n\nWe will provide you with information about Hazaribagh Police services in this language.\n\n`;
         message += `⚠️ *BEWARE:* Beware of unauthorized WhatsApp chatbots asking you to share your personal details, click on links, or download apps. These can be scams to defraud you. If you receive such communication, please report immediately on *1930*.\n\n`;
-        message += `📋 *Disclaimer:* This WhatsApp Chatbot is only for Hazaribagh Police which is made to provide you services and resolve your queries related to Hazaribagh Police. This is a query-based information system. For urgent matters, please visit the nearest police station or call *112* or call District Control Room on *8002529348*. Please find contact numbers of police stations and other important offices below.\n\n`;
-        message += `📞 *Police Station Contact Numbers:*\n\n`;
-
-        stations.forEach((station, index) => {
-            message += `${index + 1}. ${station.name} - ${formatDisclaimerStationPhones(station, 'english')}\n`;
-        });
-
-        message += `\n\nPlease select a service from the menu below.`;
+        message += `📋 *Disclaimer:* This WhatsApp Chatbot is only for Hazaribagh Police which is made to provide you services and resolve your queries related to Hazaribagh Police. This is a query-based information system. For urgent matters, please visit the nearest police station or call *112* or call District Control Room on *8002529348*.\n\n`;
+        message += `📍 To find your *nearest police station*, choose *Location Service* from the menu and share your GPS location.\n\n`;
+        message += `Please select a service from the menu below.`;
         message += `\n\n_Powered by DigiCraft Innovation Pvt. Ltd._`;
     } else {
         message = `✅ *आपने हिंदी भाषा का चयन किया है।*\n\nहम आपको हजारीबाग पुलिस सेवाओं के बारे में जानकारी इसी भाषा में प्रदान करेंगे।\n\n`;
         message += `⚠️ *सावधान:* अनाधिकृत व्हाट्सएप चैटबॉट से सावधान रहे जो आपसे आपकी व्यक्तिगत जानकारी साझा करने, लिंक पर क्लिक करने और एप डाउनलोड करने के लिये कह रहे है तो आप धोखाघडी के शिकार हो सकते है। यदि आपको ऐसा कोई संदेश प्राप्त होता है तो इसकी जानकारी आप *1930* पर कॉल कर सकते है।\n\n`;
-        message += `📋 *अस्वीकरण:* यह व्हाट्सएप चैटबॉट केवल हजारीबाग पुलिस के लिए है, जो आपको सेवाएं प्रदान करने और हजारीबाग पुलिस से संबंधित आपके प्रश्नों का समाधान करने के लिए बनाया गया है। यह प्रश्न-आधारित सूचना प्रणाली है। *अति-आवश्यक* मामलों के लिए निकटतम पुलिस स्टेशन पर जाएं या *112* पर कॉल करें या जिला नियंत्रण कक्ष *8002529348* पर कॉल करें। नीचे पुलिस स्टेशनों और अन्य महत्वपूर्ण कार्यालयों के संपर्क नंबर देखें।\n\n`;
-        message += `📞 *पुलिस स्टेशन संपर्क नंबर:*\n\n`;
-
-        stations.forEach((station, index) => {
-            message += `${index + 1}. ${station.nameHindi} - ${formatDisclaimerStationPhones(station, 'hindi')}\n`;
-        });
-
-        message += `\n\nकृपया नीचे दिए गए मेनू से एक सेवा चुनें।`;
+        message += `📋 *अस्वीकरण:* यह व्हाट्सएप चैटबॉट केवल हजारीबाग पुलिस के लिए है, जो आपको सेवाएं प्रदान करने और हजारीबाग पुलिस से संबंधित आपके प्रश्नों का समाधान करने के लिए बनाया गया है। यह प्रश्न-आधारित सूचना प्रणाली है। *अति-आवश्यक* मामलों के लिए निकटतम पुलिस स्टेशन पर जाएं या *112* पर कॉल करें या जिला नियंत्रण कक्ष *8002529348* पर कॉल करें।\n\n`;
+        message += `📍 अपना *निकटतम पुलिस स्टेशन* खोजने के लिए मेनू से *स्थान सेवा* चुनें और अपना GPS स्थान साझा करें।\n\n`;
+        message += `कृपया नीचे दिए गए मेनू से एक सेवा चुनें।`;
         message += `\n\n_Powered by DigiCraft Innovation Pvt. Ltd._`;
     }
 
-    // Send disclaimer and contacts, then return service menu
     await sendWhatsAppMessage({ to: phoneNumber, text: message });
 
-    // Return service menu
     return getServiceMenu(language);
 }
 
@@ -823,7 +806,7 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                     rows: [
                         { id: 'service_passport', title: 'Passport Issues', description: 'Passport verification issues' },
                         { id: 'service_character', title: 'Character Verification', description: 'Character verification issues' },
-                        { id: 'service_location', title: 'Location Service', description: 'Station locations & find PS' },
+                        { id: 'service_location', title: 'Location Service', description: 'Find nearest police station (GPS)' },
                         { id: 'service_lost_phone', title: 'Lost Mobile Phone', description: 'Report lost phone' },
                         { id: 'service_traffic', title: 'Traffic Issues', description: 'Traffic related queries' },
                         { id: 'service_missing_person', title: 'Missing Person', description: 'Report missing person details' },
@@ -845,7 +828,7 @@ function getServiceMenu(language: 'english' | 'hindi'): ChatbotResponse {
                     rows: [
                         { id: 'service_passport', title: 'पासपोर्ट से संबंधित', description: 'पासपोर्ट सत्यापन समस्याएं' },
                         { id: 'service_character', title: 'चरित्र सत्यापन', description: 'चरित्र सत्यापन समस्याएं' },
-                        { id: 'service_location', title: 'स्थान सेवा', description: 'स्टेशन स्थान व थाना खोजें' },
+                        { id: 'service_location', title: 'स्थान सेवा', description: 'निकटतम थाना खोजें (GPS)' },
                         { id: 'service_lost_phone', title: 'खोया मोबाइल फोन', description: 'खोया फोन रिपोर्ट करें' },
                         { id: 'service_traffic', title: 'यातायात की समस्या', description: 'यातायात संबंधी प्रश्न' },
                         { id: 'service_missing_person', title: 'लापता व्यक्ति', description: 'लापता व्यक्ति की जानकारी दें' },
@@ -891,7 +874,7 @@ async function handleServiceSelection(
         case 'service_character':
             return getCharacterSubMenu(language);
         case 'service_location':
-            return getLocationSubMenu(language);
+            return await getLocationService(phoneNumber, language);
         case 'service_lost_phone':
             return getLostPhoneSubMenu(language);
         case 'service_traffic':
@@ -1320,10 +1303,9 @@ async function handleSubServiceSelection(
         return await getLocationService(phoneNumber, language);
     }
 
-    // Find my Police Station — show INSP / DSP office list, no form, no complaint
+    // Find my Police Station — legacy entry; now same as nearest PS via GPS
     if (subServiceId === 'sub_location_find_station') {
-        delete userFlowState[phoneNumber];
-        return await getOfficeDirectoryMenu(language);
+        return await getLocationService(phoneNumber, language);
     }
 
     // Handle traffic rules separately (it returns ChatbotResponse)

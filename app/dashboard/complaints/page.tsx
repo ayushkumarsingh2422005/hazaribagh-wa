@@ -1,103 +1,99 @@
-import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import Complaint from '@/models/Complaint';
 import connectDB from '@/lib/db';
-import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import ComplaintsClient from './ComplaintsClient';
 import { requireSection, buildComplaintFilter, getStationAliasMap } from '@/lib/admin-auth';
 import { GROUPS, complaintTypeLabels } from '@/lib/complaint-services';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StatusTabs, parseStatusTab, mongoFilterForStatusTab } from '@/components/ui/StatusTabs';
+import { LIST_PAGE_SIZE, parsePageParam, getPaginationMeta } from '@/lib/pagination';
 
-async function getComplaints(filter: Record<string, unknown>) {
-    await connectDB();
-    const complaints = await Complaint.find(filter).sort({ createdAt: -1 }).limit(200).lean();
-    return complaints.map(c => ({
+function serializeComplaint(c: {
+    _id: { toString(): string };
+    complaintId?: string | null;
+    complaintType: string;
+    name: string;
+    phoneNumber: string;
+    policeStation?: string;
+    remarks?: string;
+    status: string;
+    source?: string;
+    createdAt: Date;
+    updatedAt: Date;
+}) {
+    return {
         _id: c._id.toString(),
-        complaintId: c.complaintId || null,
-        complaintType: c.complaintType,
-        name: c.name,
-        phoneNumber: c.phoneNumber,
-        policeStation: c.policeStation || '',
-        remarks: c.remarks || '',
-        status: c.status,
-        source: (c as { source?: string }).source || 'whatsapp',
+        complaintId: (c.complaintId as string) || null,
+        complaintType: c.complaintType as string,
+        name: c.name as string,
+        phoneNumber: c.phoneNumber as string,
+        policeStation: (c.policeStation as string) || '',
+        remarks: (c.remarks as string) || '',
+        status: c.status as string,
+        source: (c.source as string) || 'whatsapp',
         createdAt: c.createdAt.toISOString(),
         updatedAt: c.updatedAt.toISOString(),
-    }));
-}
-
-async function getStationAliasMapLocal(): Promise<Record<string, string>> {
-    return getStationAliasMap();
-}
-
-export default async function ComplaintsPage() {
-    const user = await requireSection('complaints');
-    const complaintFilter = await buildComplaintFilter(user);
-    const complaints = await getComplaints(complaintFilter);
-    const stationAliasMap = await getStationAliasMapLocal();
-    const stats = {
-        total: complaints.length,
-        pending: complaints.filter(c => c.status === 'pending').length,
-        inProgress: complaints.filter(c => c.status === 'in_progress').length,
-        resolved: complaints.filter(c => c.status === 'resolved').length,
     };
+}
+
+export default async function ComplaintsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ page?: string; status?: string }>;
+}) {
+    const user = await requireSection('complaints');
+    const params = await searchParams;
+    const page = parsePageParam(params.page);
+    const activeStatus = parseStatusTab(params.status);
+    const baseFilter = await buildComplaintFilter(user);
+    const statusFilter = mongoFilterForStatusTab(activeStatus);
+    const listFilter = { ...baseFilter, ...statusFilter };
+
+    await connectDB();
+
+    const [totalAll, pending, inProgress, resolved, listTotal] = await Promise.all([
+        Complaint.countDocuments(baseFilter),
+        Complaint.countDocuments({ ...baseFilter, status: 'pending' }),
+        Complaint.countDocuments({ ...baseFilter, status: 'in_progress' }),
+        Complaint.countDocuments({ ...baseFilter, status: { $in: ['resolved', 'closed'] } }),
+        Complaint.countDocuments(listFilter),
+    ]);
+
+    const { safePage, skip, pageSize, totalPages } = getPaginationMeta(listTotal, page, LIST_PAGE_SIZE);
+
+    const raw = await Complaint.find(listFilter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize)
+        .lean();
+
+    const complaints = raw.map(c => serializeComplaint(c));
+    const stationAliasMap = await getStationAliasMap();
 
     return (
         <DashboardLayout section="complaints">
-            <div className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
-                    Complaints &amp; Reports
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400 text-base">
-                    Manage citizen complaints and suggestions — grouped by category
-                </p>
-            </div>
+            <PageHeader title="Complaints & Reports" />
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Total</p>
-                            <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
-                        </div>
-                        <AlertCircle className="w-8 h-8 text-slate-400" />
-                    </div>
-                </div>
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Pending</p>
-                            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-                        </div>
-                        <Clock className="w-8 h-8 text-yellow-600" />
-                    </div>
-                </div>
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">In Progress</p>
-                            <p className="text-2xl font-bold text-blue-600">{stats.inProgress}</p>
-                        </div>
-                        <AlertCircle className="w-8 h-8 text-blue-600" />
-                    </div>
-                </div>
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Resolved</p>
-                            <p className="text-2xl font-bold text-green-600">{stats.resolved}</p>
-                        </div>
-                        <CheckCircle className="w-8 h-8 text-green-600" />
-                    </div>
-                </div>
-            </div>
+            <StatusTabs
+                basePath="/dashboard/complaints"
+                active={activeStatus}
+                counts={{ pending, inProgress, resolved, all: totalAll }}
+            />
 
-            {/* Client-side filterable grouped list */}
             <ComplaintsClient
                 complaints={complaints}
                 groups={GROUPS}
                 complaintTypeLabels={complaintTypeLabels}
                 stationAliasMap={stationAliasMap}
+                activeStatus={activeStatus}
+                pagination={{
+                    basePath: '/dashboard/complaints',
+                    page: safePage,
+                    totalPages,
+                    total: listTotal,
+                    pageSize,
+                    status: activeStatus,
+                }}
             />
         </DashboardLayout>
     );

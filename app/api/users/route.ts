@@ -10,6 +10,7 @@ import {
 } from '@/lib/admin-auth';
 import { canManageAdminUsers } from '@/lib/admin-permissions';
 import { emptyPermissions } from '@/lib/admin-permissions';
+import { validateAdminPhone } from '@/lib/admin-phone';
 
 export async function GET() {
     const actor = await getApiAuthAdminUser();
@@ -29,6 +30,7 @@ export async function GET() {
             _id: u._id.toString(),
             username: u.username,
             email: u.email,
+            phoneNumber: u.phoneNumber || '',
             isSuperAdmin: !!u.isSuperAdmin,
             canManageAdmins: !!u.canManageAdmins,
             canAccessChats: !!u.canAccessChats,
@@ -66,10 +68,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Only super admin can create super admin' }, { status: 403 });
         }
 
+        const phoneResult = validateAdminPhone(String(body.phoneNumber || ''));
+        if (!phoneResult.ok) {
+            return NextResponse.json({ error: phoneResult.error }, { status: 400 });
+        }
+
         const bcrypt = await import('bcryptjs');
         const user = await User.create({
             username: body.username,
             email: body.email?.toLowerCase(),
+            phoneNumber: phoneResult.phone,
             password: await bcrypt.hash(body.password, 10),
             isSuperAdmin: !!body.isSuperAdmin,
             canManageAdmins: !!body.isSuperAdmin || !!body.canManageAdmins,

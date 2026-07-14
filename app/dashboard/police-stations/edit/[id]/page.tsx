@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Card } from '@/components/ui/Card';
 import PoliceStationForm from '../../PoliceStationForm';
 import connectDB from '@/lib/db';
 import PoliceStation from '@/models/PoliceStation';
@@ -45,18 +47,11 @@ export default async function EditPoliceStationPage({
 
     return (
         <DashboardLayout section="police_stations">
-            <div className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
-                    Edit Police Station
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400 text-base">
-                    Update police station information
-                </p>
-            </div>
+            <PageHeader title="Edit Police Station" />
 
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6">
+            <Card className="p-4">
                 <PoliceStationForm initialData={station} />
-            </div>
+            </Card>
         </DashboardLayout>
     );
 }

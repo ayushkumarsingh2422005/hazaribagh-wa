@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/providers/ToastProvider';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+import { Button } from '@/components/ui/Button';
+import { LABEL_CLASS, FIELD_CLASS, TEXTAREA_CLASS, FORM_GRID_CLASS } from '@/components/ui/field-styles';
 
 interface ResourceFormProps {
     initialData?: {
@@ -19,7 +23,9 @@ interface ResourceFormProps {
 
 export default function ResourceForm({ initialData }: ResourceFormProps) {
     const router = useRouter();
+    const toast = useToast();
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         type: initialData?.type || 'disclaimer',
         title: initialData?.title || '',
@@ -34,6 +40,7 @@ export default function ResourceForm({ initialData }: ResourceFormProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError('');
 
         try {
             const url = initialData?._id
@@ -49,31 +56,32 @@ export default function ResourceForm({ initialData }: ResourceFormProps) {
             const data = await response.json();
 
             if (data.success) {
+                toast.success(initialData?._id ? 'Resource updated' : 'Resource created');
                 router.push('/dashboard/resources');
                 router.refresh();
             } else {
-                alert('Error: ' + (data.error || 'Failed to save'));
+                setError(data.error || 'Failed to save');
             }
-        } catch (error) {
-            alert('Error saving resource');
-            console.error(error);
+        } catch {
+            setError('Error saving resource');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+            {error && <AlertBanner variant="error">{error}</AlertBanner>}
+            <div className={FORM_GRID_CLASS}>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Type *
                     </label>
                     <select
                         required
                         value={formData.type}
                         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     >
                         <option value="disclaimer">Disclaimer</option>
                         <option value="important_link">Important Link</option>
@@ -84,19 +92,19 @@ export default function ResourceForm({ initialData }: ResourceFormProps) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Order
                     </label>
                     <input
                         type="number"
                         value={formData.order}
                         onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Title (English) *
                     </label>
                     <input
@@ -104,12 +112,12 @@ export default function ResourceForm({ initialData }: ResourceFormProps) {
                         required
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Title (Hindi) *
                     </label>
                     <input
@@ -117,12 +125,12 @@ export default function ResourceForm({ initialData }: ResourceFormProps) {
                         required
                         value={formData.titleHindi}
                         onChange={(e) => setFormData({ ...formData, titleHindi: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Content (English) *
                     </label>
                     <textarea
@@ -130,12 +138,12 @@ export default function ResourceForm({ initialData }: ResourceFormProps) {
                         rows={5}
                         value={formData.content}
                         onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         Content (Hindi) *
                     </label>
                     <textarea
@@ -143,19 +151,19 @@ export default function ResourceForm({ initialData }: ResourceFormProps) {
                         rows={5}
                         value={formData.contentHindi}
                         onChange={(e) => setFormData({ ...formData, contentHindi: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                     />
                 </div>
 
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className={LABEL_CLASS}>
                         URL (Optional)
                     </label>
                     <input
                         type="url"
                         value={formData.url}
                         onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        className={FIELD_CLASS}
                         placeholder="https://example.com"
                     />
                 </div>
@@ -174,21 +182,13 @@ export default function ResourceForm({ initialData }: ResourceFormProps) {
                 </div>
             </div>
 
-            <div className="flex gap-4">
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-6 py-2 bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
-                >
-                    {loading ? 'Saving...' : initialData?._id ? 'Update Resource' : 'Create Resource'}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="px-6 py-2 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
+            <div className="flex flex-wrap gap-4">
+                <Button type="submit" disabled={loading} isLoading={loading}>
+                    {initialData?._id ? 'Update Resource' : 'Create Resource'}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => router.back()}>
                     Cancel
-                </button>
+                </Button>
             </div>
         </form>
     );

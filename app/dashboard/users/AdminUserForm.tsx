@@ -81,6 +81,15 @@ export default function AdminUserForm({
             </div>
 
             <Input
+                name="phoneNumber"
+                type="tel"
+                label="Phone number (optional)"
+                hint="10-digit mobile for contact"
+                placeholder="9876543210"
+                defaultValue={editUser?.phoneNumber || ''}
+            />
+
+            <Input
                 name="password"
                 type="password"
                 label={editUser ? 'New Password (leave blank to keep)' : 'Password'}
