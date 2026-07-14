@@ -177,7 +177,7 @@ export default function PoliceStationForm({ initialData }: PoliceStationFormProp
                         className={FIELD_CLASS}
                     />
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        Lower number appears first in chatbot and station lists.
+                        1 = Police Station (P.S.), 2 = Out Post (O.P.), 0/3/4 = offices. Nearest GPS uses 1 &amp; 2 only.
                     </p>
                 </div>
 

@@ -8,6 +8,7 @@ import { buildMyActivitiesMessage } from './my-activities';
 import {
     formatGpsStationPhoneLines,
 } from './police-station-phones';
+import { nearestLocationStationQuery, NEAREST_LOCATION_DISPLAY_ORDERS } from './police-station-filters';
 // DISABLED: Police Offices directory
 // import {
 //     getActivePoliceOfficesForChatbot,
@@ -39,6 +40,7 @@ interface ChatbotResponse {
 async function getActivePoliceStations(): Promise<Array<{ name: string; nameHindi: string }>> {
     const stations = await PoliceStation.find({
         isActive: true,
+        displayOrder: { $in: [...NEAREST_LOCATION_DISPLAY_ORDERS] },
         $nor: [{ showInAssociatedPsList: false }],
     })
         .sort({ displayOrder: 1, name: 1 })
@@ -1645,7 +1647,7 @@ export async function handleLocationMessage(
     // Nearest-police-station GPS service (not an information submission).
     delete userFlowState[phoneNumber];
 
-    const stations = await PoliceStation.find({ isActive: true });
+    const stations = await PoliceStation.find(nearestLocationStationQuery());
 
     if (stations.length === 0) {
         return {

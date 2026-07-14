@@ -3,6 +3,7 @@ import connectDB from '@/lib/db';
 import PoliceStation from '@/models/PoliceStation';
 import { handleOptions, jsonWithCors } from '@/lib/app-cors';
 import { formatGpsStationPhoneLines } from '@/lib/police-station-phones';
+import { nearestLocationStationQuery } from '@/lib/police-station-filters';
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
         }
 
         await connectDB();
-        const stations = await PoliceStation.find({ isActive: true }).lean();
+        const stations = await PoliceStation.find(nearestLocationStationQuery()).lean();
         if (!stations.length) {
             return jsonWithCors(request, { success: false, error: 'No stations available' }, 404);
         }

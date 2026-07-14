@@ -17,6 +17,7 @@ export interface IPoliceStation extends Document {
     inchargeName?: string;
     inchargeNameHindi?: string;
     displayOrder: number;
+    /** 1 = P.S., 2 = O.P., 0/3/4 = offices (directory only; excluded from nearest GPS). */
     /** When false, station is hidden from chatbot "associated PS" list only (disclaimer, GPS, alerts unchanged). */
     showInAssociatedPsList: boolean;
     isActive: boolean;
