@@ -4,6 +4,7 @@ export type AdminSection =
     | 'chats'
     | 'test_whatsapp'
     | 'police_stations'
+    // | 'police_offices' — disabled; kept in User.permissions schema for legacy DB docs
     | 'police_offices'
     | 'traffic_rules'
     | 'complaints'
@@ -29,7 +30,8 @@ export const ADMIN_SECTION_META: Array<{
     { key: 'raw_complaints', label: 'Raw Complaints', href: '/dashboard/raw-complaints', description: 'Unparsed citizen messages', group: 'operations' },
     { key: 'reviews', label: 'Reviews', href: '/dashboard/reviews', description: 'Citizen reviews & feedback', group: 'operations' },
     { key: 'police_stations', label: 'Police Stations', href: '/dashboard/police-stations', description: 'Manage police station directory', group: 'directory' },
-    { key: 'police_offices', label: 'Police Offices', href: '/dashboard/police-offices', description: 'Manage DSP / CI offices', group: 'directory' },
+    // DISABLED: Police Offices — not needed for now
+    // { key: 'police_offices', label: 'Police Offices', href: '/dashboard/police-offices', description: 'Manage DSP / CI offices', group: 'directory' },
     { key: 'traffic_rules', label: 'Traffic Rules', href: '/dashboard/traffic-rules', description: 'Manage traffic violations & fines', group: 'directory' },
     { key: 'resources', label: 'Resources', href: '/dashboard/resources', description: 'Helpful links & resources', group: 'directory' },
     { key: 'admin_users', label: 'Admin Users', href: '/dashboard/users', description: 'View administrator accounts', group: 'administration' },
@@ -117,6 +119,9 @@ export function hasSectionAccess(
     user: { isSuperAdmin?: boolean; canManageAdmins?: boolean; canAccessChats?: boolean; permissions?: Partial<AdminPermissions> },
     section: AdminSection
 ): boolean {
+    // Police Offices section disabled
+    if (section === 'police_offices') return false;
+
     const nav = toNavPermissions(user);
     if (section === 'chats') return nav.canAccessChats && nav.sections.chats;
     if (section === 'admin_users') return nav.sections.admin_users || nav.canManageAdmins;

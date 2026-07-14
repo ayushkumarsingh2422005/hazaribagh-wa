@@ -31,6 +31,7 @@ const PermissionsSchema = new Schema(
         chats: { type: Boolean, default: false },
         test_whatsapp: { type: Boolean, default: false },
         police_stations: { type: Boolean, default: false },
+        // DISABLED section — kept for legacy admin permission docs
         police_offices: { type: Boolean, default: false },
         traffic_rules: { type: Boolean, default: false },
         complaints: { type: Boolean, default: false },

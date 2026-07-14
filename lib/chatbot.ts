@@ -8,12 +8,13 @@ import { buildMyActivitiesMessage } from './my-activities';
 import {
     formatGpsStationPhoneLines,
 } from './police-station-phones';
-import {
-    getActivePoliceOfficesForChatbot,
-    getPoliceOfficeByKey,
-    parseOfficeInteractiveId,
-    type ChatbotPoliceOffice,
-} from './police-offices';
+// DISABLED: Police Offices directory
+// import {
+//     getActivePoliceOfficesForChatbot,
+//     getPoliceOfficeByKey,
+//     parseOfficeInteractiveId,
+//     type ChatbotPoliceOffice,
+// } from './police-offices';
 
 interface ChatbotResponse {
     type: 'text' | 'buttons' | 'list';
@@ -707,41 +708,14 @@ async function handleInteractiveResponse(
         return await saveDeferredComplaintWithStation(phoneNumber, language, stations[pickedIndex].name);
     }
 
-    // Office directory — category / pagination (must be before office_* selection)
-    if (
-        interactiveId === 'office_cat_dsp' ||
-        interactiveId === 'office_cat_ci' ||
-        interactiveId === 'office_dir_back' ||
-        interactiveId.startsWith('office_page_')
-    ) {
-        const contact = await Contact.findOne({ phoneNumber });
-        const language = contact?.language || 'english';
-
-        if (interactiveId === 'office_dir_back') {
-            return await getOfficeDirectoryMenu(language);
-        }
-        if (interactiveId === 'office_cat_dsp') {
-            return await buildOfficeCategoryListResponse('dsp', language, 0);
-        }
-        if (interactiveId === 'office_cat_ci') {
-            return await buildOfficeCategoryListResponse('ci', language, 0);
-        }
-        const pageMatch = interactiveId.match(/^office_page_(dsp|ci)_(\d+)$/);
-        if (pageMatch) {
-            return await buildOfficeCategoryListResponse(
-                pageMatch[1] as 'dsp' | 'ci',
-                language,
-                Number(pageMatch[2])
-            );
-        }
-    }
-
-    // Police office directory — pick a specific office
-    if (interactiveId.startsWith('office_')) {
-        const contact = await Contact.findOne({ phoneNumber });
-        const language = contact?.language || 'english';
-        return await handleOfficeSelection(interactiveId, language);
-    }
+    // DISABLED: Police Office directory handlers
+    // if (
+    //     interactiveId === 'office_cat_dsp' ||
+    //     interactiveId === 'office_cat_ci' ||
+    //     interactiveId === 'office_dir_back' ||
+    //     interactiveId.startsWith('office_page_')
+    // ) { ... }
+    // if (interactiveId.startsWith('office_')) { ... }
 
     // Main service selection
     if (interactiveId.startsWith('service_')) {
@@ -1000,8 +974,9 @@ function getCharacterSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
 }
 
 /**
- * Location-based services (PDF Section D): GPS nearest PS or submit place details.
+ * DISABLED: Location submenu (included Office Directory). Location Service now goes straight to GPS.
  */
+/*
 function getLocationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
     if (language === 'english') {
         return {
@@ -1060,6 +1035,7 @@ function getLocationSubMenu(language: 'english' | 'hindi'): ChatbotResponse {
         ],
     };
 }
+*/
 
 /**
  * Location service - request user's location then find nearest station
@@ -1838,6 +1814,7 @@ export async function handleFlowPhotoMessage(
     return handleMissingPersonImageMessage(phoneNumber, mediaId);
 }
 
+/* DISABLED: Police Office directory (DSP / CI) — not needed for now
 const OFFICE_LIST_PAGE_SIZE = 6;
 
 function safeListTitle(value: string, max = 24): string {
@@ -2033,3 +2010,4 @@ async function handleOfficeSelection(officeId: string, language: 'english' | 'hi
 
     return buildOfficeLocationMessage(office, language);
 }
+*/

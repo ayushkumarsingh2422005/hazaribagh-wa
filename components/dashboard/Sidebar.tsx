@@ -32,6 +32,7 @@ const SECTION_ICONS: Record<AdminSection, React.ComponentType<{ className?: stri
     chats: MessageSquare,
     test_whatsapp: FlaskConical,
     police_stations: MapPin,
+    // DISABLED: police_offices: Building2,
     police_offices: Building2,
     traffic_rules: BookOpen,
     complaints: ClipboardList,

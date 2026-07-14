@@ -5,8 +5,9 @@ import Contact from '@/models/Contact';
 import Review from '@/models/Review';
 import User from '@/models/User';
 import PoliceStation from '@/models/PoliceStation';
-import PoliceOffice from '@/models/PoliceOffice';
 import TrafficViolation from '@/models/TrafficViolation';
+// DISABLED: Police Offices
+// import PoliceOffice from '@/models/PoliceOffice';
 import Resource from '@/models/Resource';
 import {
     type AuthAdminUser,
@@ -262,20 +263,21 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
         );
     }
 
-    if (hasSectionAccess(user, 'police_offices')) {
-        const active = await PoliceOffice.countDocuments({ isActive: true });
-        reference.push(
-            card({
-                id: 'offices',
-                label: 'Police offices',
-                value: active,
-                hint: 'DSP / CI offices active',
-                href: '/dashboard/police-offices',
-                section: 'police_offices',
-                needsAttention: false,
-            })
-        );
-    }
+    // DISABLED: Police Offices stats card
+    // if (hasSectionAccess(user, 'police_offices')) {
+    //     const active = await PoliceOffice.countDocuments({ isActive: true });
+    //     reference.push(
+    //         card({
+    //             id: 'offices',
+    //             label: 'Police offices',
+    //             value: active,
+    //             hint: 'DSP / CI offices active',
+    //             href: '/dashboard/police-offices',
+    //             section: 'police_offices',
+    //             needsAttention: false,
+    //         })
+    //     );
+    // }
 
     if (hasSectionAccess(user, 'traffic_rules')) {
         const active = await TrafficViolation.countDocuments({ isActive: true });
