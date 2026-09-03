@@ -1,26 +1,77 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+    /* Brand — light defaults (sidebar matches light theme) */
+    --sidebar-bg: #ffffff;
+    --sidebar-bg-deep: #f8fafc;
+    --sidebar-text: #334155;
+    --sidebar-text-muted: #94a3b8;
+    --sidebar-heading: #0f172a;
+    --sidebar-border: #e2e8f0;
+    --sidebar-hover: #f1f5f9;
+    --sidebar-icon-bg: #f1f5f9;
+    --sidebar-active: #2563eb;
+    --sidebar-active-bg: #eff6ff;
+    --sidebar-active-text: #1d4ed8;
+    --sidebar-signout-bg: #f8fafc;
+
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --success: #16a34a;
+    --warning: #d97706;
+    --urgent: #dc2626;
+    --accent: #7c3aed;
+    --info: #0284c7;
+
+    --canvas: #f1f5f9;
+    --card: #ffffff;
+    --card-border: #e2e8f0;
+    --muted: #64748b;
+    --text: #0f172a;
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(15, 23, 42, 0.04);
+
     --scrollbar-track: #f1f5f9;
     --scrollbar-thumb: #cbd5e1;
-    --scrollbar-thumb-hover: #818cf8;
-    --scrollbar-thumb-active: #6366f1;
+    --scrollbar-thumb-hover: #60a5fa;
+    --scrollbar-thumb-active: #2563eb;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --scrollbar-track: #0f172a;
-        --scrollbar-thumb: #334155;
-        --scrollbar-thumb-hover: #6366f1;
-        --scrollbar-thumb-active: #818cf8;
-    }
-}
-
+/* Dark tokens only when .dark is on <html> (set by theme toggle / system script) */
 .dark {
+    --sidebar-bg: #0b1f3a;
+    --sidebar-bg-deep: #071528;
+    --sidebar-text: #cbd5e1;
+    --sidebar-text-muted: #64748b;
+    --sidebar-heading: #ffffff;
+    --sidebar-border: rgba(148, 163, 184, 0.15);
+    --sidebar-hover: rgba(255, 255, 255, 0.06);
+    --sidebar-icon-bg: rgba(255, 255, 255, 0.06);
+    --sidebar-active: #3b82f6;
+    --sidebar-active-bg: rgba(59, 130, 246, 0.22);
+    --sidebar-active-text: #ffffff;
+    --sidebar-signout-bg: rgba(255, 255, 255, 0.06);
+
+    --primary: #3b82f6;
+    --primary-hover: #60a5fa;
+    --success: #22c55e;
+    --warning: #fbbf24;
+    --urgent: #f87171;
+    --accent: #a78bfa;
+    --info: #38bdf8;
+
+    --canvas: #020617;
+    --card: #0f172a;
+    --card-border: #1e293b;
+    --muted: #94a3b8;
+    --text: #f1f5f9;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+
     --scrollbar-track: #0f172a;
     --scrollbar-thumb: #334155;
-    --scrollbar-thumb-hover: #6366f1;
-    --scrollbar-thumb-active: #818cf8;
+    --scrollbar-thumb-hover: #3b82f6;
+    --scrollbar-thumb-active: #60a5fa;
 }
 
 @layer base {
@@ -57,20 +108,29 @@
     }
 
     html {
-        color-scheme: light dark;
+        color-scheme: light;
+    }
+
+    html.dark {
+        color-scheme: dark;
     }
 
     body {
-        @apply bg-slate-50 text-slate-900 antialiased;
+        background: var(--canvas);
+        color: var(--text);
+        @apply antialiased;
+    }
+}
+
+@layer utilities {
+    .dash-card {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        box-shadow: var(--shadow-card);
+        border-radius: 0.75rem;
     }
 
-    @media (prefers-color-scheme: dark) {
-        body {
-            @apply bg-slate-950 text-slate-100;
-        }
-    }
-
-    .dark body {
-        @apply bg-slate-950 text-slate-100;
+    .dash-muted {
+        color: var(--muted);
     }
 }

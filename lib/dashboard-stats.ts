@@ -6,8 +6,6 @@ import Review from '@/models/Review';
 import User from '@/models/User';
 import PoliceStation from '@/models/PoliceStation';
 import TrafficViolation from '@/models/TrafficViolation';
-// DISABLED: Police Offices
-// import PoliceOffice from '@/models/PoliceOffice';
 import Resource from '@/models/Resource';
 import {
     type AuthAdminUser,
@@ -17,6 +15,7 @@ import {
 } from '@/lib/admin-auth';
 import { hasSectionAccess, type AdminSection } from '@/lib/admin-permissions';
 import { getWhatsAppHealth } from '@/lib/whatsapp-health';
+import { SERVICE_GROUPS, COMPLAINT_TYPE_LABELS } from '@/lib/complaint-services';
 
 export type DashboardCardVariant = 'default' | 'warning' | 'success' | 'info' | 'urgent';
 
@@ -31,10 +30,52 @@ export type DashboardStatCard = {
     needsAttention?: boolean;
 };
 
+export type StatusSlice = { key: string; label: string; value: number; color: string };
+export type GroupSlice = { id: string; label: string; value: number };
+export type TrendPoint = { month: string; label: string; count: number };
+export type RecentComplaintRow = {
+    id: string;
+    complaintId: string | null;
+    complaintType: string;
+    typeLabel: string;
+    policeStation: string;
+    status: string;
+    source: string;
+    createdAt: string;
+};
+export type DashboardAlert = {
+    id: string;
+    title: string;
+    detail: string;
+    href: string;
+    severity: 'urgent' | 'warning' | 'info';
+};
+export type QuickAction = {
+    id: string;
+    label: string;
+    href: string;
+    tone: 'blue' | 'green' | 'amber' | 'red' | 'purple' | 'cyan';
+};
+
 export type DashboardOverview = {
     attention: DashboardStatCard[];
     operations: DashboardStatCard[];
     reference: DashboardStatCard[];
+    kpis: {
+        total: number;
+        pending: number;
+        inProgress: number;
+        resolved: number;
+        today: number;
+        rawPending: number;
+    };
+    statusBreakdown: StatusSlice[];
+    groupBreakdown: GroupSlice[];
+    monthlyTrend: TrendPoint[];
+    recentComplaints: RecentComplaintRow[];
+    alerts: DashboardAlert[];
+    quickActions: QuickAction[];
+    canViewComplaints: boolean;
 };
 
 function startOfTodayIST(): Date {
@@ -60,6 +101,15 @@ function card(
     return { ...partial, variant, needsAttention };
 }
 
+function typeToGroupId(complaintType: string): string {
+    const found = SERVICE_GROUPS.find(g => g.types.includes(complaintType));
+    return found?.id || 'other';
+}
+
+function monthLabel(key: string): string {
+    const [y, m] = key.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, 1)).toLocaleString('en-IN', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+}
 
 export async function getDashboardOverview(user: AuthAdminUser): Promise<DashboardOverview> {
     await connectDB();
@@ -67,18 +117,118 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
     const attention: DashboardStatCard[] = [];
     const operations: DashboardStatCard[] = [];
     const reference: DashboardStatCard[] = [];
+    const alerts: DashboardAlert[] = [];
+    const quickActions: QuickAction[] = [];
+
+    let pending = 0;
+    let inProgress = 0;
+    let resolved = 0;
+    let todayNew = 0;
+    let rawPending = 0;
+    let total = 0;
+    let statusBreakdown: StatusSlice[] = [];
+    let groupBreakdown: GroupSlice[] = [];
+    let monthlyTrend: TrendPoint[] = [];
+    let recentComplaints: RecentComplaintRow[] = [];
 
     const todayStart = startOfTodayIST();
+    const canViewComplaints = hasSectionAccess(user, 'complaints');
 
-    if (hasSectionAccess(user, 'complaints')) {
+    if (canViewComplaints) {
         const filter = await buildComplaintFilter(user);
-        const [pending, inProgress, resolved, todayNew, sathiPending] = await Promise.all([
+        const [p, ip, r, tn, sathiPending, totalCount, byStatus, byType, recent] = await Promise.all([
             Complaint.countDocuments({ ...filter, status: 'pending' }),
             Complaint.countDocuments({ ...filter, status: 'in_progress' }),
             Complaint.countDocuments({ ...filter, status: { $in: ['resolved', 'closed'] } }),
             Complaint.countDocuments({ ...filter, createdAt: { $gte: todayStart } }),
             Complaint.countDocuments({ ...filter, status: 'pending', source: 'app' }),
+            Complaint.countDocuments(filter),
+            Complaint.aggregate<{ _id: string; count: number }>([
+                { $match: filter },
+                { $group: { _id: '$status', count: { $sum: 1 } } },
+            ]),
+            Complaint.aggregate<{ _id: string; count: number }>([
+                { $match: filter },
+                { $group: { _id: '$complaintType', count: { $sum: 1 } } },
+            ]),
+            Complaint.find(filter)
+                .sort({ createdAt: -1 })
+                .limit(8)
+                .select('complaintId complaintType policeStation status source createdAt')
+                .lean(),
         ]);
+
+        pending = p;
+        inProgress = ip;
+        resolved = r;
+        todayNew = tn;
+        total = totalCount;
+
+        const statusMap: Record<string, number> = {};
+        for (const row of byStatus) statusMap[row._id] = row.count;
+        statusBreakdown = [
+            { key: 'pending', label: 'Pending', value: statusMap.pending || 0, color: '#f59e0b' },
+            { key: 'in_progress', label: 'In Progress', value: statusMap.in_progress || 0, color: '#2563eb' },
+            {
+                key: 'resolved',
+                label: 'Resolved',
+                value: (statusMap.resolved || 0) + (statusMap.closed || 0),
+                color: '#16a34a',
+            },
+        ];
+
+        const groupCounts: Record<string, number> = {};
+        for (const row of byType) {
+            const gid = typeToGroupId(String(row._id || ''));
+            groupCounts[gid] = (groupCounts[gid] || 0) + row.count;
+        }
+        groupBreakdown = SERVICE_GROUPS.map(g => ({
+            id: g.id,
+            label: g.label,
+            value: groupCounts[g.id] || 0,
+        }))
+            .filter(g => g.value > 0)
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 8);
+
+        // Last 6 months trend (IST-ish via +05:30 offset on createdAt for grouping)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+        sixMonthsAgo.setDate(1);
+        sixMonthsAgo.setHours(0, 0, 0, 0);
+
+        const trendAgg = await Complaint.aggregate<{ _id: string; count: number }>([
+            { $match: { ...filter, createdAt: { $gte: sixMonthsAgo } } },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: '%Y-%m', date: '$createdAt', timezone: 'Asia/Kolkata' },
+                    },
+                    count: { $sum: 1 },
+                },
+            },
+            { $sort: { _id: 1 } },
+        ]);
+        const trendMap = Object.fromEntries(trendAgg.map(t => [t._id, t.count]));
+        monthlyTrend = [];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            d.setDate(1);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            monthlyTrend.push({ month: key, label: monthLabel(key), count: trendMap[key] || 0 });
+        }
+
+        recentComplaints = recent.map(c => ({
+            id: String(c._id),
+            complaintId: c.complaintId || null,
+            complaintType: String(c.complaintType || ''),
+            typeLabel: COMPLAINT_TYPE_LABELS[String(c.complaintType)] || String(c.complaintType || '—'),
+            policeStation: c.policeStation || '—',
+            status: String(c.status || 'pending'),
+            source: (c as { source?: string }).source || 'whatsapp',
+            createdAt: c.createdAt.toISOString(),
+        }));
 
         attention.push(
             card({
@@ -90,6 +240,16 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
                 section: 'complaints',
             })
         );
+
+        if (pending > 0) {
+            alerts.push({
+                id: 'alert-pending',
+                title: `${pending} complaint${pending === 1 ? '' : 's'} pending`,
+                detail: 'Awaiting review or assignment',
+                href: '/dashboard/complaints?status=pending',
+                severity: pending > 10 ? 'urgent' : 'warning',
+            });
+        }
 
         operations.push(
             card({
@@ -128,7 +288,7 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
             attention.push(
                 card({
                     id: 'sathi-pending',
-                    label: 'Sathi app pending',
+                    label: 'Saathi app pending',
                     value: sathiPending,
                     hint: 'From mobile app — needs action',
                     href: '/dashboard/complaints?status=pending',
@@ -136,39 +296,71 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
                     section: 'complaints',
                 })
             );
+            alerts.push({
+                id: 'alert-sathi',
+                title: `${sathiPending} Saathi app pending`,
+                detail: 'Mobile app submissions need action',
+                href: '/dashboard/complaints?status=pending',
+                severity: 'warning',
+            });
         }
+
+        quickActions.push({
+            id: 'qa-complaints',
+            label: 'Complaints',
+            href: '/dashboard/complaints',
+            tone: 'blue',
+        });
     }
 
     if (hasSectionAccess(user, 'raw_complaints')) {
         const filter = await buildRawComplaintFilter(user);
-        const [pending, inProgress] = await Promise.all([
+        const [rp, rip] = await Promise.all([
             RawComplaint.countDocuments({ ...filter, status: 'pending' }),
             RawComplaint.countDocuments({ ...filter, status: 'in_progress' }),
         ]);
+        rawPending = rp;
 
         attention.push(
             card({
                 id: 'raw-pending',
                 label: 'Raw submissions pending',
-                value: pending,
+                value: rp,
                 hint: 'Invalid-format messages to review',
                 href: '/dashboard/raw-complaints?status=pending',
                 section: 'raw_complaints',
             })
         );
 
+        if (rp > 0) {
+            alerts.push({
+                id: 'alert-raw',
+                title: `${rp} raw submission${rp === 1 ? '' : 's'} pending`,
+                detail: 'Non-standard messages awaiting review',
+                href: '/dashboard/raw-complaints?status=pending',
+                severity: 'warning',
+            });
+        }
+
         operations.push(
             card({
                 id: 'raw-in-progress',
                 label: 'Raw in progress',
-                value: inProgress,
+                value: rip,
                 hint: 'Under manual review',
                 href: '/dashboard/raw-complaints?status=in_progress',
-                variant: inProgress > 0 ? 'info' : 'default',
+                variant: rip > 0 ? 'info' : 'default',
                 section: 'raw_complaints',
                 needsAttention: false,
             })
         );
+
+        quickActions.push({
+            id: 'qa-raw',
+            label: 'Raw Complaints',
+            href: '/dashboard/raw-complaints',
+            tone: 'amber',
+        });
     }
 
     if (hasSectionAccess(user, 'chats') && user.canAccessChats) {
@@ -196,6 +388,13 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
                     section: 'chats',
                 })
             );
+            alerts.push({
+                id: 'alert-chats',
+                title: `${unread} unread WhatsApp message${unread === 1 ? '' : 's'}`,
+                detail: 'Citizens awaiting a reply',
+                href: '/dashboard/chats',
+                severity: 'info',
+            });
         }
 
         operations.push(
@@ -210,6 +409,8 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
                 needsAttention: false,
             })
         );
+
+        quickActions.push({ id: 'qa-chats', label: 'Chats', href: '/dashboard/chats', tone: 'cyan' });
     }
 
     if (hasSectionAccess(user, 'reviews')) {
@@ -246,7 +447,7 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
     }
 
     if (hasSectionAccess(user, 'police_stations')) {
-        const [total, active] = await Promise.all([
+        const [stationTotal, active] = await Promise.all([
             PoliceStation.countDocuments({}),
             PoliceStation.countDocuments({ isActive: true }),
         ]);
@@ -255,29 +456,19 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
                 id: 'stations',
                 label: 'Police stations',
                 value: active,
-                hint: `${total} total in directory`,
+                hint: `${stationTotal} total in directory`,
                 href: '/dashboard/police-stations',
                 section: 'police_stations',
                 needsAttention: false,
             })
         );
+        quickActions.push({
+            id: 'qa-stations',
+            label: 'Stations',
+            href: '/dashboard/police-stations',
+            tone: 'green',
+        });
     }
-
-    // DISABLED: Police Offices stats card
-    // if (hasSectionAccess(user, 'police_offices')) {
-    //     const active = await PoliceOffice.countDocuments({ isActive: true });
-    //     reference.push(
-    //         card({
-    //             id: 'offices',
-    //             label: 'Police offices',
-    //             value: active,
-    //             hint: 'DSP / CI offices active',
-    //             href: '/dashboard/police-offices',
-    //             section: 'police_offices',
-    //             needsAttention: false,
-    //         })
-    //     );
-    // }
 
     if (hasSectionAccess(user, 'traffic_rules')) {
         const active = await TrafficViolation.countDocuments({ isActive: true });
@@ -322,6 +513,7 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
                 needsAttention: false,
             })
         );
+        quickActions.push({ id: 'qa-users', label: 'Admins', href: '/dashboard/users', tone: 'purple' });
     }
 
     const health = getWhatsAppHealth();
@@ -333,7 +525,7 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
                 value: health.configured ? 'OK' : 'Setup',
                 hint: health.configured
                     ? health.otpTemplateSet
-                        ? 'Ready for chatbot & Sathi OTP'
+                        ? 'Ready for chatbot & Saathi OTP'
                         : 'OTP template not set'
                     : 'Configure in settings',
                 href: '/dashboard/settings',
@@ -342,6 +534,7 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
                 needsAttention: !health.configured,
             })
         );
+        quickActions.push({ id: 'qa-settings', label: 'Settings', href: '/dashboard/settings', tone: 'red' });
     }
 
     attention.sort((a, b) => {
@@ -353,5 +546,20 @@ export async function getDashboardOverview(user: AuthAdminUser): Promise<Dashboa
         attention,
         operations,
         reference,
+        kpis: {
+            total,
+            pending,
+            inProgress,
+            resolved,
+            today: todayNew,
+            rawPending,
+        },
+        statusBreakdown,
+        groupBreakdown,
+        monthlyTrend,
+        recentComplaints,
+        alerts,
+        quickActions,
+        canViewComplaints,
     };
 }

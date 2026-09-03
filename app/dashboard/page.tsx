@@ -23,16 +23,16 @@ export default async function DashboardPage({
     return (
         <DashboardLayout>
             {params.access === 'denied' ? (
-                <AlertBanner variant="warning" className="mb-6">
+                <AlertBanner variant="warning" className="mb-5">
                     You do not have access to {deniedSection ? `"${deniedSection}"` : 'that section'}. Contact your
                     administrator if you need permission.
                 </AlertBanner>
             ) : null}
 
             {!health.configured && (user.isSuperAdmin || user.permissions.settings) && (
-                <AlertBanner variant="warning" className="mb-6">
+                <AlertBanner variant="warning" className="mb-5">
                     {health.message}{' '}
-                    <Link href="/dashboard/settings" className="underline font-medium">
+                    <Link href="/dashboard/settings" className="underline font-semibold">
                         View settings
                     </Link>
                 </AlertBanner>

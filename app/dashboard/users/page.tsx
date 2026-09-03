@@ -23,7 +23,7 @@ export default async function UsersPage() {
 
     return (
         <DashboardLayout section="admin_users">
-            <PageHeader title="Admin Users" />
+            <PageHeader title="Admin Users" subtitle="Administration" />
 
             <UsersClient
                 users={users}

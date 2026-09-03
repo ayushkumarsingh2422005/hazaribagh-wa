@@ -98,7 +98,7 @@ function RawComplaintCard({
                 </div>
                 <Link
                     href={`/dashboard/raw-complaints/${row._id}`}
-                    className="shrink-0 text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium"
+                    className="shrink-0 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 font-semibold"
                 >
                     View →
                 </Link>

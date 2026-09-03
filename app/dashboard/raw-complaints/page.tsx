@@ -64,7 +64,7 @@ export default async function RawComplaintsPage({
 
     return (
         <DashboardLayout section="raw_complaints">
-            <PageHeader title="Raw / invalid-format submissions" />
+            <PageHeader title="Raw / invalid-format submissions" subtitle="Operations" />
 
             <StatusTabs
                 basePath="/dashboard/raw-complaints"

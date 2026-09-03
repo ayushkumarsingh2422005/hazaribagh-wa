@@ -36,7 +36,7 @@ export async function deliverWhatsAppOtp(
     const inSession = await hasActiveWhatsAppSession(phoneNumber);
 
     // Prefer the approved Authentication template whenever it is configured —
-    // same delivery path for Sathi registration and admin password reset.
+    // same delivery path for Saathi registration and admin password reset.
     if (otpTemplateConfigured()) {
         try {
             await sendWhatsAppOtpTemplate({ to: phoneNumber, otp });

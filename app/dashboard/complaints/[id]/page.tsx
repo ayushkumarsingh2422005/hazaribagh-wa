@@ -80,7 +80,7 @@ export default async function ComplaintDetailPage({
                         <span
                             className={`text-xs px-1.5 py-0.5 rounded font-medium ${(complaint as { source?: string }).source === 'app' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'}`}
                         >
-                            {(complaint as { source?: string }).source === 'app' ? 'Sathi App' : 'WhatsApp'}
+                            {(complaint as { source?: string }).source === 'app' ? 'Saathi App' : 'WhatsApp'}
                         </span>
                     </>
                 }

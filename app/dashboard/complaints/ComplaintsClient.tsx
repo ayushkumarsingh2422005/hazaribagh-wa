@@ -3,9 +3,8 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Search, X, Phone } from 'lucide-react';
-import { statusBadgeClass } from '@/lib/complaint-status-sections';
 import { Pagination } from '@/components/ui/Pagination';
-import { Card, CardBody, ListRow } from '@/components/ui/Card';
+import { Card, CardBody, ListRow, StatusBadge } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { FILTER_INPUT_CLASS, SELECT_CLASS } from '@/components/ui/field-styles';
 import type { StatusTabValue } from '@/components/ui/StatusTabs';
@@ -82,17 +81,15 @@ function ComplaintCard({
                         <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded">
                             {complaintTypeLabels[complaint.complaintType] || complaint.complaintType}
                         </span>
-                        <span className={statusBadgeClass(complaint.status)}>
-                            {complaint.status.replace('_', ' ')}
-                        </span>
+                        <StatusBadge status={complaint.status} />
                         <span
-                            className={`text-xs px-2 py-0.5 rounded font-medium ${
+                            className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${
                                 complaint.source === 'app'
-                                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                    ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300'
+                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
                             }`}
                         >
-                            {complaint.source === 'app' ? 'Sathi App' : 'WhatsApp'}
+                            {complaint.source === 'app' ? 'Saathi App' : 'WhatsApp'}
                         </span>
                     </div>
                     <h3 className="text-base font-semibold text-slate-900 dark:text-white">
@@ -114,7 +111,7 @@ function ComplaintCard({
                 </div>
                 <Link
                     href={`/dashboard/complaints/${complaint._id}`}
-                    className="shrink-0 text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium"
+                    className="shrink-0 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 font-semibold"
                 >
                     View →
                 </Link>
@@ -221,7 +218,8 @@ export default function ComplaintsClient({
 
     return (
         <div>
-            <div className="space-y-2 mb-4">
+            <Card className="mb-4">
+            <CardBody className="p-4 space-y-3">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     <input
@@ -311,14 +309,15 @@ export default function ComplaintsClient({
                         {hasActiveFilters && (
                             <button
                                 onClick={clearAll}
-                                className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium underline"
+                                className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-semibold underline"
                             >
                                 Clear filters
                             </button>
                         )}
                     </div>
                 </div>
-            </div>
+            </CardBody>
+            </Card>
 
             <Card>
                 {filtered.length === 0 ? (

@@ -16,7 +16,7 @@ export function getWhatsAppHealth(): WhatsAppHealthStatus {
     if (!configured) {
         message = 'Missing WHATSAPP_ACCESS_TOKEN or WHATSAPP_PHONE_NUMBER_ID in environment.';
     } else if (!otpTemplateSet) {
-        message = 'API configured. OTP template not set — Sathi app login may fail for new users.';
+        message = 'API configured. OTP template not set — Saathi app login may fail for new users.';
     }
 
     return { configured, tokenSet, phoneNumberIdSet, otpTemplateSet, message };

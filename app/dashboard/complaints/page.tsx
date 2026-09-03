@@ -72,7 +72,15 @@ export default async function ComplaintsPage({
 
     return (
         <DashboardLayout section="complaints">
-            <PageHeader title="Complaints & Reports" />
+            <PageHeader
+                title="Complaints & Reports"
+                subtitle="Operations"
+                meta={
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                        Structured citizen complaints from WhatsApp and Saathi app
+                    </span>
+                }
+            />
 
             <StatusTabs
                 basePath="/dashboard/complaints"

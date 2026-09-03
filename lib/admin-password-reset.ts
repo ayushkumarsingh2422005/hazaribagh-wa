@@ -41,7 +41,7 @@ export async function sendAdminPasswordResetOtp(
         return { success: false, error: 'The phone number on this account is invalid. Contact your administrator.' };
     }
 
-    // Same OTP delivery path as Sathi app registration (/api/app/auth/send-otp)
+    // Same OTP delivery path as Saathi app registration (/api/app/auth/send-otp)
     const result = await sendAppOtp(phone10);
     if (!result.success) {
         return { success: false, error: result.error || 'Could not send OTP on WhatsApp. Try again later.' };

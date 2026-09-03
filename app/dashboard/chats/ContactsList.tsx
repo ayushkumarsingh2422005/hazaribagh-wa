@@ -84,7 +84,7 @@ export default function ContactsList() {
                     <ListRow key={contact._id} href={`/dashboard/chats/${encodeURIComponent(contact.phoneNumber)}`}>
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
                                     {contact.name ? (
                                         contact.name.charAt(0).toUpperCase()
                                     ) : (
@@ -108,7 +108,7 @@ export default function ContactsList() {
                                     })}
                                 </p>
                                 {contact.unreadCount > 0 && (
-                                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-indigo-600 rounded-full">
+                                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-blue-600 rounded-full">
                                         {contact.unreadCount}
                                     </span>
                                 )}

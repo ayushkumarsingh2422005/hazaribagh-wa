@@ -5,7 +5,7 @@ import TestWhatsAppClient from './TestWhatsAppClient';
 export default async function TestWhatsAppPage() {
     return (
         <DashboardLayout section="test_whatsapp">
-            <PageHeader title="Test WhatsApp API" />
+            <PageHeader title="Test WhatsApp API" subtitle="Operations" />
             <TestWhatsAppClient />
         </DashboardLayout>
     );

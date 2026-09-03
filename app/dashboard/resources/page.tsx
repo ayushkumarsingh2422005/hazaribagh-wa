@@ -34,6 +34,7 @@ export default async function ResourcesPage() {
         <DashboardLayout section="resources">
             <PageHeader
                 title="Resources & Information"
+                subtitle="Directory"
                 actions={<ButtonLink href="/dashboard/resources/new">Add Resource</ButtonLink>}
             />
 

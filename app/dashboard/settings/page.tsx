@@ -1,19 +1,33 @@
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Activity, Settings, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Activity, CheckCircle2, AlertCircle, Palette } from 'lucide-react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { AlertBanner } from '@/components/ui/AlertBanner';
 import { getWhatsAppHealth } from '@/lib/whatsapp-health';
+import { ThemePreferenceCard } from '@/components/ui/ThemeToggle';
 
 export default async function SettingsPage() {
     const health = getWhatsAppHealth();
 
     return (
         <DashboardLayout section="settings">
-            <PageHeader title="Settings" />
+            <PageHeader title="Settings" subtitle="Administration" />
 
             <div className="space-y-4">
+                <Card className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Palette className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+                            Appearance
+                        </h2>
+                    </div>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                        Choose light, dark, or follow your device setting. Preference is saved in this browser.
+                    </p>
+                    <ThemePreferenceCard />
+                </Card>
+
                 <Card className="p-4">
                     <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-2">
                         WhatsApp Configuration
@@ -27,7 +41,7 @@ export default async function SettingsPage() {
                             ok={health.configured}
                         />
                         <StatusRow
-                            label="OTP template (Sathi App)"
+                            label="OTP template (Saathi App)"
                             description="WHATSAPP_OTP_TEMPLATE_NAME for new user login"
                             ok={health.otpTemplateSet}
                             warnWhenOff
@@ -37,7 +51,7 @@ export default async function SettingsPage() {
                     <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
                         <Link
                             href="/dashboard/test-whatsapp"
-                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                            className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
                         >
                             Test WhatsApp connection →
                         </Link>
@@ -50,17 +64,6 @@ export default async function SettingsPage() {
                         environment variables are set on the server.
                     </AlertBanner>
                 )}
-
-                <Card className="p-4">
-                    <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-3">Additional Settings</h2>
-                    <div className="text-center py-6">
-                        <Settings className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">More settings coming soon</p>
-                        <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
-                            Environment-based configuration is managed on the deployment platform (e.g. Vercel).
-                        </p>
-                    </div>
-                </Card>
             </div>
         </DashboardLayout>
     );

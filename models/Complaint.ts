@@ -44,7 +44,7 @@ export interface IComplaint extends Document {
     missingPersonPhotoUrl?: string;
     suggestion?: string;
     status: 'pending' | 'in_progress' | 'resolved';
-    /** whatsapp = chatbot, app = HazariBagh Sathi mobile app */
+    /** whatsapp = chatbot, app = Hazaribagh Saathi mobile app */
     source?: 'whatsapp' | 'app';
     assignedTo?: string;
     resolvedAt?: Date;

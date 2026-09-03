@@ -25,11 +25,12 @@ export default async function PoliceStationsPage() {
         <DashboardLayout section="police_stations">
             <PageHeader
                 title="Police Stations"
+                subtitle="Directory"
                 actions={<ButtonLink href="/dashboard/police-stations/new">Add Station</ButtonLink>}
             />
 
             <Card>
-                <CardHeader title="All Stations" count={stations.length} />
+                <CardHeader title="All Stations" count={stations.length} accent="blue" />
                 <CardBody divided>
                     {stations.length === 0 ? (
                         <EmptyState

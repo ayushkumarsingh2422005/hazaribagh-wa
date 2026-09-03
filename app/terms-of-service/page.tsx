@@ -2,15 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Terms of Service | Hazaribagh Police WhatsApp Assistant',
+    title: 'Terms of Service | Hazaribagh Police — WhatsApp & Saathi App',
     description:
-        'Read the Terms of Service governing your use of the Hazaribagh Police WhatsApp Assistant.',
+        'Terms of Service for Hazaribagh Police WhatsApp Assistant and Hazaribagh Saathi mobile app.',
 };
 
 export default function TermsOfServicePage() {
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-            {/* Header Banner */}
             <header className="bg-slate-800 text-white py-12 px-4">
                 <div className="max-w-3xl mx-auto">
                     <div className="flex items-center gap-3 mb-4">
@@ -23,121 +22,120 @@ export default function TermsOfServicePage() {
                     </div>
                     <h1 className="text-3xl md:text-4xl font-bold mb-2">Terms of Service</h1>
                     <p className="text-slate-300 text-base">
-                        Last updated: March 5, 2026
+                        Last updated: September 3, 2026
                     </p>
                 </div>
             </header>
 
-            {/* Content */}
             <main className="max-w-3xl mx-auto px-4 py-12">
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-8 space-y-8">
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">1. Acceptance of Terms</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            By accessing or using the <strong>Hazaribagh Police WhatsApp Assistant</strong> (&ldquo;the Service&rdquo;), you agree to be bound by these Terms of Service. If you do not agree to all of these terms, please discontinue use of the Service immediately. These Terms apply to all users who interact with the chatbot via WhatsApp.
+                            By accessing or using the <strong>Hazaribagh Police WhatsApp Assistant</strong> or the <strong>Hazaribagh Saathi</strong> mobile app (Android package <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-sm">com.digicraft.HazariBaghsaathi</code>) (together, &ldquo;the Services&rdquo;), you agree to these Terms of Service. If you do not agree, discontinue use immediately.
                         </p>
                     </section>
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">2. Description of Service</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            The Service is a WhatsApp-based chatbot operated by Hazaribagh Police that provides citizens with the ability to:
+                            The Services are citizen channels operated for Hazaribagh Police that allow you to:
                         </p>
                         <ul className="list-disc list-inside space-y-2 text-slate-600 dark:text-slate-400 mt-3">
-                            <li>File complaints and inquiries with Hazaribagh Police.</li>
+                            <li>File complaints and inquiries with Hazaribagh Police (via WhatsApp or the Saathi app).</li>
                             <li>Access information about police stations, emergency contacts, and traffic regulations.</li>
-                            <li>Receive automated responses and guidance on public safety topics.</li>
-                            <li>Submit feedback and reviews about police services.</li>
+                            <li>Use GPS to find the nearest police station (Saathi app).</li>
+                            <li>Attach optional photos to certain reports (Saathi app).</li>
+                            <li>Track submission status in &ldquo;My Activities&rdquo; (Saathi app).</li>
+                            <li>Receive OTP login via WhatsApp for the Saathi app.</li>
+                            <li>Submit feedback and suggestions.</li>
                         </ul>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed mt-3">
-                            The Service is intended to supplement, not replace, direct communication with law enforcement. For emergencies, always call <strong>100</strong> (Police) or <strong>112</strong> (National Emergency).
+                            The Services supplement, not replace, direct contact with law enforcement. For emergencies, always call <strong>112</strong> (National Emergency) or your local control room.
                         </p>
                     </section>
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">3. Eligibility</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            You must be at least 18 years old to use this Service, or use it under the supervision of a parent or legal guardian. By using the Service, you represent that you meet this eligibility requirement.
+                            You must be at least 18 years old to use the Services, or use them under the supervision of a parent or legal guardian.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">4. Acceptable Use</h2>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">4. Account &amp; Login (Saathi App)</h2>
+                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                            The Saathi app requires login with a mobile number. A one-time password (OTP) is sent via WhatsApp. You are responsible for keeping your device secure and not sharing OTPs. We may suspend access if we detect misuse or fraud.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">5. Acceptable Use</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
-                            You agree <strong>not</strong> to use the Service to:
+                            You agree <strong>not</strong> to use the Services to:
                         </p>
                         <ul className="list-disc list-inside space-y-2 text-slate-600 dark:text-slate-400">
                             <li>Submit false, misleading, or fraudulent complaints or information.</li>
                             <li>Harass, threaten, or abuse police personnel or other individuals.</li>
-                            <li>Attempt to disrupt, overload, or hack the Service or its underlying systems.</li>
-                            <li>Use automated bots or scripts to interact with the chatbot.</li>
-                            <li>Violate any applicable local, state, national, or international law or regulation.</li>
+                            <li>Attempt to disrupt, overload, or hack the Services.</li>
+                            <li>Use unauthorised automated bots or scripts.</li>
+                            <li>Violate any applicable law or regulation.</li>
                             <li>Impersonate any person or entity, including law enforcement officials.</li>
                         </ul>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed mt-3">
-                            Misuse of the Service may result in your number being blocked and, where applicable, legal action being taken.
+                            Misuse may result in your number being blocked and, where applicable, legal action.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">5. Accuracy of Information</h2>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">6. Accuracy of Information</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            While we strive to provide accurate and up-to-date information, the Service is provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. Hazaribagh Police does not warrant the completeness, accuracy, reliability, or timeliness of any information provided through the chatbot. Always verify critical information through official channels.
+                            The Services are provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. Hazaribagh Police does not warrant completeness, accuracy, reliability, or timeliness of all information. Always verify critical information through official channels.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">6. Intellectual Property</h2>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">7. Intellectual Property</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            All content, design, and technology comprising the Service, including but not limited to text, graphics, logos, and software, are the property of Hazaribagh Police or its licensors and are protected by applicable intellectual property laws. You may not reproduce, distribute, or create derivative works without our express written permission.
+                            Content, design, and technology of the Services are the property of Hazaribagh Police or its licensors (including technology partners such as DigiCraft Innovation Pvt. Ltd.) and are protected by applicable law. You may not reproduce or create derivative works without written permission.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">7. Privacy</h2>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">8. Privacy</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Your use of the Service is also governed by our{' '}
+                            Your use is also governed by our{' '}
                             <Link href="/privacy-policy" className="text-indigo-600 dark:text-indigo-400 underline hover:no-underline">
                                 Privacy Policy
                             </Link>
-                            , which is incorporated into these Terms by reference. Please review the Privacy Policy to understand our practices.
+                            , including how location, photos, and OTP login are handled in the Saathi app.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">8. Limitation of Liability</h2>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">9. Limitation of Liability</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            To the fullest extent permitted by law, Hazaribagh Police and its officers, employees, and agents shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of your use of, or inability to use, the Service. This includes, without limitation, any loss of data, revenue, or goodwill.
+                            To the fullest extent permitted by law, Hazaribagh Police and its officers, employees, and agents shall not be liable for indirect, incidental, special, consequential, or punitive damages arising from your use of, or inability to use, the Services.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">9. Modifications to the Service</h2>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">10. Modifications</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            We reserve the right to modify, suspend, or discontinue the Service (or any part thereof) at any time without notice. We shall not be liable to you or any third party for any modification, suspension, or discontinuation of the Service.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">10. Changes to These Terms</h2>
-                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            We reserve the right to update these Terms at any time. Changes will be effective immediately upon posting. Your continued use of the Service after any changes constitutes your acceptance of the new Terms.
+                            We may modify, suspend, or discontinue the Services (or any part) at any time without notice. Continued use after Terms updates constitutes acceptance of the new Terms.
                         </p>
                     </section>
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">11. Governing Law</h2>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            These Terms shall be governed by and construed in accordance with the laws of <strong>India</strong>, specifically the Information Technology Act, 2000, and other applicable statutes. Any disputes shall be subject to the exclusive jurisdiction of the courts of Hazaribagh, Jharkhand.
+                            These Terms are governed by the laws of <strong>India</strong>, including the Information Technology Act, 2000. Disputes are subject to the exclusive jurisdiction of the courts of Hazaribagh, Jharkhand.
                         </p>
                     </section>
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">12. Contact Us</h2>
-                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            If you have any questions about these Terms, please contact us:
-                        </p>
                         <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 space-y-1">
                             <p><strong>Hazaribagh Police</strong></p>
                             <p>Hazaribagh, Jharkhand, India</p>
@@ -146,7 +144,6 @@ export default function TermsOfServicePage() {
                     </section>
                 </div>
 
-                {/* Footer links */}
                 <div className="flex flex-wrap gap-4 justify-center mt-8 text-sm text-slate-500 dark:text-slate-400">
                     <Link href="/privacy-policy" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Privacy Policy</Link>
                     <span className="text-slate-300 dark:text-slate-600">|</span>

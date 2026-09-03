@@ -25,11 +25,12 @@ export default async function TrafficRulesPage() {
         <DashboardLayout section="traffic_rules">
             <PageHeader
                 title="Traffic Rules & Violations"
+                subtitle="Directory"
                 actions={<ButtonLink href="/dashboard/traffic-rules/new">Add Rule</ButtonLink>}
             />
 
             <Card>
-                <CardHeader title="All Rules" count={violations.length} />
+                <CardHeader title="All Rules" count={violations.length} accent="amber" />
                 {violations.length === 0 ? (
                     <EmptyState
                         icon={BookOpen}

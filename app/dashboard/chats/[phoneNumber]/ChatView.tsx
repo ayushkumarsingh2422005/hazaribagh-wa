@@ -121,7 +121,7 @@ export default function ChatView({ phoneNumber }: { phoneNumber: string }) {
                                 <div
                                     className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-3 ${
                                         msg.direction === 'outgoing'
-                                            ? 'bg-indigo-600 text-white rounded-br-md'
+                                            ? 'bg-blue-600 text-white rounded-br-md'
                                             : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-bl-md'
                                     }`}
                                 >
@@ -129,7 +129,7 @@ export default function ChatView({ phoneNumber }: { phoneNumber: string }) {
                                     <p
                                         className={`text-xs mt-1 ${
                                             msg.direction === 'outgoing'
-                                                ? 'text-indigo-100'
+                                                ? 'text-blue-100'
                                                 : 'text-slate-500 dark:text-slate-400'
                                         }`}
                                     >

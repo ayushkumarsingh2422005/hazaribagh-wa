@@ -16,7 +16,7 @@ import {
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const OTP_SESSION_MESSAGE =
-    '*Hazaribagh Police — Sathi App*\n\nYour login OTP is: *{{otp}}*\n\nValid for 10 minutes. Do not share this code with anyone.\n\n_If you did not request this, ignore this message._';
+    '*Hazaribagh Police — Saathi App*\n\nYour login OTP is: *{{otp}}*\n\nValid for 10 minutes. Do not share this code with anyone.\n\n_If you did not request this, ignore this message._';
 
 export function normalizeAppPhone(input: string): string | null {
     return normalizeIndiaWhatsAppTo(input);

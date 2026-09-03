@@ -32,7 +32,7 @@ export default async function ReviewsPage() {
 
     return (
         <DashboardLayout section="reviews">
-            <PageHeader title="Reviews & Suggestions" />
+            <PageHeader title="Reviews & Suggestions" subtitle="Operations" />
             <ReviewsClient policeStations={policeStations} initialReviews={reviews} />
         </DashboardLayout>
     );
