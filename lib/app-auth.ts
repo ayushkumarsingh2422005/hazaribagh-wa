@@ -15,11 +15,19 @@ import {
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+/** Google Play review account — fixed OTP, no WhatsApp delivery. */
+export const PLAY_REVIEW_PHONE = '918299797516';
+export const PLAY_REVIEW_OTP = '123456';
+
 const OTP_SESSION_MESSAGE =
     '*Hazaribagh Police — Saathi App*\n\nYour login OTP is: *{{otp}}*\n\nValid for 10 minutes. Do not share this code with anyone.\n\n_If you did not request this, ignore this message._';
 
 export function normalizeAppPhone(input: string): string | null {
     return normalizeIndiaWhatsAppTo(input);
+}
+
+function isPlayReviewPhone(phoneNumber: string): boolean {
+    return phoneNumber === PLAY_REVIEW_PHONE;
 }
 
 function generateSessionToken(): string {
@@ -30,6 +38,23 @@ export async function sendAppOtp(rawPhone: string): Promise<{ success: boolean; 
     const phoneNumber = normalizeAppPhone(rawPhone);
     if (!phoneNumber) {
         return { success: false, error: 'Invalid phone number. Enter a valid 10-digit Indian mobile number.' };
+    }
+
+    // Play Store reviewers: skip WhatsApp and use fixed OTP.
+    if (isPlayReviewPhone(phoneNumber)) {
+        const expiresAt = new Date(Date.now() + OTP_TTL_MS);
+        try {
+            await saveOtpRecord({
+                phoneNumber,
+                purpose: 'app',
+                otp: PLAY_REVIEW_OTP,
+                expiresAt,
+            });
+        } catch (err) {
+            console.error('Failed to save Play review OTP:', err);
+            return { success: false, error: 'Could not prepare OTP. Please try again later.' };
+        }
+        return { success: true };
     }
 
     const otp = generateOtp();
@@ -71,9 +96,15 @@ export async function verifyAppOtp(
         return { success: false, error: 'Invalid phone number.' };
     }
 
-    const verified = await verifyOtpRecord({ phoneNumber, purpose: 'app', otpInput });
-    if (!verified.success) {
-        return { success: false, error: verified.error };
+    // Always accept fixed review OTP for the Play test number.
+    if (isPlayReviewPhone(phoneNumber) && String(otpInput).trim() === PLAY_REVIEW_OTP) {
+        await connectDB();
+        await AppOtp.deleteOne({ phoneNumber, purpose: 'app' });
+    } else {
+        const verified = await verifyOtpRecord({ phoneNumber, purpose: 'app', otpInput });
+        if (!verified.success) {
+            return { success: false, error: verified.error };
+        }
     }
 
     await connectDB();
