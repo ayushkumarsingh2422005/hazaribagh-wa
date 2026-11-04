@@ -1730,10 +1730,10 @@ export async function handleMissingPersonImageMessage(
 
     try {
         const { saveWhatsappImageToUploads } = await import('./whatsapp-media');
-        const relativePath = await saveWhatsappImageToUploads(mediaId);
+        const photoUrl = await saveWhatsappImageToUploads(mediaId, 'missing-person');
         const data = (flow.data || {}) as Record<string, unknown>;
         const prev = (data.complaintData as Record<string, unknown>) || {};
-        const complaintData = { ...prev, missingPersonPhotoUrl: relativePath };
+        const complaintData = { ...prev, missingPersonPhotoUrl: photoUrl };
 
         return finalizeMissingPersonComplaint(phoneNumber, language, complaintData);
     } catch (err) {
@@ -1780,11 +1780,11 @@ export async function handleHarassmentPhotoMessage(
 
     try {
         const { saveWhatsappImageToUploads } = await import('./whatsapp-media');
-        const relativePath = await saveWhatsappImageToUploads(mediaId);
+        const photoUrl = await saveWhatsappImageToUploads(mediaId, 'harassment');
         const data = (flow.data || {}) as Record<string, unknown>;
         const prev = (data.complaintData as Record<string, unknown>) || {};
         const complaintType = String(data.complaintType || 'sub_info_misbehavior');
-        const complaintData = { ...prev, missingPersonPhotoUrl: relativePath };
+        const complaintData = { ...prev, missingPersonPhotoUrl: photoUrl };
 
         return finalizeInfoComplaint(phoneNumber, language, complaintType, complaintData);
     } catch (err) {

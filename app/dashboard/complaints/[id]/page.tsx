@@ -6,6 +6,7 @@ import StatusUpdateForm from '@/components/dashboard/StatusUpdateForm';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { requireSection, buildComplaintFilter } from '@/lib/admin-auth';
+import { resolvePhotoUrl } from '@/lib/blob-upload';
 import { COMPLAINT_TYPE_LABELS } from '@/lib/complaint-services';
 
 const complaintTypeLabels = COMPLAINT_TYPE_LABELS;
@@ -51,15 +52,9 @@ export default async function ComplaintDetailPage({
         redirect('/dashboard/complaints');
     }
 
-    const missingPhotoPath = (complaint as { missingPersonPhotoUrl?: string }).missingPersonPhotoUrl;
-    const publicBase = (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '');
-    const missingPersonPhotoSrc =
-        missingPhotoPath &&
-        (missingPhotoPath.startsWith('http://') || missingPhotoPath.startsWith('https://'))
-            ? missingPhotoPath
-            : missingPhotoPath
-              ? `${publicBase}${missingPhotoPath.startsWith('/') ? missingPhotoPath : `/${missingPhotoPath}`}`
-              : '';
+    const missingPersonPhotoSrc = resolvePhotoUrl(
+        (complaint as { missingPersonPhotoUrl?: string }).missingPersonPhotoUrl
+    );
 
     return (
         <DashboardLayout section="complaints">

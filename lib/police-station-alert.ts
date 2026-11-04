@@ -1,5 +1,6 @@
 import PoliceStation from '@/models/PoliceStation';
 import connectDB from './db';
+import { resolvePhotoUrl } from './blob-upload';
 import { getAlertWhatsAppNumber } from './police-station-phones';
 import { sendWhatsAppMessage } from './whatsapp';
 
@@ -97,14 +98,8 @@ export async function notifyPoliceStationComplaintAlert(params: {
             ? `\n*Complainant name:* ${params.complainantName.trim()}`
             : '';
         const idLine = params.complaintId ? `\n*Complaint ID:* ${params.complaintId}` : '';
-        const rel = String(params.missingPersonPhotoUrl || '').trim();
-        const base = (process.env.NEXT_PUBLIC_BASE_URL || '').replace(/\/$/, '');
-        const photoLine =
-            rel && base
-                ? `\n*Photo:* ${base}${rel.startsWith('/') ? rel : `/${rel}`}`
-                : rel
-                  ? `\n*Photo path:* ${rel}`
-                  : '';
+        const photoUrl = resolvePhotoUrl(params.missingPersonPhotoUrl);
+        const photoLine = photoUrl ? `\n*Photo:* ${photoUrl}` : '';
 
         const text = `🔔 *Hazaribagh Police — New registration*
 
