@@ -397,19 +397,20 @@ export async function processChatbotMessage(
         return getServiceMenu(userLanguage);
     }
 
-    // Check if user is in a form flow (waiting for input)
-    if (userFlowState[phoneNumber]?.step) {
-        if (userFlowState[phoneNumber].step === 'awaiting_police_station_selection') {
+    // Check if user is in a form flow (waiting for input) — hydrate from DB on cold starts
+    const activeFlow = await getFlowState(phoneNumber);
+    if (activeFlow?.step) {
+        if (activeFlow.step === 'awaiting_police_station_selection') {
             const language = userLanguage || 'english';
             const stations = await getActivePoliceStations();
-            const page = Number(userFlowState[phoneNumber].data?.stationPage || 0);
+            const page = Number(activeFlow.data?.stationPage || 0);
             return buildStationSelectionListResponse(language, stations, Number.isNaN(page) ? 0 : page);
         }
 
-        if (userFlowState[phoneNumber].step === 'awaiting_info_location') {
+        if (activeFlow.step === 'awaiting_info_location') {
             const language = userLanguage || 'english';
-            const optional = Boolean(userFlowState[phoneNumber].data?.locationOptional);
-            const complaintType = String(userFlowState[phoneNumber].data?.complaintType || '');
+            const optional = Boolean(activeFlow.data?.locationOptional);
+            const complaintType = String(activeFlow.data?.complaintType || '');
             const isHarassment = complaintType === 'sub_info_misbehavior';
             return {
                 type: 'buttons',
@@ -434,7 +435,7 @@ export async function processChatbotMessage(
             };
         }
 
-        if (userFlowState[phoneNumber].step === 'awaiting_harassment_photo') {
+        if (activeFlow.step === 'awaiting_harassment_photo') {
             const language = userLanguage || 'english';
             return {
                 type: 'buttons',
@@ -450,7 +451,7 @@ export async function processChatbotMessage(
             };
         }
 
-        if (userFlowState[phoneNumber].step === 'awaiting_missing_person_photo') {
+        if (activeFlow.step === 'awaiting_missing_person_photo') {
             const language = userLanguage || 'english';
             return {
                 type: 'buttons',
@@ -466,30 +467,30 @@ export async function processChatbotMessage(
             };
         }
 
-        const result = await handleFormSubmission(phoneNumber, incomingMessage, userFlowState[phoneNumber]);
+        const result = await handleFormSubmission(phoneNumber, incomingMessage, activeFlow);
 
         if (result.success) {
             if (result.awaitStationSelection && result.deferredComplaintType && result.deferredComplaintData) {
                 const stations = await getActivePoliceStations();
-                userFlowState[phoneNumber] = {
+                await setFlowState(phoneNumber, {
                     step: 'awaiting_police_station_selection',
                     data: {
                         complaintType: result.deferredComplaintType,
                         complaintData: result.deferredComplaintData,
                         stationPage: 0,
                     },
-                };
+                });
                 return buildStationSelectionListResponse(result.language, stations, 0);
             }
 
             if (result.awaitMissingPersonPhoto && result.deferredComplaintType && result.deferredComplaintData) {
-                userFlowState[phoneNumber] = {
+                await setFlowState(phoneNumber, {
                     step: 'awaiting_missing_person_photo',
                     data: {
                         complaintType: result.deferredComplaintType,
                         complaintData: result.deferredComplaintData,
                     },
-                };
+                });
                 return buildMissingPersonPhotoPrompt(result.language);
             }
 
@@ -641,7 +642,7 @@ async function handleInteractiveResponse(
     if (interactiveId === 'missing_photo_skip') {
         const contact = await Contact.findOne({ phoneNumber });
         const language = contact?.language || 'english';
-        const flowState = userFlowState[phoneNumber];
+        const flowState = await getFlowState(phoneNumber);
 
         if (!flowState || flowState.step !== 'awaiting_missing_person_photo') {
             return {
@@ -664,7 +665,7 @@ async function handleInteractiveResponse(
     if (interactiveId === 'station_pick_unknown' || interactiveId.startsWith('station_pick_') || interactiveId.startsWith('station_page_')) {
         const contact = await Contact.findOne({ phoneNumber });
         const language = contact?.language || 'english';
-        const flowState = userFlowState[phoneNumber];
+        const flowState = await getFlowState(phoneNumber);
 
         if (!flowState || flowState.step !== 'awaiting_police_station_selection') {
             return {
@@ -685,13 +686,13 @@ async function handleInteractiveResponse(
 
         if (interactiveId.startsWith('station_page_')) {
             const nextPage = Number(interactiveId.replace('station_page_', ''));
-            userFlowState[phoneNumber] = {
+            await setFlowState(phoneNumber, {
                 ...flowState,
                 data: {
                     ...(flowState.data || {}),
                     stationPage: Number.isNaN(nextPage) ? 0 : Math.max(0, nextPage),
                 },
-            };
+            });
             return buildStationSelectionListResponse(language, stations, Number.isNaN(nextPage) ? 0 : nextPage);
         }
 
@@ -1714,7 +1715,7 @@ export async function handleMissingPersonImageMessage(
 
     const contact = await Contact.findOne({ phoneNumber });
     const language = contact?.language || 'english';
-    const flow = userFlowState[phoneNumber];
+    const flow = await getFlowState(phoneNumber);
 
     if (!flow || flow.step !== 'awaiting_missing_person_photo') {
         return {
